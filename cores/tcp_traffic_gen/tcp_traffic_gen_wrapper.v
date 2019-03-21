@@ -4,8 +4,6 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-`timescale 1ns / 1ps
-
 module tcp_traffic_gen_w
 (
 	// Clock and reset are shared by all interfaces
