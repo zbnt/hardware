@@ -15,7 +15,7 @@ def scan_modules(path):
 		full_path = os.path.join(path, f)
 
 		if os.path.isfile(full_path) and (f[-3:] == ".sv" or f[-2:] == ".v"):
-			fixed_full_path = full_path[7:(-2 if f[-2] == "." else -3)]
+			fixed_full_path = full_path[4:(-2 if f[-2] == "." else -3)]
 
 			g_modules[fixed_full_path] = [full_path]
 
