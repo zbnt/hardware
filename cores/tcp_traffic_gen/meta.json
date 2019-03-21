@@ -5,7 +5,8 @@
 		"axi4_lite/axi4_lite_slave",
 		"axi4_lite/axi4_lite_slave_read",
 		"axi4_lite/axi4_lite_slave_write",
+		"axi4_lite/axi4_lite_reg_bank",
 		"register_bank",
-		"lfsr"
+		"lfsr/lfsr_32"
 	]
 }
