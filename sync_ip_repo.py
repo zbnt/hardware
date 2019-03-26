@@ -79,7 +79,7 @@ for p in sorted(os.listdir("cores")):
 			print("\t-", p_file, "=>", ip_file)
 			shutil.copy(p_file, ip_file)
 
-	ip_gui_file = os.path.join(ip_dir, os.path.join("xgui", p + "_v" + p_meta.get("version", "1.0")))
+	ip_gui_file = os.path.join(ip_dir, os.path.join("xgui", p + "_v" + p_meta.get("version", "1_0").replace(".", "_") + ".tcl"))
 	p_gui_file = os.path.join(p_dir, "xgui.tcl")
 
 	if os.path.exists(p_gui_file) or os.path.exists(ip_gui_file):
@@ -92,7 +92,7 @@ for p in sorted(os.listdir("cores")):
 		if p_time > ip_time:
 			print("\t-", p_gui_file, "=>", ip_gui_file)
 			shutil.copy2(p_gui_file, ip_gui_file)
-		elif ptime < ip_time:
+		elif p_time < ip_time:
 			print("\t-", ip_gui_file, "=>", p_gui_file)
 			shutil.copy2(ip_gui_file, p_gui_file)
 
