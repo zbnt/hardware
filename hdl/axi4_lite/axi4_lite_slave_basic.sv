@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module axi4_lite_slave #(parameter num_regs = 2, parameter addr_width = 7)
+module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 (
 	input logic clk,
 	input logic rst_n,
@@ -34,12 +34,23 @@ module axi4_lite_slave #(parameter num_regs = 2, parameter addr_width = 7)
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
 );
-	axi4_lite_slave_read #(num_regs, addr_width) U0
+	logic read_req, write_req;
+	logic read_response, write_response;
+	logic [addr_width-1:0] read_addr, write_addr;
+	logic [31:0] read_value, write_value;
+	logic [3:0] write_mask;
+
+	axi4_lite_slave_read #(addr_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.reg_vals(reg_vals),
+		.read_req(read_req),
+		.read_addr(read_addr),
+
+		.read_ready(1'b1),
+		.read_response(read_response),
+		.read_value(read_value),
 
 		.s_axi_araddr(s_axi_araddr),
 		.s_axi_arprot(s_axi_arprot),
@@ -52,15 +63,18 @@ module axi4_lite_slave #(parameter num_regs = 2, parameter addr_width = 7)
 		.s_axi_rready(s_axi_rready)
 	);
 
-	axi4_lite_slave_write #(num_regs, addr_width) U1
+	axi4_lite_slave_write #(addr_width) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.reg_vals(reg_vals),
-		.reg_write_enable(reg_write_enable),
-		.reg_write_idx(reg_write_idx),
-		.reg_write_value(reg_write_value),
+		.write_req(write_req),
+		.write_addr(write_addr),
+		.write_value(write_value),
+		.write_mask(write_mask),
+
+		.write_ready(1'b1),
+		.write_response(write_response),
 
 		.s_axi_awaddr(s_axi_awaddr),
 		.s_axi_awprot(s_axi_awprot),
@@ -76,4 +90,26 @@ module axi4_lite_slave #(parameter num_regs = 2, parameter addr_width = 7)
 		.s_axi_bvalid(s_axi_bvalid),
 		.s_axi_bready(s_axi_bready)
 	);
+
+	always_comb begin
+		read_response = s_axi_araddr[addr_width-1:2] < num_regs;
+		read_value = read_response ? reg_vals[s_axi_araddr[addr_width-1:2]] : 32'd0;
+	end
+
+	always_comb begin
+		write_response = s_axi_awaddr[addr_width-1:2] < num_regs;
+
+		if(write_response & write_req) begin
+			logic [31:0] reg_write_mask;
+			reg_write_mask = {{8{s_axi_wstrb[3]}}, {8{s_axi_wstrb[2]}}, {8{s_axi_wstrb[1]}}, {8{s_axi_wstrb[0]}}};
+
+			reg_write_enable = 1'b1;
+			reg_write_idx = s_axi_awaddr[addr_width-1:2];
+			reg_write_value = reg_vals[reg_write_idx] & ~reg_write_mask | s_axi_wdata & reg_write_mask;
+		end else begin
+			reg_write_enable = 1'b0;
+			reg_write_idx = '0;
+			reg_write_value = '0;
+		end
+	end
 endmodule

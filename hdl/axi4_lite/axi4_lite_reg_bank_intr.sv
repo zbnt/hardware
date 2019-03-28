@@ -40,7 +40,7 @@ module axi4_lite_reg_bank_intr #(parameter num_regs = 2, parameter addr_width = 
 	logic [31:0] reg_write_value;
 	logic reg_write_enable;
 
-	axi4_lite_slave #(num_regs + 1, addr_width) U0
+	axi4_lite_slave_basic #(num_regs + 1, addr_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),

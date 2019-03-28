@@ -1,14 +1,16 @@
-`timescale 1ns / 1ps
 
-module axi4_lite_slave_write #(parameter num_regs = 2, parameter addr_width = 7)
+module axi4_lite_slave_write #(parameter addr_width = 7)
 (
 	input logic clk,
 	input logic rst_n,
 
-	input logic [31:0] reg_vals[0:num_regs-1],
-	output logic [addr_width-1:0] reg_write_idx,
-	output logic [31:0] reg_write_value,
-	output logic reg_write_enable,
+	output logic write_req,
+	output logic [addr_width-1:0] write_addr,
+	output logic [31:0] write_value,
+	output logic [3:0] write_mask,
+
+	input logic write_ready,
+	input logic write_response,
 
 	input logic [addr_width-1:0] s_axi_awaddr,
 	input logic [2:0] s_axi_awprot,
@@ -24,87 +26,95 @@ module axi4_lite_slave_write #(parameter num_regs = 2, parameter addr_width = 7)
 	output logic s_axi_bvalid,
 	input logic s_axi_bready
 );
-	enum logic [1:0] {ST_W_WAIT_ADDR, ST_W_WAIT_DATA, ST_W_RESPONSE} w_state, w_state_next;
-	logic [addr_width-1:0] w_addr, w_addr_next;
-	logic [31:0] w_data_next, w_data_mask;
-	logic [addr_width-3:0] w_idx_next;
-	logic [1:0] w_resp_next;
-	logic w_enable_next;
+	// Receive write address
 
-	always_ff @(posedge clk) begin
-		w_state <= w_state_next;
-		w_addr <= w_addr_next;
-		s_axi_bresp <= w_resp_next;
-		reg_write_idx <= w_idx_next;
-		reg_write_value <= w_data_next;
-		reg_write_enable <= w_enable_next;
+	logic awready_next;
+	logic [addr_width-1:0] write_addr_next;
+
+	always_ff @(posedge clk or negedge rst_n) begin
+		if(~rst_n) begin
+			s_axi_awready <= 1'b0;
+			write_addr <= '0;
+		end else begin
+			s_axi_awready <= awready_next;
+			write_addr <= write_addr_next;
+		end
 	end
 
 	always_comb begin
-		w_state_next = w_state;
-
-		w_addr_next = w_addr;
-		w_data_next = reg_write_value;
-		w_resp_next = s_axi_bresp;
-		w_enable_next = 1'b0;
-		w_idx_next = '0;
-
-		s_axi_awready = 1'b0;
-		s_axi_wready = 1'b0;
-		s_axi_bvalid = 1'b0;
-
-		w_data_mask = {{8{s_axi_wstrb[3]}}, {8{s_axi_wstrb[2]}}, {8{s_axi_wstrb[1]}}, {8{s_axi_wstrb[0]}}};
-
-		if(~rst_n) begin
-			w_state_next = ST_W_WAIT_ADDR;
-			w_data_next = 32'd0;
-			w_resp_next = 2'd0;
-			w_addr_next = 7'd0;
+		if(rst_n & s_axi_awvalid & s_axi_awready) begin
+			awready_next = 1'b0;
+			write_addr_next = s_axi_awaddr;
+		end else if(rst_n | (s_axi_bready & s_axi_bvalid)) begin
+			awready_next = 1'b1;
+			write_addr_next = write_addr;
 		end else begin
-			case(w_state)
-				ST_W_WAIT_ADDR: begin
-					s_axi_awready = 1'b1;
+			awready_next = s_axi_awready;
+			write_addr_next = write_addr;
+		end
+	end
 
-					if(s_axi_awvalid) begin
-						w_state_next = ST_W_WAIT_DATA;
-						w_addr_next = s_axi_awaddr;
+	// Receive write value
 
-						if(s_axi_awaddr[addr_width-1:2] < num_regs) begin
-							w_resp_next = 2'b00;
-						end else begin
-							w_resp_next = 2'b10;
-						end
-					end
-				end
+	logic wready_next;
+	logic [31:0] write_value_next;
+	logic [3:0] write_mask_next;
 
-				ST_W_WAIT_DATA: begin
-					s_axi_wready = 1'b1;
+	always_ff @(posedge clk or negedge rst_n) begin
+		if(~rst_n) begin
+			s_axi_wready <= 1'b0;
+			write_value <= 32'd0;
+			write_mask <= 4'd0;
+		end else begin
+			s_axi_wready <= wready_next;
+			write_value <= write_value_next;
+			write_mask <= write_mask_next;
+		end
+	end
 
-					if(s_axi_wvalid) begin
-						w_state_next = ST_W_RESPONSE;
+	always_comb begin
+		if(rst_n & s_axi_wvalid & s_axi_wready) begin
+			wready_next = 1'b0;
+			write_value_next = s_axi_wdata;
+			write_mask_next = s_axi_wstrb;
+		end else if(rst_n | (s_axi_bready & s_axi_bvalid)) begin
+			wready_next = 1'b1;
+			write_value_next = write_value;
+			write_mask_next = write_mask;
+		end else begin
+			wready_next = s_axi_wready;
+			write_value_next = write_value;
+			write_mask_next = write_mask;
+		end
+	end
 
-						if(w_addr[addr_width-1:2] < num_regs) begin
-							w_data_next = (reg_vals[w_addr[addr_width-1:2]] & ~w_data_mask) | (s_axi_wdata & w_data_mask);
-							w_enable_next = 1'b1;
-							w_idx_next = w_addr[addr_width-1:2];
-						end else begin
-							w_data_next = 32'd0;
-						end
-					end
-				end
+	// Send response
 
-				// TODO: Merge with previous state?
-				ST_W_RESPONSE: begin
-					s_axi_bvalid = 1'b1;
+	logic bvalid_next;
+	logic [1:0] bresp_next;
 
-					if(s_axi_bready) begin
-						w_state_next = ST_W_WAIT_ADDR;
-						w_data_next = 32'd0;
-						w_resp_next = 2'd0;
-						w_addr_next = 7'd0;
-					end
-				end
-			endcase
+	always_ff @(posedge clk or negedge rst_n) begin
+		if(~rst_n) begin
+			s_axi_bvalid <= 1'b0;
+			s_axi_bresp <= 2'd0;
+		end else begin
+			s_axi_bvalid <= bvalid_next;
+			s_axi_bresp <= bresp_next;
+		end
+	end
+
+	always_comb begin
+		write_req = rst_n & (~s_axi_awready | ~awready_next) & (~s_axi_wready | ~wready_next);
+
+		if(write_ready & write_req & ~s_axi_bvalid) begin
+			bvalid_next = 1'b1;
+			bresp_next = {~write_response, 1'b0};
+		end else if(rst_n | (s_axi_bready & s_axi_bvalid)) begin
+			bvalid_next = 1'b0;
+			bresp_next = 2'd0;
+		end else begin
+			bvalid_next = s_axi_bvalid;
+			bresp_next = s_axi_bready;
 		end
 	end
 endmodule

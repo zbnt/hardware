@@ -1,11 +1,16 @@
 `timescale 1ns / 1ps
 
-module axi4_lite_slave_read #(parameter num_regs = 2, parameter addr_width = 7)
+module axi4_lite_slave_read #(parameter addr_width = 7)
 (
 	input logic clk,
 	input logic rst_n,
 
-	input logic [31:0] reg_vals[0:num_regs-1],
+	output logic read_req,
+	output logic [addr_width-1:0] read_addr,
+
+	input logic read_ready,
+	input logic read_response,
+	input logic [31:0] read_value,
 
 	input logic [addr_width-1:0] s_axi_araddr,
 	input logic [2:0] s_axi_arprot,
@@ -17,57 +22,67 @@ module axi4_lite_slave_read #(parameter num_regs = 2, parameter addr_width = 7)
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
 );
-	enum logic {ST_R_WAIT_ADDR, ST_R_RESPONSE} r_state, r_state_next;
-	logic [31:0] r_data_next;
-	logic [1:0] r_resp_next;
+	// Receive read address
 
-	always_ff @(posedge clk) begin
-		r_state <= r_state_next;
-		s_axi_rresp <= r_resp_next;
-		s_axi_rdata <= r_data_next;
+	logic arready_next;
+	logic [addr_width-1:0] read_addr_next;
+
+	always_ff @(posedge clk or negedge rst_n) begin
+		if(~rst_n) begin
+			s_axi_arready <= 1'b0;
+			read_addr <= '0;
+		end else begin
+			s_axi_arready <= arready_next;
+			read_addr <= read_addr_next;
+		end
 	end
 
 	always_comb begin
-		r_state_next = r_state;
-
-		r_data_next = s_axi_rdata;
-		r_resp_next = s_axi_rresp;
-
-		s_axi_arready = 1'b0;
-		s_axi_rvalid = 1'b0;
-
-		if(~rst_n) begin
-			r_state_next = ST_R_WAIT_ADDR;
-			r_data_next = 32'd0;
-			r_resp_next = 2'd0;
+		if(rst_n & s_axi_arvalid) begin
+			arready_next = 1'b0;
+			read_addr_next = s_axi_araddr;
+		end else if(rst_n | (s_axi_rready & s_axi_rvalid)) begin
+			arready_next = 1'b1;
+			read_addr_next = read_addr;
 		end else begin
-			case(r_state)
-				ST_R_WAIT_ADDR: begin
-					s_axi_arready = 1'b1;
+			arready_next = s_axi_arready;
+			read_addr_next = read_addr;
+		end
+	end
 
-					if(s_axi_arvalid) begin
-						r_state_next = ST_R_RESPONSE;
+	// Send response
 
-						if(s_axi_araddr[addr_width-1:2] < num_regs) begin
-							r_data_next = reg_vals[s_axi_araddr[addr_width-1:2]];
-							r_resp_next = 2'b00;
-						end else begin
-							r_data_next = 32'd0;
-							r_resp_next = 2'b10;
-						end
-					end
-				end
+	logic rvalid_next;
+	logic [31:0] rdata_next;
+	logic [1:0] rresp_next;
 
-				ST_R_RESPONSE: begin
-					s_axi_rvalid = 1'b1;
+	always_ff @(posedge clk or negedge rst_n) begin
+		if(~rst_n) begin
+			s_axi_rvalid <= 1'b0;
+			s_axi_rdata <= 32'd0;
+			s_axi_rresp <= 2'd0;
+		end else begin
+			s_axi_rvalid <= rvalid_next;
+			s_axi_rdata <= rdata_next;
+			s_axi_rresp <= rresp_next;
+		end
+	end
 
-					if(s_axi_rready) begin
-						r_state_next = ST_R_WAIT_ADDR;
-						r_data_next = 32'd0;
-						r_resp_next = 2'd0;
-					end
-				end
-			endcase
+	always_comb begin
+		read_req = rst_n & (~s_axi_arready | ~arready_next);
+
+		if(read_ready & read_req & ~s_axi_rvalid) begin
+			rvalid_next = 1'b1;
+			rdata_next = read_value;
+			rresp_next = {~read_response, 1'b0};
+		end else if(rst_n | (s_axi_rready & s_axi_rvalid)) begin
+			rvalid_next = 1'b0;
+			rdata_next = 32'd0;
+			rresp_next = 2'd0;
+		end else begin
+			rvalid_next = s_axi_rvalid;
+			rdata_next = s_axi_rdata;
+			rresp_next = s_axi_rresp;
 		end
 	end
 endmodule
