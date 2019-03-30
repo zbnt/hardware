@@ -275,7 +275,7 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXI_RST.POLARITY">ACTIVE_LOW</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXI_RST.POLARITY" spirit:choiceRef="choice_list_74b5137e">ACTIVE_LOW</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
@@ -372,7 +372,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>0214b12d</spirit:value>
+            <spirit:value>52ab7a61</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -388,7 +388,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>0214b12d</spirit:value>
+            <spirit:value>52ab7a61</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -748,7 +748,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">31</spirit:left>
+            <spirit:left spirit:format="long">7</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -951,6 +951,11 @@
       <spirit:enumeration>32</spirit:enumeration>
     </spirit:choice>
     <spirit:choice>
+      <spirit:name>choice_list_74b5137e</spirit:name>
+      <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
+      <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
+    </spirit:choice>
+    <spirit:choice>
       <spirit:name>choice_pairs_ce1226b1</spirit:name>
       <spirit:enumeration spirit:text="true">1</spirit:enumeration>
       <spirit:enumeration spirit:text="false">0</spirit:enumeration>
@@ -998,7 +1003,7 @@
       <spirit:file>
         <spirit:name>src/eth_traffic_gen_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_c25c077c</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_08caf4b8</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1104,18 +1109,18 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Traffic Generator</xilinx:displayName>
-      <xilinx:coreRevision>1</xilinx:coreRevision>
+      <xilinx:coreRevision>2</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:tcp_traffic_gen:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2019-03-30T00:36:11Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-03-30T01:03:44Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="67d5fa4d"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="52375250"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="4ed3b4f8"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="9c8e8f67"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="95cf5375"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="ea6e69cc"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="f62ab5e6"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="70edbaaa"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="b1e343c2"/>
     </xilinx:packagingInfo>

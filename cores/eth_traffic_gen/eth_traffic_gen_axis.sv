@@ -17,7 +17,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 
 	// MEM
 
-	output logic [7:0] mem_addr,
+	output logic [addr_width-1:0] mem_addr,
 	input logic [7:0] mem_rdata,
 
 	// M_AXIS
@@ -59,12 +59,18 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 
 	always_ff @(posedge clk or posedge rst) begin
 		if(rst) begin
+			state <= ST_SEND_HEADERS;
+			count <= 16'd0;
+
 			mem_addr <= '0;
 
 			m_axis_tvalid <= 1'b0;
 			m_axis_tdata <= '0;
 			m_axis_tlast <= 1'b0;
 		end else begin
+			state <= state_next;
+			count <= count_next;
+
 			mem_addr <= mem_addr_next;
 
 			m_axis_tvalid <= m_axis_tvalid_next;
@@ -81,8 +87,9 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 		m_axis_tvalid_next = m_axis_tvalid;
 		m_axis_tdata_next = m_axis_tdata;
 		m_axis_tlast_next = m_axis_tlast;
-
 		m_axis_tkeep = 1'b1;
+
+		crc32_enable = (state != ST_SEND_FCS && m_axis_tready);
 
 		if(~rst) begin
 			m_axis_tvalid_next = 1'b1;

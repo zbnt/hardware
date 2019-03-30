@@ -40,8 +40,8 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 	input logic m_axis_clk,
 	input logic m_axis_reset,
 
-	output logic [31:0] m_axis_tdata,
-	output logic [3:0] m_axis_tkeep,
+	output logic [7:0] m_axis_tdata,
+	output logic m_axis_tkeep,
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid,
 	input logic m_axis_tready,
@@ -64,10 +64,10 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 );
 	logic [31:0] reg_val[0:1];
 
-	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 2) U0
+	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 2, 2'b11) U0
 	(
-		.clk(s_axi_clk),
-		.rst_n(s_axi_resetn),
+		.s_axi_clk(s_axi_clk),
+		.s_axi_resetn(s_axi_resetn),
 
 		.s_axi_awaddr(s_axi_awaddr),
 		.s_axi_awprot(s_axi_awprot),

@@ -55,16 +55,24 @@ module eth_traffic_gen_axi
 	input logic [31:0] reg_in[0:num_regs-1]
 );
 	logic read_req, write_req;
-	logic read_response, write_response;
-	logic [addr_width-1:0] read_addr, write_addr;
-	logic [31:0] read_value, write_value;
+	logic [11:0] read_addr, write_addr;
+	logic [31:0] write_value;
 	logic [3:0] write_mask;
 
 	logic [reg_addr_width-1:0] reg_write_idx;
 	logic [31:0] reg_write_value;
 	logic reg_write_enable;
 
-	axi4_lite_slave_rw #(mem_addr_width) U0
+	logic read_ready, read_ready_next;
+	logic read_response, read_response_next;
+	logic [31:0] read_value, read_value_next;
+
+	logic write_ready, write_ready_next;
+	logic write_response, write_response_next;
+	logic [7:0] mem_a_wdata_next;
+	logic mem_a_we_next;
+
+	axi4_lite_slave_rw #(12) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -128,6 +136,7 @@ module eth_traffic_gen_axi
 		if(~s_axi_resetn) begin
 			state <= ST_IDLE;
 			mem_a_addr <= '0;
+			mem_a_wdata <= 8'd0;
 			mem_a_we <= 1'b0;
 
 			read_ready <= 1'b0;
@@ -139,6 +148,7 @@ module eth_traffic_gen_axi
 		end else begin
 			state <= state_next;
 			mem_a_addr <= mem_a_addr_next;
+			mem_a_wdata <= mem_a_wdata_next;
 			mem_a_we <= mem_a_we_next;
 
 			read_ready <= read_ready_next;
@@ -153,6 +163,7 @@ module eth_traffic_gen_axi
 	always_comb begin
 		state_next = state;
 		mem_a_addr_next = mem_a_addr;
+		mem_a_wdata_next = mem_a_wdata;
 		mem_a_we_next = 1'b0;
 
 		read_ready_next = 1'b0;
@@ -173,13 +184,13 @@ module eth_traffic_gen_axi
 						if(write_addr < mem_size) begin
 							state_next = ST_WRITE_MEM;
 							mem_a_addr_next = {write_addr[mem_addr_width-1:2], 2'd0};
-						end else if(write_addr[mem_addr_width:6] == '1 && write_addr[5:2] < num_regs) begin
+						end else if(write_addr[mem_addr_width-1:6] == '1 && write_addr[5:2] < num_regs) begin
 							logic [31:0] reg_write_mask;
 							reg_write_mask = {{8{write_mask[3]}}, {8{write_mask[2]}}, {8{write_mask[1]}}, {8{write_mask[0]}}};
 
 							reg_write_enable = 1'b1;
 							reg_write_idx = write_addr[5:2];
-							reg_write_value = reg_vals[reg_write_idx] & ~reg_write_mask | write_value & reg_write_mask;
+							reg_write_value = reg_val[reg_write_idx] & ~reg_write_mask | write_value & reg_write_mask;
 						end else begin
 							write_ready_next = 1'b1;
 							write_response_next = 1'b0;
@@ -188,7 +199,7 @@ module eth_traffic_gen_axi
 						if(read_addr < mem_size) begin
 							state_next = ST_READ_MEM;
 							mem_a_addr_next = {read_addr[mem_addr_width-1:2], 2'd0};
-						end else if(read_addr[mem_addr_width:6] == '1 && read_addr[5:2] < num_regs) begin
+						end else if(read_addr[mem_addr_width-1:6] == '1 && read_addr[5:2] < num_regs) begin
 							read_ready_next = 1'b1;
 							read_response_next = 1'b1;
 							read_value_next = reg_val[read_addr[5:2]];

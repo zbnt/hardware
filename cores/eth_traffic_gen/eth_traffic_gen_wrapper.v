@@ -40,8 +40,8 @@ module eth_traffic_gen_w #(parameter mem_addr_width = 6, parameter mem_size = 4)
 	input wire m_axis_clk,
 	input wire m_axis_reset,
 
-	output wire [31:0] m_axis_tdata,
-	output wire [3:0] m_axis_tkeep,
+	output wire [7:0] m_axis_tdata,
+	output wire m_axis_tkeep,
 	output wire m_axis_tlast,
 	output wire m_axis_tvalid,
 	input wire m_axis_tready,
