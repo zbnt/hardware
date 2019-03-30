@@ -64,7 +64,7 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 );
 	logic [31:0] reg_val[0:1];
 
-	eth_traffic_gen_axi U0 #(mem_addr_width, mem_size, 4, 2, {2{1'b1}})
+	eth_traffic_gen_axi U0 #(mem_addr_width, mem_size, 4, 2)
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -102,30 +102,23 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 		.reg_in(reg_val)
 	);
 
-	tcp_traffic_gen_tx U1
+	eth_traffic_gen_axis U1 #(mem_addr_width, mem_size)
 	(
-		.clk(clk),
-		.rst_n(rst_n),
+		.clk(m_axis_clk),
+		.rst(m_axis_reset),
 
-		.enable(cfg[0]),
+		.enable(reg_val[0][0]),
+		.headers_size(reg_val[1][15:0]),
+		.payload_size(reg_val[1][31:16]),
 
-		.frame_headers(frame_headers),
-		.ip_options(reg_val[13:23]),
-		.num_options(nopts),
-		.data_len(data_len),
-		.word_cycles(wtime),
+		.mem_addr(mem_b_addr),
+		.mem_rdata(mem_b_rdata),
 
-		.m_axis_txd_tdata(m_axis_txd_tdata),
-		.m_axis_txd_tkeep(m_axis_txd_tkeep),
-		.m_axis_txd_tlast(m_axis_txd_tlast),
-		.m_axis_txd_tvalid(m_axis_txd_tvalid),
-		.m_axis_txd_tready(m_axis_txd_tready),
-
-		.m_axis_txc_tdata(m_axis_txc_tdata),
-		.m_axis_txc_tkeep(m_axis_txc_tkeep),
-		.m_axis_txc_tlast(m_axis_txc_tlast),
-		.m_axis_txc_tvalid(m_axis_txc_tvalid),
-		.m_axis_txc_tready(m_axis_txc_tready)
+		.m_axis_tdata(m_axis_tdata),
+		.m_axis_tkeep(m_axis_tkeep),
+		.m_axis_tlast(m_axis_tlast),
+		.m_axis_tvalid(m_axis_tvalid),
+		.m_axis_tready(m_axis_tready)
 	);
 endmodule
 

@@ -2,11 +2,11 @@
 	"version": "1.0",
 
 	"imports": [
-		"axi4_lite/axi4_lite_slave",
+		"axi4_lite/axi4_lite_slave_rw",
 		"axi4_lite/axi4_lite_slave_read",
 		"axi4_lite/axi4_lite_slave_write",
-		"axi4_lite/axi4_lite_reg_bank",
 		"register_bank",
-		"lfsr/lfsr_32"
+		"lfsr/lfsr_64",
+		"crc/crc32b"
 	]
 }
