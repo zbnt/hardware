@@ -44,7 +44,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 	(
 		.clk(clk),
 		.rst(rst),
-		.enable(m_axis_tready).
+		.enable(m_axis_tready),
 		.value(lfsr_val)
 	);
 

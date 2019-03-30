@@ -62,7 +62,7 @@ module eth_traffic_gen_w #(parameter mem_addr_width = 6, parameter mem_size = 4)
 
 	output wire [7:0] ifg_delay
 );
-	eth_traffic_gen U0 #(mem_addr_width, mem_size)
+	eth_traffic_gen #(mem_addr_width, mem_size) U0
 	(
 		// S_AXI
 

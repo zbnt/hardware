@@ -64,7 +64,7 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 );
 	logic [31:0] reg_val[0:1];
 
-	eth_traffic_gen_axi U0 #(mem_addr_width, mem_size, 4, 2)
+	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 2) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -102,7 +102,7 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 		.reg_in(reg_val)
 	);
 
-	eth_traffic_gen_axis U1 #(mem_addr_width, mem_size)
+	eth_traffic_gen_axis #(mem_addr_width, mem_size) U1
 	(
 		.clk(m_axis_clk),
 		.rst(m_axis_reset),
