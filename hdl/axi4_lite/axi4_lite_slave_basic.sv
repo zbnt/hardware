@@ -97,14 +97,14 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 	end
 
 	always_comb begin
-		write_response = s_axi_awaddr[addr_width-1:2] < num_regs;
+		write_response = write_addr[addr_width-1:2] < num_regs;
 
 		if(write_response & write_req) begin
 			logic [31:0] reg_write_mask;
 			reg_write_mask = {{8{s_axi_wstrb[3]}}, {8{s_axi_wstrb[2]}}, {8{s_axi_wstrb[1]}}, {8{s_axi_wstrb[0]}}};
 
 			reg_write_enable = 1'b1;
-			reg_write_idx = s_axi_awaddr[addr_width-1:2];
+			reg_write_idx = write_addr[addr_width-1:2];
 			reg_write_value = reg_vals[reg_write_idx] & ~reg_write_mask | s_axi_wdata & reg_write_mask;
 		end else begin
 			reg_write_enable = 1'b0;

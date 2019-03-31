@@ -26,95 +26,102 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 	output logic s_axi_bvalid,
 	input logic s_axi_bready
 );
-	// Receive write address
+	enum logic [1:0] {ST_W_WAIT_ADDR, ST_W_WAIT_DATA, ST_W_RESPONSE} state, state_next;
 
 	logic awready_next;
 	logic [addr_width-1:0] write_addr_next;
 
-	always_ff @(posedge clk or negedge rst_n) begin
-		if(~rst_n) begin
-			s_axi_awready <= 1'b0;
-			write_addr <= '0;
-		end else begin
-			s_axi_awready <= awready_next;
-			write_addr <= write_addr_next;
-		end
-	end
-
-	always_comb begin
-		if(rst_n & s_axi_awvalid & s_axi_awready) begin
-			awready_next = 1'b0;
-			write_addr_next = s_axi_awaddr;
-		end else if(rst_n | (s_axi_bready & s_axi_bvalid)) begin
-			awready_next = 1'b1;
-			write_addr_next = write_addr;
-		end else begin
-			awready_next = s_axi_awready;
-			write_addr_next = write_addr;
-		end
-	end
-
-	// Receive write value
-
 	logic wready_next;
 	logic [31:0] write_value_next;
 	logic [3:0] write_mask_next;
-
-	always_ff @(posedge clk or negedge rst_n) begin
-		if(~rst_n) begin
-			s_axi_wready <= 1'b0;
-			write_value <= 32'd0;
-			write_mask <= 4'd0;
-		end else begin
-			s_axi_wready <= wready_next;
-			write_value <= write_value_next;
-			write_mask <= write_mask_next;
-		end
-	end
-
-	always_comb begin
-		if(rst_n & s_axi_wvalid & s_axi_wready) begin
-			wready_next = 1'b0;
-			write_value_next = s_axi_wdata;
-			write_mask_next = s_axi_wstrb;
-		end else if(rst_n | (s_axi_bready & s_axi_bvalid)) begin
-			wready_next = 1'b1;
-			write_value_next = write_value;
-			write_mask_next = write_mask;
-		end else begin
-			wready_next = s_axi_wready;
-			write_value_next = write_value;
-			write_mask_next = write_mask;
-		end
-	end
-
-	// Send response
 
 	logic bvalid_next;
 	logic [1:0] bresp_next;
 
 	always_ff @(posedge clk or negedge rst_n) begin
 		if(~rst_n) begin
+			state <= ST_W_WAIT_ADDR;
+
+			s_axi_awready <= 1'b0;
+			write_addr <= '0;
+
+			s_axi_wready <= 1'b0;
+			write_value <= 32'd0;
+			write_mask <= 4'd0;
+
 			s_axi_bvalid <= 1'b0;
 			s_axi_bresp <= 2'd0;
 		end else begin
+			state <= state_next;
+
+			s_axi_awready <= awready_next;
+			write_addr <= write_addr_next;
+
+			s_axi_wready <= wready_next;
+			write_value <= write_value_next;
+			write_mask <= write_mask_next;
+
 			s_axi_bvalid <= bvalid_next;
 			s_axi_bresp <= bresp_next;
 		end
 	end
 
 	always_comb begin
-		write_req = rst_n & (~s_axi_awready | ~awready_next) & (~s_axi_wready | ~wready_next);
+		state_next = state;
 
-		if(write_ready & write_req & ~s_axi_bvalid) begin
-			bvalid_next = 1'b1;
-			bresp_next = {~write_response, 1'b0};
-		end else if(rst_n | (s_axi_bready & s_axi_bvalid)) begin
-			bvalid_next = 1'b0;
-			bresp_next = 2'd0;
-		end else begin
-			bvalid_next = s_axi_bvalid;
-			bresp_next = s_axi_bready;
-		end
+		awready_next = s_axi_awready;
+		write_addr_next = write_addr;
+
+		wready_next = s_axi_wready;
+		write_value_next = write_value;
+		write_mask_next = write_mask;
+
+		bvalid_next = s_axi_bvalid;
+		bresp_next = s_axi_bresp;
+
+		write_req = 1'b0;
+
+		case(state)
+			ST_W_WAIT_ADDR: begin
+				awready_next = 1'b1;
+
+				if(rst_n) begin
+					if(s_axi_awvalid) begin
+						state_next = ST_W_WAIT_DATA;
+						write_addr_next = s_axi_awaddr;
+						awready_next = 1'b0;
+						wready_next = 1'b1;
+					end
+				end
+			end
+
+			ST_W_WAIT_DATA: begin
+				if(s_axi_wvalid) begin
+					state_next = ST_W_RESPONSE;
+					write_value_next = s_axi_wdata;
+					write_mask_next = s_axi_wstrb;
+					wready_next = 1'd0;
+					write_req = 1'b1;
+
+					if(write_ready) begin
+						bresp_next = {~write_response, 1'b0};
+						bvalid_next = 1'b1;
+					end
+				end
+			end
+
+			ST_W_RESPONSE: begin
+				write_req = 1'b1;
+
+				if(s_axi_bvalid & s_axi_bready) begin
+					state_next = ST_W_WAIT_ADDR;
+					awready_next = 1'b1;
+					bvalid_next = 1'b0;
+				end else if(write_ready) begin
+					bresp_next = {~write_response, 1'b0};
+					bvalid_next = 1'b1;
+				end
+			end
+		endcase
 	end
 endmodule
