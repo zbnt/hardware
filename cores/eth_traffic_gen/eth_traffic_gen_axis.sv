@@ -145,6 +145,10 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 						end
 					end
 				end
+
+				default: begin
+					state_next = ST_SEND_HEADERS;
+				end
 			endcase
 		end
 	end
