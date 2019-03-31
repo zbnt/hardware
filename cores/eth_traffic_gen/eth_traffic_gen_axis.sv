@@ -101,7 +101,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 
 					if(mem_addr != '0 || enable) begin
 						if(m_axis_tready) begin
-							if(mem_addr == byte_count - 'd1 || mem_addr == headers_size) begin
+							if(mem_addr == byte_count - 'd1 || mem_addr == headers_size - 16'd1) begin
 								mem_addr_next = '0;
 								count_next = 16'd0;
 								state_next = ST_SEND_PAYLOAD;
