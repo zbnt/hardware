@@ -6,7 +6,6 @@
 		"axi4_lite/axi4_lite_slave_read",
 		"axi4_lite/axi4_lite_slave_write",
 		"register_bank",
-		"lfsr/lfsr_64",
-		"crc/crc32b"
+		"lfsr/lfsr_64"
 	]
 }

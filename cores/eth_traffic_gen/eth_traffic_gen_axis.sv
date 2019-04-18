@@ -29,14 +29,11 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
 );
-	enum logic [1:0] {ST_SEND_HEADERS, ST_SEND_PAYLOAD, ST_SEND_FCS, ST_FRAME_DELAY} state, state_next;
+	enum logic [1:0] {ST_SEND_HEADERS, ST_SEND_PAYLOAD, ST_FRAME_DELAY} state, state_next;
 	logic [31:0] count, count_next;
 
 	logic [7:0] mem_addr_next;
-
 	logic [63:0] lfsr_val;
-	logic [31:0] crc32_val;
-	logic crc32_enable;
 
 	lfsr_64 U0
 	(
@@ -44,15 +41,6 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 		.rst(rst),
 		.enable(m_axis_tready),
 		.value(lfsr_val)
-	);
-
-	crc32b U1
-	(
-		.clk(clk),
-		.rst(rst),
-		.enable(crc32_enable),
-		.in_byte(m_axis_tdata),
-		.crc(crc32_val)
 	);
 
 	always_ff @(posedge clk or posedge rst) begin
@@ -76,8 +64,6 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 		m_axis_tlast = 1'b0;
 		m_axis_tkeep = 1'b1;
 		m_axis_tvalid = 1'b1;
-
-		crc32_enable = (state != ST_SEND_FCS && state != ST_FRAME_DELAY && m_axis_tready);
 
 		if(~rst) begin
 			case(state)
@@ -105,23 +91,6 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 					if(m_axis_tready) begin
 						if(count[15:0] == payload_size - 16'd1) begin
 							count_next = 32'd0;
-							state_next = ST_SEND_FCS;
-						end else begin
-							count_next = count + 32'd1;
-						end
-					end
-				end
-
-				ST_SEND_FCS: begin
-					case(count[1:0])
-						2'd0: m_axis_tdata = crc32_val[7:0];
-						2'd1: m_axis_tdata = crc32_val[15:8];
-						2'd2: m_axis_tdata = crc32_val[23:16];
-						2'd3: m_axis_tdata = crc32_val[31:24];
-					endcase
-
-					if(m_axis_tready) begin
-						if(count[1:0] == 32'd3) begin
 							m_axis_tlast = 1'b1;
 
 							if(frame_delay == 32'd0) begin
@@ -143,6 +112,11 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 					if(count == frame_delay) begin
 						state_next = ST_SEND_HEADERS;
 					end
+				end
+
+				default: begin
+					state_next = ST_SEND_HEADERS;
+					m_axis_tvalid = 1'b0;
 				end
 			endcase
 		end
