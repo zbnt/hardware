@@ -33,9 +33,6 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 	logic [31:0] count, count_next;
 
 	logic [7:0] mem_addr_next;
-	logic [7:0] m_axis_tdata_next;
-	logic m_axis_tlast_next;
-	logic m_axis_tvalid_next;
 
 	logic [63:0] lfsr_val;
 	logic [31:0] crc32_val;
@@ -54,7 +51,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 		.clk(clk),
 		.rst(rst),
 		.enable(crc32_enable),
-		.in_byte(m_axis_tdata_next),
+		.in_byte(m_axis_tdata),
 		.crc(crc32_val)
 	);
 
@@ -62,43 +59,30 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 		if(rst) begin
 			state <= ST_SEND_HEADERS;
 			count <= 32'd0;
-
 			mem_addr <= '0;
-
-			m_axis_tvalid <= 1'b0;
-			m_axis_tdata <= '0;
-			m_axis_tlast <= 1'b0;
 		end else begin
 			state <= state_next;
 			count <= count_next;
-
 			mem_addr <= mem_addr_next;
-
-			m_axis_tvalid <= m_axis_tvalid_next;
-			m_axis_tdata <= m_axis_tdata_next;
-			m_axis_tlast <= m_axis_tlast_next;
 		end
 	end
 
 	always_comb begin
 		state_next = state;
 		count_next = count;
-
 		mem_addr_next = mem_addr;
-		m_axis_tvalid_next = m_axis_tvalid;
-		m_axis_tdata_next = m_axis_tdata;
-		m_axis_tlast_next = m_axis_tlast;
+
+		m_axis_tdata = 8'd0;
+		m_axis_tlast = 1'b0;
 		m_axis_tkeep = 1'b1;
+		m_axis_tvalid = 1'b1;
 
 		crc32_enable = (state != ST_SEND_FCS && state != ST_FRAME_DELAY && m_axis_tready);
 
 		if(~rst) begin
-			m_axis_tvalid_next = 1'b1;
-			m_axis_tlast_next = 1'b0;
-
 			case(state)
 				ST_SEND_HEADERS: begin
-					m_axis_tdata_next = mem_rdata;
+					m_axis_tdata = mem_rdata;
 
 					if(mem_addr != '0 || enable) begin
 						if(m_axis_tready) begin
@@ -111,12 +95,12 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 							end
 						end
 					end else begin
-						m_axis_tvalid_next = 1'b0;
+						m_axis_tvalid = 1'b0;
 					end
 				end
 
 				ST_SEND_PAYLOAD: begin
-					m_axis_tdata_next = lfsr_val[7:0];
+					m_axis_tdata = lfsr_val[7:0];
 
 					if(m_axis_tready) begin
 						if(count[15:0] == payload_size - 16'd1) begin
@@ -130,15 +114,15 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 
 				ST_SEND_FCS: begin
 					case(count[1:0])
-						2'd0: m_axis_tdata_next = crc32_val[7:0];
-						2'd1: m_axis_tdata_next = crc32_val[15:8];
-						2'd2: m_axis_tdata_next = crc32_val[23:16];
-						2'd3: m_axis_tdata_next = crc32_val[31:24];
+						2'd0: m_axis_tdata = crc32_val[7:0];
+						2'd1: m_axis_tdata = crc32_val[15:8];
+						2'd2: m_axis_tdata = crc32_val[23:16];
+						2'd3: m_axis_tdata = crc32_val[31:24];
 					endcase
 
 					if(m_axis_tready) begin
 						if(count[1:0] == 32'd3) begin
-							m_axis_tlast_next = 1'b1;
+							m_axis_tlast = 1'b1;
 
 							if(frame_delay == 32'd0) begin
 								state_next = ST_SEND_HEADERS;
@@ -153,7 +137,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 				end
 
 				ST_FRAME_DELAY: begin
-					m_axis_tvalid_next = 1'b0;
+					m_axis_tvalid = 1'b0;
 					count_next = count + 32'd1;
 
 					if(count == frame_delay) begin
