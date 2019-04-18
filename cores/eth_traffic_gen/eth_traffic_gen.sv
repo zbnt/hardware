@@ -62,9 +62,9 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 
 	output logic [7:0] ifg_delay
 );
-	logic [31:0] reg_val[0:1];
+	logic [31:0] reg_val[0:2];
 
-	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 2, 2'b11) U0
+	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 3, 3'b111) U0
 	(
 		.s_axi_clk(s_axi_clk),
 		.s_axi_resetn(s_axi_resetn),
@@ -110,6 +110,7 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 		.enable(reg_val[0][0]),
 		.headers_size(reg_val[1][15:0]),
 		.payload_size(reg_val[1][31:16]),
+		.frame_delay(reg_val[2]),
 
 		.mem_addr(mem_b_addr),
 		.mem_rdata(mem_b_rdata),
@@ -120,5 +121,9 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
 	);
+
+	always_comb begin
+		ifg_delay = 8'd0;
+	end
 endmodule
 
