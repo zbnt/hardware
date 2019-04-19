@@ -7,14 +7,11 @@ module axi4_lite_slave_rw #(parameter addr_width = 7)
 
 	output logic write_req,
 	output logic [addr_width-1:0] write_addr,
-	output logic [31:0] write_value,
-	output logic [3:0] write_mask,
 
 	input logic write_ready,
 	input logic write_response,
 
 	output logic read_req,
-	output logic [addr_width-1:0] read_addr,
 
 	input logic read_ready,
 	input logic read_response,
@@ -50,7 +47,6 @@ module axi4_lite_slave_rw #(parameter addr_width = 7)
 		.rst_n(rst_n),
 
 		.read_req(read_req),
-		.read_addr(read_addr),
 
 		.read_ready(read_ready),
 		.read_response(read_response),
@@ -74,8 +70,6 @@ module axi4_lite_slave_rw #(parameter addr_width = 7)
 
 		.write_req(write_req),
 		.write_addr(write_addr),
-		.write_value(write_value),
-		.write_mask(write_mask),
 
 		.write_ready(write_ready),
 		.write_response(write_response),

@@ -6,8 +6,6 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 
 	output logic write_req,
 	output logic [addr_width-1:0] write_addr,
-	output logic [31:0] write_value,
-	output logic [3:0] write_mask,
 
 	input logic write_ready,
 	input logic write_response,
@@ -32,8 +30,6 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 	logic [addr_width-1:0] write_addr_next;
 
 	logic wready_next;
-	logic [31:0] write_value_next;
-	logic [3:0] write_mask_next;
 
 	logic bvalid_next;
 	logic [1:0] bresp_next;
@@ -46,8 +42,6 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 			write_addr <= '0;
 
 			s_axi_wready <= 1'b0;
-			write_value <= 32'd0;
-			write_mask <= 4'd0;
 
 			s_axi_bvalid <= 1'b0;
 			s_axi_bresp <= 2'd0;
@@ -58,8 +52,6 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 			write_addr <= write_addr_next;
 
 			s_axi_wready <= wready_next;
-			write_value <= write_value_next;
-			write_mask <= write_mask_next;
 
 			s_axi_bvalid <= bvalid_next;
 			s_axi_bresp <= bresp_next;
@@ -73,8 +65,6 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 		write_addr_next = write_addr;
 
 		wready_next = s_axi_wready;
-		write_value_next = write_value;
-		write_mask_next = write_mask;
 
 		bvalid_next = s_axi_bvalid;
 		bresp_next = s_axi_bresp;
@@ -98,8 +88,6 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 			ST_W_WAIT_DATA: begin
 				if(s_axi_wvalid) begin
 					state_next = ST_W_RESPONSE;
-					write_value_next = s_axi_wdata;
-					write_mask_next = s_axi_wstrb;
 					wready_next = 1'd0;
 					write_req = 1'b1;
 

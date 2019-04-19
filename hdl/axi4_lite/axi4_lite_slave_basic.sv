@@ -36,9 +36,9 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 );
 	logic read_req, write_req;
 	logic read_response, write_response;
-	logic [addr_width-1:0] read_addr, write_addr;
-	logic [31:0] read_value, write_value;
-	logic [3:0] write_mask;
+	logic [31:0] read_value;
+
+	logic [addr_width-1:0] write_addr;
 
 	axi4_lite_slave_read #(addr_width) U0
 	(
@@ -46,7 +46,6 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 		.rst_n(rst_n),
 
 		.read_req(read_req),
-		.read_addr(read_addr),
 
 		.read_ready(1'b1),
 		.read_response(read_response),
@@ -70,8 +69,6 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 
 		.write_req(write_req),
 		.write_addr(write_addr),
-		.write_value(write_value),
-		.write_mask(write_mask),
 
 		.write_ready(1'b1),
 		.write_response(write_response),

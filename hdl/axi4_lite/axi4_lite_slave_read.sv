@@ -5,7 +5,6 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 	input logic rst_n,
 
 	output logic read_req,
-	output logic [addr_width-1:0] read_addr,
 
 	input logic read_ready,
 	input logic read_response,
@@ -24,7 +23,6 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 	enum logic {ST_R_WAIT_ADDR, ST_R_RESPONSE} state, state_next;
 
 	logic arready_next;
-	logic [addr_width-1:0] read_addr_next;
 
 	logic rvalid_next;
 	logic [31:0] rdata_next;
@@ -35,7 +33,6 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 			state <= ST_R_WAIT_ADDR;
 
 			s_axi_arready <= 1'b0;
-			read_addr <= '0;
 
 			s_axi_rvalid <= 1'b0;
 			s_axi_rdata <= 32'd0;
@@ -44,7 +41,6 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 			state <= state_next;
 
 			s_axi_arready <= arready_next;
-			read_addr <= read_addr_next;
 
 			s_axi_rvalid <= rvalid_next;
 			s_axi_rdata <= rdata_next;
@@ -56,7 +52,6 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 		state_next = state;
 
 		arready_next = s_axi_arready;
-		read_addr_next = read_addr;
 
 		rvalid_next = s_axi_rvalid;
 		rdata_next = s_axi_rdata;
@@ -71,7 +66,6 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 				if(rst_n) begin
 					if(s_axi_arvalid) begin
 						state_next = ST_R_RESPONSE;
-						read_addr_next = s_axi_araddr;
 						arready_next = 1'b0;
 						read_req = 1'b1;
 
