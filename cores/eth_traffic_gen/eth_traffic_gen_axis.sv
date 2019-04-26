@@ -72,7 +72,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 
 					if(mem_addr != '0 || enable) begin
 						if(m_axis_tready) begin
-							if(mem_addr == byte_count - 'd1 || mem_addr == headers_size - 16'd1) begin
+							if(mem_addr >= byte_count - 'd1 || mem_addr >= headers_size - 16'd1) begin
 								mem_addr_next = '0;
 								count_next = 32'd0;
 								state_next = ST_SEND_PAYLOAD;
@@ -89,7 +89,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 					m_axis_tdata = lfsr_val[7:0];
 
 					if(m_axis_tready) begin
-						if(count[15:0] == payload_size - 16'd1) begin
+						if(count[15:0] >= payload_size - 16'd1) begin
 							count_next = 32'd0;
 							m_axis_tlast = 1'b1;
 
@@ -109,7 +109,7 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 					m_axis_tvalid = 1'b0;
 					count_next = count + 32'd1;
 
-					if(count == frame_delay) begin
+					if(count >= frame_delay) begin
 						state_next = ST_SEND_HEADERS;
 					end
 				end
