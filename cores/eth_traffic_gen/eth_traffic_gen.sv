@@ -37,14 +37,21 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 
 	// M_AXIS : AXI4-Stream master interface (to TEMAC)
 
-	input logic m_axis_clk,
-	input logic m_axis_reset,
+	input logic axis_clk,
+	input logic axis_reset,
 
 	output logic [7:0] m_axis_tdata,
 	output logic m_axis_tkeep,
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid,
 	input logic m_axis_tready,
+
+	// S_AXIS : AXI4-Stream slave interface (from FIFO)
+
+	input logic [31:0] s_axis_tdata,
+	input logic s_axis_tlast,
+	input logic s_axis_tvalid,
+	output logic s_axis_tready,
 
 	// MEM_A : Memory port A (read/written by S_AXI)
 
@@ -63,8 +70,10 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 	output logic [7:0] ifg_delay
 );
 	logic [31:0] reg_val[0:2];
+	logic [31:0] frame_delay;
+	logic fifo_trigger;
 
-	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 3, 3'b111) U0
+	eth_traffic_gen_axi #(mem_addr_width, mem_size, 4, 3, 3'b011) U0
 	(
 		.s_axi_clk(s_axi_clk),
 		.s_axi_resetn(s_axi_resetn),
@@ -99,18 +108,20 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 		.mem_a_rdata(mem_a_rdata),
 
 		.reg_val(reg_val),
-		.reg_in(reg_val)
+		.reg_in({reg_val[0:1], frame_delay})
 	);
 
 	eth_traffic_gen_axis #(mem_addr_width, mem_size) U1
 	(
-		.clk(m_axis_clk),
-		.rst(m_axis_reset),
+		.clk(axis_clk),
+		.rst(axis_reset),
+
+		.tx_begin(fifo_trigger),
 
 		.enable(reg_val[0][0]),
 		.headers_size(reg_val[1][15:0]),
 		.payload_size(reg_val[1][31:16]),
-		.frame_delay(reg_val[2]),
+		.frame_delay(frame_delay),
 
 		.mem_addr(mem_b_addr),
 		.mem_rdata(mem_b_rdata),
@@ -120,6 +131,20 @@ module eth_traffic_gen #(parameter mem_addr_width = 6, parameter mem_size = 4)
 		.m_axis_tlast(m_axis_tlast),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
+	);
+
+	eth_traffic_gen_fifo U2
+	(
+		.clk(axis_clk),
+		.rst(axis_reset),
+		.trigger(fifo_trigger),
+
+		.s_axis_tdata(s_axis_tdata),
+		.s_axis_tlast(s_axis_tlast),
+		.s_axis_tvalid(s_axis_tvalid),
+		.s_axis_tready(s_axis_tready),
+
+		.frame_delay(frame_delay)
 	);
 
 	always_comb begin

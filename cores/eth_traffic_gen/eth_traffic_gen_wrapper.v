@@ -37,14 +37,21 @@ module eth_traffic_gen_w #(parameter mem_addr_width = 6, parameter mem_size = 4)
 
 	// M_AXIS : AXI4-Stream master interface (to TEMAC)
 
-	input wire m_axis_clk,
-	input wire m_axis_reset,
+	input wire axis_clk,
+	input wire axis_reset,
 
 	output wire [7:0] m_axis_tdata,
 	output wire m_axis_tkeep,
 	output wire m_axis_tlast,
 	output wire m_axis_tvalid,
 	input wire m_axis_tready,
+
+	// S_AXIS : AXI4-Stream slave interface (from FIFO)
+
+	input wire [31:0] s_axis_tdata,
+	input wire s_axis_tlast,
+	input wire s_axis_tvalid,
+	output wire s_axis_tready,
 
 	// MEM_A : Memory port A (read/written by S_AXI)
 
@@ -95,14 +102,21 @@ module eth_traffic_gen_w #(parameter mem_addr_width = 6, parameter mem_size = 4)
 
 		// M_AXIS
 
-		.m_axis_clk(m_axis_clk),
-		.m_axis_reset(m_axis_reset),
+		.axis_clk(axis_clk),
+		.axis_reset(axis_reset),
 
 		.m_axis_tdata(m_axis_tdata),
 		.m_axis_tkeep(m_axis_tkeep),
 		.m_axis_tlast(m_axis_tlast),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready),
+
+		// S_AXIS
+
+		.s_axis_tdata(s_axis_tdata),
+		.s_axis_tlast(s_axis_tlast),
+		.s_axis_tvalid(s_axis_tvalid),
+		.s_axis_tready(s_axis_tready),
 
 		// MEM_A
 

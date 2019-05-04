@@ -8,10 +8,14 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 (
 	input logic clk,
 	input logic rst,
-	input logic enable,
+
+	// Status
+
+	output logic tx_begin,
 
 	// Config
 
+	input logic enable,
 	input logic [15:0] headers_size,
 	input logic [15:0] payload_size,
 	input logic [31:0] frame_delay,
@@ -65,6 +69,8 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 		m_axis_tkeep = 1'b1;
 		m_axis_tvalid = 1'b1;
 
+		tx_begin = 1'b0;
+
 		if(~rst) begin
 			case(state)
 				ST_SEND_HEADERS: begin
@@ -78,6 +84,10 @@ module eth_traffic_gen_axis #(parameter addr_width = 6, parameter byte_count = 4
 								state_next = ST_SEND_PAYLOAD;
 							end else begin
 								mem_addr_next = mem_addr + 'd1;
+							end
+
+							if(mem_addr == '0) begin
+								tx_begin = 1'b1;
 							end
 						end
 					end else begin
