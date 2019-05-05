@@ -71,7 +71,7 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 
 	// MAIN_RX_STATS : Reception statistics provided by main TEMAC
 
-	input wire [31:0] main_rx_stats_vector,
+	input wire [27:0] main_rx_stats_vector,
 	input wire main_rx_stats_valid,
 
 	// MAIN_TX_STATS : Transmission statistics provided by main TEMAC

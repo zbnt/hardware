@@ -73,7 +73,7 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 
 	// MAIN_RX_STATS : Reception statistics provided by main TEMAC
 
-	input logic [31:0] main_rx_stats_vector,
+	input logic [27:0] main_rx_stats_vector,
 	input logic main_rx_stats_valid,
 
 	// MAIN_TX_STATS : Transmission statistics provided by main TEMAC
