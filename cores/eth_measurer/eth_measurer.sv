@@ -46,12 +46,12 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	// S_AXIS_MAIN : AXI4-Stream slave interface (from TEMAC of main iface)
 
 	input logic s_axis_main_clk,
+	input logic s_axis_main_rst,
 
 	input logic [7:0] s_axis_main_tdata,
 	input logic s_axis_main_tkeep,
 	input logic s_axis_main_tlast,
 	input logic s_axis_main_tvalid,
-	output logic s_axis_main_tready,
 
 	// M_AXIS_LOOP : AXI4-Stream master interface (to TEMAC of loopback iface)
 
@@ -64,12 +64,12 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	// S_AXIS_LOOP : AXI4-Stream slave interface (from TEMAC of loopback iface)
 
 	input logic s_axis_loop_clk,
+	input logic s_axis_loop_rst,
 
 	input logic [7:0] s_axis_loop_tdata,
 	input logic s_axis_loop_tkeep,
 	input logic s_axis_loop_tlast,
 	input logic s_axis_loop_tvalid,
-	output logic s_axis_loop_tready,
 
 	// MAIN_RX_STATS : Reception statistics provided by main TEMAC
 
@@ -185,7 +185,6 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.rst_rx(s_axis_main_rst),
 
 		.rx_end(main_rx_end),
-		.padding_size(psize),
 
 		.rx_bytes(main_rx_bytes),
 		.rx_good(main_rx_good),
@@ -244,7 +243,6 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.rst_rx(s_axis_loop_rst),
 
 		.rx_end(loop_rx_end),
-		.padding_size(psize),
 
 		.rx_bytes(loop_rx_bytes),
 		.rx_good(loop_rx_good),
@@ -272,6 +270,11 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	end
 
 	// statistics collection
+
+	logic [63:0] main_total_tx_bytes, main_total_tx_pings, main_total_tx_good, main_total_tx_bad;
+	logic [63:0] main_total_rx_bytes, main_total_rx_pings, main_total_rx_good, main_total_rx_bad;
+	logic [63:0] loop_total_tx_bytes, loop_total_tx_pings, loop_total_tx_good, loop_total_tx_bad;
+	logic [63:0] loop_total_rx_bytes, loop_total_rx_pings, loop_total_rx_good, loop_total_rx_bad;
 
 	eth_measurer_stats U6
 	(

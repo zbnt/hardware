@@ -13,8 +13,6 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 	input logic rst_rx,
 
 	output logic rx_end,
-	output logic [15:0] padding_size,
-
 	output logic [13:0] rx_bytes,
 	output logic rx_good,
 	output logic rx_bad,
@@ -36,7 +34,7 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 
 	logic valid_frame;
 	logic fifo_full, fifo_empty;
-	logic [32:0] fifo_out;
+	logic [16:0] fifo_out;
 
 	// clk_rx clock domain: reads data from the TEMAC and writes to FIFO
 
@@ -75,7 +73,6 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 	// clk clock domain: reads from the FIFO
 
 	always_comb begin
-		padding_size = 16'd0;
 		rx_end = 1'b0;
 
 		rx_bytes = 14'd0;
@@ -84,7 +81,6 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 
 		if(~rst & ~fifo_empty) begin
 			if(fifo_out[16]) begin
-				padding_size = fifo_out[32:17];
 				rx_end = 1'b1;
 			end
 
@@ -105,7 +101,7 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 		.rst(rst_rx),
 
 		.full(fifo_full),
-		.din({count - 16'd17, valid_frame, rx_stats_vector[18:5], rx_stats_vector[0], rx_stats_valid}),
+		.din({valid_frame, rx_stats_vector[18:5], rx_stats_vector[0], rx_stats_valid}),
 		.wr_en((valid_frame | rx_stats_valid) & ~fifo_full),
 
 		.empty(fifo_empty),

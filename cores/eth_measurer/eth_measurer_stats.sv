@@ -47,7 +47,7 @@ module eth_measurer_stats
 			total_tx_bad <= total_tx_bad + {63'd0, tx_bad};
 
 			total_rx_bytes <= total_rx_bytes + {50'd0, rx_bytes};
-			total_rx_pings <= total_rx_pings + {63'd0, rx_begin};
+			total_rx_pings <= total_rx_pings + {63'd0, rx_end};
 			total_rx_good <= total_rx_good + {63'd0, rx_good};
 			total_rx_bad <= total_rx_bad + {63'd0, rx_bad};
 		end

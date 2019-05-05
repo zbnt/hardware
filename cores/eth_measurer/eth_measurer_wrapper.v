@@ -46,6 +46,7 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 	// S_AXIS_MAIN : AXI4-Stream slave interface (from TEMAC of main iface)
 
 	input wire s_axis_main_clk,
+	input wire s_axis_main_rst,
 
 	input wire [7:0] s_axis_main_tdata,
 	input wire s_axis_main_tkeep,
@@ -63,6 +64,7 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 	// S_AXIS_LOOP : AXI4-Stream slave interface (from TEMAC of loopback iface)
 
 	input wire s_axis_loop_clk,
+	input wire s_axis_loop_rst,
 
 	input wire [7:0] s_axis_loop_tdata,
 	input wire s_axis_loop_tkeep,
@@ -89,7 +91,7 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 	input wire [31:0] loop_tx_stats_vector,
 	input wire loop_tx_stats_valid
 );
-	eth_measurer #(main_mac, loop_mac, identifier) U0
+	eth_measurer #(main_mac, loop_mac, identifier, timeout) U0
 	(
 		// S_AXI
 
@@ -131,12 +133,12 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 		// S_AXIS_MAIN
 
 		.s_axis_main_clk(s_axis_main_clk),
+		.s_axis_main_rst(s_axis_main_rst),
 
 		.s_axis_main_tdata(s_axis_main_tdata),
 		.s_axis_main_tkeep(s_axis_main_tkeep),
 		.s_axis_main_tlast(s_axis_main_tlast),
 		.s_axis_main_tvalid(s_axis_main_tvalid),
-		.s_axis_main_tready(s_axis_main_tready),
 
 		// M_AXIS_LOOP
 
@@ -149,12 +151,12 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 		// S_AXIS_LOOP
 
 		.s_axis_loop_clk(s_axis_loop_clk),
+		.s_axis_loop_rst(s_axis_loop_rst),
 
 		.s_axis_loop_tdata(s_axis_loop_tdata),
 		.s_axis_loop_tkeep(s_axis_loop_tkeep),
 		.s_axis_loop_tlast(s_axis_loop_tlast),
 		.s_axis_loop_tvalid(s_axis_loop_tvalid),
-		.s_axis_loop_tready(s_axis_loop_tready),
 
 		// MAIN_RX_STATS
 

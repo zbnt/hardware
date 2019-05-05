@@ -45,7 +45,11 @@ module eth_measurer_tx #(parameter src_mac, parameter identifier)
 		count_next = count;
 		tx_buffer_next = tx_buffer;
 
+		m_axis_tvalid = 1'b0;
+		m_axis_tdata = 8'd0;
+		m_axis_tlast = 1'b0;
 		m_axis_tkeep = 1'b1;
+
 		tx_begin = (state == ST_SEND_HEADERS && count == 16'd0 && m_axis_tready);
 
 		if(~rst) begin
@@ -100,9 +104,6 @@ module eth_measurer_tx #(parameter src_mac, parameter identifier)
 
 				default: begin
 					state_next = ST_WAIT_TRIGGER;
-					m_axis_tvalid = 1'b0;
-					m_axis_tdata = 8'd0;
-					m_axis_tlast = 1'b0;
 				end
 			endcase
 		end
