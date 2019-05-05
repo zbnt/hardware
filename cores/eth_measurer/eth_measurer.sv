@@ -93,15 +93,22 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 );
 	// axi4_lite registers
 
-	logic [31:0] reg_val[0:2];
+	logic [31:0] reg_val[0:35];
+	logic [31:0] reg_in[0:35];
 
-	axi4_lite_reg_bank #(3, 12, 3'b111) U0
+	logic [63:0] latency;
+	logic [63:0] main_total_tx_bytes, main_total_tx_pings, main_total_tx_good, main_total_tx_bad;
+	logic [63:0] main_total_rx_bytes, main_total_rx_pings, main_total_rx_good, main_total_rx_bad;
+	logic [63:0] loop_total_tx_bytes, loop_total_tx_pings, loop_total_tx_good, loop_total_tx_bad;
+	logic [63:0] loop_total_rx_bytes, loop_total_rx_pings, loop_total_rx_good, loop_total_rx_bad;
+
+	axi4_lite_reg_bank #(36, 12, 36'b11) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
 
 		.reg_val(reg_val),
-		.reg_in(reg_val),
+		.reg_in(reg_in),
 
 		.s_axi_awaddr(s_axi_awaddr),
 		.s_axi_awprot(s_axi_awprot),
@@ -127,6 +134,62 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.s_axi_rvalid(s_axi_rvalid),
 		.s_axi_rready(s_axi_rready)
 	);
+
+	always_comb begin
+		reg_in[0] = {reg_val[0][31:16], 8'd0, reg_val[0][7:0]};
+		reg_in[1] = reg_val[1];
+
+		reg_in[2] = main_total_tx_bytes[31:0];
+		reg_in[3] = main_total_tx_bytes[63:32];
+
+		reg_in[4] = main_total_tx_pings[31:0];
+		reg_in[5] = main_total_tx_pings[63:32];
+
+		reg_in[6] = main_total_tx_good[31:0];
+		reg_in[7] = main_total_tx_good[63:32];
+
+		reg_in[8] = main_total_tx_bad[31:0];
+		reg_in[9] = main_total_tx_bad[63:32];
+
+		reg_in[10] = main_total_rx_bytes[31:0];
+		reg_in[11] = main_total_rx_bytes[63:32];
+
+		reg_in[12] = main_total_rx_pings[31:0];
+		reg_in[13] = main_total_rx_pings[63:32];
+
+		reg_in[14] = main_total_rx_good[31:0];
+		reg_in[15] = main_total_rx_good[63:32];
+
+		reg_in[16] = main_total_rx_bad[31:0];
+		reg_in[17] = main_total_rx_bad[63:32];
+
+		reg_in[18] = loop_total_tx_bytes[31:0];
+		reg_in[19] = loop_total_tx_bytes[63:32];
+
+		reg_in[20] = loop_total_tx_pings[31:0];
+		reg_in[21] = loop_total_tx_pings[63:32];
+
+		reg_in[22] = loop_total_tx_good[31:0];
+		reg_in[23] = loop_total_tx_good[63:32];
+
+		reg_in[24] = loop_total_tx_bad[31:0];
+		reg_in[25] = loop_total_tx_bad[63:32];
+
+		reg_in[26] = loop_total_rx_bytes[31:0];
+		reg_in[27] = loop_total_rx_bytes[63:32];
+
+		reg_in[28] = loop_total_rx_pings[31:0];
+		reg_in[29] = loop_total_rx_pings[63:32];
+
+		reg_in[30] = loop_total_rx_good[31:0];
+		reg_in[31] = loop_total_rx_good[63:32];
+
+		reg_in[32] = loop_total_rx_bad[31:0];
+		reg_in[33] = loop_total_rx_bad[63:32];
+
+		reg_in[34] = latency[31:0];
+		reg_in[35] = latency[63:32];
+	end
 
 	// traffic coordinator
 
@@ -271,11 +334,6 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 
 	// statistics collection
 
-	logic [63:0] main_total_tx_bytes, main_total_tx_pings, main_total_tx_good, main_total_tx_bad;
-	logic [63:0] main_total_rx_bytes, main_total_rx_pings, main_total_rx_good, main_total_rx_bad;
-	logic [63:0] loop_total_tx_bytes, loop_total_tx_pings, loop_total_tx_good, loop_total_tx_bad;
-	logic [63:0] loop_total_rx_bytes, loop_total_rx_pings, loop_total_rx_good, loop_total_rx_bad;
-
 	eth_measurer_stats U6
 	(
 		.clk(s_axi_clk),
@@ -327,5 +385,23 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.total_rx_good(loop_total_rx_good),
 		.total_rx_bad(loop_total_rx_bad)
 	);
-endmodule
 
+	// latency collection
+
+	eth_measurer_timer U8
+	(
+		.clk(s_axi_clk),
+		.rst(~s_axi_resetn),
+
+		.fifo_read(reg_val[0][8]),
+		.fifo_out(latency),
+
+		.main_tx_begin(main_tx_begin),
+		.main_rx_end(main_rx_end),
+		.main_rx_timeout(main_rx_timeout),
+
+		.loop_tx_begin(loop_tx_begin),
+		.loop_rx_end(loop_rx_end),
+		.loop_rx_timeout(loop_rx_timeout)
+	);
+endmodule

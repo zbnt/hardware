@@ -500,6 +500,116 @@
         <spirit:baseAddress spirit:format="long">0</spirit:baseAddress>
         <spirit:range spirit:format="long">4096</spirit:range>
         <spirit:width spirit:format="long">0</spirit:width>
+        <spirit:register>
+          <spirit:name>ENABLE</spirit:name>
+          <spirit:addressOffset>0</spirit:addressOffset>
+          <spirit:size spirit:format="long">8</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>FIFO_POP</spirit:name>
+          <spirit:addressOffset>1</spirit:addressOffset>
+          <spirit:size spirit:format="long">8</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>PADDING_SIZE</spirit:name>
+          <spirit:addressOffset>2</spirit:addressOffset>
+          <spirit:size spirit:format="long">16</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>DELAY_TIME</spirit:name>
+          <spirit:addressOffset>4</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_TX_BYTES</spirit:name>
+          <spirit:addressOffset>8</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_TX_PINGS</spirit:name>
+          <spirit:addressOffset>16</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_TX_GOOD</spirit:name>
+          <spirit:addressOffset>24</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_TX_BAD</spirit:name>
+          <spirit:addressOffset>32</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_RX_BYTES</spirit:name>
+          <spirit:addressOffset>40</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_RX_PINGS</spirit:name>
+          <spirit:addressOffset>48</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_RX_GOOD</spirit:name>
+          <spirit:addressOffset>56</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>MAIN_RX_BAD</spirit:name>
+          <spirit:addressOffset>64</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_TX_BYTES</spirit:name>
+          <spirit:addressOffset>72</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_TX_PINGS</spirit:name>
+          <spirit:addressOffset>80</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_TX_GOOD</spirit:name>
+          <spirit:addressOffset>88</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_TX_BAD</spirit:name>
+          <spirit:addressOffset>96</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_RX_BYTES</spirit:name>
+          <spirit:addressOffset>104</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_RX_PINGS</spirit:name>
+          <spirit:addressOffset>112</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_RX_GOOD</spirit:name>
+          <spirit:addressOffset>120</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LOOP_RX_BAD</spirit:name>
+          <spirit:addressOffset>128</spirit:addressOffset>
+          <spirit:size spirit:format="long">64</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>PING_TIME</spirit:name>
+          <spirit:addressOffset>136</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>PONG_TIME</spirit:name>
+          <spirit:addressOffset>140</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
       </spirit:addressBlock>
     </spirit:memoryMap>
   </spirit:memoryMaps>
@@ -520,7 +630,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>7c55c1d1</spirit:value>
+            <spirit:value>27e2048e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -539,7 +649,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>7c55c1d1</spirit:value>
+            <spirit:value>27e2048e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1349,7 +1459,11 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogsynthesis_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>ip/eth_rx_fifo.xci</spirit:name>
+        <spirit:name>ip/eth_rx_fifo/eth_rx_fifo.xci</spirit:name>
+        <spirit:userFileType>xci</spirit:userFileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>ip/eth_times_fifo/eth_times_fifo.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
@@ -1382,6 +1496,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>src/eth_measurer_stats.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>src/eth_measurer_timer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1411,7 +1529,11 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogbehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>ip/eth_rx_fifo.xci</spirit:name>
+        <spirit:name>ip/eth_rx_fifo/eth_rx_fifo.xci</spirit:name>
+        <spirit:userFileType>xci</spirit:userFileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>ip/eth_times_fifo/eth_times_fifo.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
@@ -1444,6 +1566,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>src/eth_measurer_stats.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>src/eth_measurer_timer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1515,17 +1641,17 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Latency Measurer</xilinx:displayName>
-      <xilinx:coreRevision>6</xilinx:coreRevision>
+      <xilinx:coreRevision>8</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>user.org:user:axi4_lite_tests:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2019-05-05T05:04:28Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-05-05T22:50:34Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="c498d100"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="9c1e3f30"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="2cb25266"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="8e3689a2"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="ef8db577"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="7728709e"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="83605aa5"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="af9a9299"/>

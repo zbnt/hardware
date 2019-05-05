@@ -6,7 +6,6 @@
 		"axi4_lite/axi4_lite_slave_basic",
 		"axi4_lite/axi4_lite_slave_read",
 		"axi4_lite/axi4_lite_slave_write",
-		"register_bank",
-		"counter"
+		"register_bank"
 	]
 }
