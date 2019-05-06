@@ -63,7 +63,7 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 			if(s_axis_tlast) begin
 				count_next = 16'd0;
 
-				if(rx_buffer[143:95] == 48'hFF_FF_FF_FF_FF_FF && rx_buffer[94:46] == src_mac && rx_buffer[31:0] == identifier) begin
+				if(rx_buffer[143:96] == 48'hFF_FF_FF_FF_FF_FF && rx_buffer[95:48] == src_mac && rx_buffer[31:0] == identifier) begin
 					valid_frame = 1'b1;
 				end
 			end

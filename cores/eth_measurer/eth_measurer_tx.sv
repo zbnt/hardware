@@ -68,12 +68,12 @@ module eth_measurer_tx #(parameter src_mac, parameter identifier)
 
 				ST_SEND_HEADERS: begin
 					m_axis_tvalid = 1'b1;
-					m_axis_tdata = tx_buffer[143:135];
+					m_axis_tdata = tx_buffer[143:136];
 					m_axis_tlast = 1'b0;
 
 					if(m_axis_tready) begin
 						count_next = count + 16'd1;
-						tx_buffer_next = {tx_buffer[134:0], 8'd0};
+						tx_buffer_next = {tx_buffer[135:0], 8'd0};
 
 						if(count >= 16'd17) begin
 							count_next = 16'd0;

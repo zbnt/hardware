@@ -60,6 +60,7 @@ module eth_measurer_timer
 				fifo_write_next = 1'b1;
 			end else if(main_rx_end) begin
 				time_pong_next = timer;
+				fifo_write_next = 1'b1;
 			end else if(main_rx_timeout) begin
 				time_pong_next = 32'hFFFFFFFF;
 				fifo_write_next = 1'b1;
