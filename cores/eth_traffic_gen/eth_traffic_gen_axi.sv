@@ -5,18 +5,11 @@
 */
 
 module eth_traffic_gen_axi
-#(
-	parameter mem_addr_width = 6,
-	parameter mem_size = 4,
-	parameter reg_addr_width = 4,
-	parameter num_regs = 2,
-	parameter allow_write = {num_regs{1'b1}}
-)
 (
-	// S_AXI
+	input logic clk,
+	input logic rst_n,
 
-	input logic s_axi_clk,
-	input logic s_axi_resetn,
+	// S_AXI
 
 	input logic [11:0] s_axi_awaddr,
 	input logic [2:0] s_axi_awprot,
@@ -42,38 +35,46 @@ module eth_traffic_gen_axi
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
 
-	// MEM_A
+	// MEM
 
-	output logic [mem_addr_width-1:0] mem_a_addr,
-	output logic [7:0] mem_a_wdata,
-	output logic mem_a_we,
-	input logic [7:0] mem_a_rdata,
+	output logic [10:0] mem_addr,
+	output logic [7:0] mem_wdata,
+	output logic mem_we,
+	input logic [7:0] mem_rdata,
+
+	// FIFOs
+
+	input logic fifo_trigger,
+	output logic fifo_ready,
 
 	// Registers
 
-	output logic [31:0] reg_val[0:num_regs-1],
-	input logic [31:0] reg_in[0:num_regs-1]
+	output logic tx_enable,
+
+	input logic tx_busy,
+	input logic [1:0] tx_state,
+	input logic [10:0] tx_ptr,
+
+	output logic [11:0] headers_size,
+	output logic [15:0] payload_size,
+	output logic [31:0] frame_delay
 );
-	logic read_req, write_req;
+	// Handle AXI4-Lite requests
+
+	logic read_req;
+	logic read_ready;
+	logic read_response;
+	logic [31:0] read_value;
+
+	logic write_req;
+	logic write_ready;
+	logic write_response;
 	logic [11:0] write_addr;
-
-	logic [reg_addr_width-1:0] reg_write_idx;
-	logic [31:0] reg_write_value;
-	logic reg_write_enable;
-
-	logic read_ready, read_ready_next;
-	logic read_response, read_response_next;
-	logic [31:0] read_value, read_value_next;
-
-	logic write_ready, write_ready_next;
-	logic write_response, write_response_next;
-	logic [31:0] write_value, write_value_next;
-	logic [3:0] write_mask, write_mask_next;
 
 	axi4_lite_slave_rw #(12) U0
 	(
-		.clk(s_axi_clk),
-		.rst_n(s_axi_resetn),
+		.clk(clk),
+		.rst_n(rst_n),
 
 		.read_req(read_req),
 
@@ -112,170 +113,172 @@ module eth_traffic_gen_axi
 		.s_axi_rready(s_axi_rready)
 	);
 
-	register_bank #(num_regs, reg_addr_width, allow_write) U1
-	(
-		.clk(s_axi_clk),
-		.write_enable(reg_write_enable),
-		.write_index(reg_write_idx),
-		.write_value(reg_write_value),
-		.reg_in(reg_in),
-		.reg_val(reg_val)
-	);
+	// Read/write registers as requested
 
-	// Handle AXI read/write operations
+	logic fifo_rst;
+	logic frame_delay_src;
+	logic payload_size_src;
 
-	enum logic [1:0] {ST_IDLE, ST_READ_MEM, ST_WRITE_MEM} state, state_next;
-	logic [mem_addr_width-1:0] mem_a_addr_next;
+	logic frame_delay_we;
+	logic payload_size_we;
 
-	always_ff @(posedge s_axi_clk or negedge s_axi_resetn) begin
-		if(~s_axi_resetn) begin
-			state <= ST_IDLE;
-			mem_a_addr <= '0;
+	logic [10:0] frame_delay_avail;
+	logic [10:0] payload_size_avail;
 
-			read_ready <= 1'b0;
-			read_response <= 1'b0;
-			read_value <= 32'd0;
+	logic [31:0] write_mask;
 
-			write_ready <= 1'b0;
-			write_response <= 1'b0;
-			write_value <= 32'd0;
-			write_mask <= 4'd0;
-		end else begin
-			state <= state_next;
-			mem_a_addr <= mem_a_addr_next;
+	logic mem_read_req, mem_write_req;
+	logic mem_read_ready, mem_write_ready;
+	logic mem_read_response, mem_write_response;
+	logic [31:0] mem_read_value;
 
-			read_ready <= read_ready_next;
-			read_response <= read_response_next;
-			read_value <= read_value_next;
+	always_ff @(posedge clk or negedge rst_n) begin
+		if(~rst_n) begin
+			tx_enable <= 1'b0;
+			frame_delay_src <= 1'b0;
+			payload_size_src <= 1'b0;
+			headers_size <= 12'd14;
+		end else if(write_req) begin
+			// TG_CFG and TG_HSIZE work like regular registers.
+			// TG_PSIZE and TG_FDELAY writes are handled in a different way in order to support writing to FIFOs, see eth_traffic_gen_fifo.
+			// DRAM access also works in a special way, see eth_traffic_gen_axi_dram.
 
-			write_ready <= write_ready_next;
-			write_response <= write_response_next;
-			write_value <= write_value_next;
-			write_mask <= write_mask_next;
+			case(write_addr[4:2])
+				3'd0: begin
+					tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
+					frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
+					payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
+				end
+
+				3'd2: begin
+					headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
+				end
+			endcase
 		end
 	end
 
 	always_comb begin
-		state_next = state;
-		mem_a_addr_next = mem_a_addr;
-		mem_a_wdata = 8'd0;
-		mem_a_we = 1'b0;
+		write_mask = {{8{s_axi_wstrb[3]}}, {8{s_axi_wstrb[2]}}, {8{s_axi_wstrb[1]}}, {8{s_axi_wstrb[0]}}};
 
-		read_ready_next = 1'b0;
-		read_response_next = 1'b0;
-		read_value_next = read_value;
+		read_ready = 1'b0;
+		read_response = 1'b0;
+		read_value = 32'd0;
 
-		write_ready_next = 1'b0;
-		write_response_next = 1'b0;
-		write_value_next = write_value;
-		write_mask_next = write_mask;
+		write_ready = 1'b0;
+		write_response = 1'b0;
 
-		reg_write_enable = 1'b0;
-		reg_write_idx = '0;
-		reg_write_value = '0;
+		fifo_rst = 1'b0;
+		frame_delay_we = 1'b0;
+		payload_size_we = 1'b0;
 
-		case(state)
-			ST_IDLE: begin
-				if(s_axi_resetn) begin
-					if(write_req) begin
-						if(write_addr < mem_size) begin
-							state_next = ST_WRITE_MEM;
-							mem_a_addr_next = {write_addr[mem_addr_width-1:2], 2'd0};
-							write_value_next = s_axi_wdata;
-							write_mask_next = s_axi_wstrb;
-						end else if(write_addr[11] == 1'b1 && write_addr[10:2] < num_regs) begin
-							logic [31:0] reg_write_mask;
-							reg_write_mask = {{8{s_axi_wstrb[3]}}, {8{s_axi_wstrb[2]}}, {8{s_axi_wstrb[1]}}, {8{s_axi_wstrb[0]}}};
+		mem_read_req = 1'b0;
+		mem_write_req = 1'b0;
 
-							reg_write_enable = 1'b1;
-							reg_write_idx = write_addr[reg_addr_width+1:2];
-							reg_write_value = reg_val[reg_write_idx] & ~reg_write_mask | s_axi_wdata & reg_write_mask;
+		// Handle read requests
 
-							write_ready_next = 1'b1;
-							write_response_next = 1'b1;
-						end else begin
-							write_ready_next = 1'b1;
-							write_response_next = 1'b0;
-						end
-					end else if(read_req) begin
-						if(s_axi_araddr < mem_size) begin
-							state_next = ST_READ_MEM;
-							mem_a_addr_next = {s_axi_araddr[mem_addr_width-1:2], 2'd0};
-						end else if(s_axi_araddr[11] == 1'b1 && s_axi_araddr[10:2] < num_regs) begin
-							read_ready_next = 1'b1;
-							read_response_next = 1'b1;
-							read_value_next = reg_val[s_axi_araddr[reg_addr_width+1:2]];
+		if(read_req) begin
+			if(s_axi_araddr >= 12'd0 && s_axi_araddr <= 12'd23) begin
+				// Register address
+				read_ready = 1'b1;
+				read_response = 1'b1;
 
-							read_ready_next = 1'b1;
-							read_response_next = 1'b1;
-						end else begin
-							read_ready_next = 1'b1;
-							read_response_next = 1'b0;
-						end
-					end
-				end
-			end
-
-			ST_READ_MEM: begin
-				case(mem_a_addr[1:0])
-					2'b00: read_value_next[7:0] = mem_a_rdata;
-					2'b01: read_value_next[15:8] = mem_a_rdata;
-					2'b10: read_value_next[23:16] = mem_a_rdata;
-					2'b11: read_value_next[31:24] = mem_a_rdata;
+				case(s_axi_araddr[4:2])
+					3'd0: read_value = {28'd0, frame_delay_src, payload_size_src, fifo_rst, tx_enable};
+					3'd1: read_value = {18'd0, tx_ptr, tx_state, tx_busy};
+					3'd2: read_value = {20'd0, headers_size};
+					3'd3: read_value = {16'd0, payload_size};
+					3'd4: read_value = frame_delay;
+					3'd5: read_value = {5'd0, frame_delay_avail, 5'd0, payload_size_avail};
 				endcase
-
-				if(mem_a_addr[1:0] == 2'b11 || mem_a_addr >= mem_size - 'd1) begin
-					state_next = ST_IDLE;
-					read_ready_next = 1'b1;
-					read_response_next = 1'b1;
-				end else begin
-					mem_a_addr_next = mem_a_addr + 'd1;
-				end
+			end else if(s_axi_araddr >= 12'h800) begin
+				// DRAM address, handled by eth_traffic_gen_axi_dram
+				read_ready = mem_read_ready;
+				read_response = mem_read_response;
+				read_value = mem_read_value;
+				mem_read_req = 1'b1;
+			end else begin
+				// Invalid address, mark as error
+				read_ready = 1'b1;
+				read_response = 1'b0;
 			end
+		end
 
-			ST_WRITE_MEM: begin
-				case(mem_a_addr[1:0])
-					2'b00: begin
-						if(write_mask[0]) begin
-							mem_a_wdata = write_value[7:0];
-							mem_a_we = 1'b1;
-						end
-					end
+		// Handle write requests
 
-					2'b01: begin
-						if(write_mask[1]) begin
-							mem_a_wdata = write_value[15:8];
-							mem_a_we = 1'b1;
-						end
-					end
+		if(write_req) begin
+			if(write_addr >= 12'd0 && write_addr <= 12'd23) begin
+				// Register address
+				write_ready = 1'b1;
+				write_response = (write_addr[4:2] != 3'd1 && write_addr[4:2] != 3'd5);
 
-					2'b10: begin
-						if(write_mask[2]) begin
-							mem_a_wdata = write_value[23:16];
-							mem_a_we = 1'b1;
-						end
-					end
-
-					2'b11: begin
-						if(write_mask[3]) begin
-							mem_a_wdata = write_value[31:24];
-							mem_a_we = 1'b1;
-						end
-					end
+				case(write_addr[4:2])
+					3'd0: fifo_rst = s_axi_wdata[1] & write_mask[1];
+					3'd3: frame_delay_we = 1'b1;
+					3'd4: payload_size_we = 1'b1;
 				endcase
-
-				if(mem_a_addr[1:0] == 2'b11 || mem_a_addr >= mem_size - 'd1) begin
-					state_next = ST_IDLE;
-					write_ready_next = 1'b1;
-					write_response_next = 1'b1;
-				end else begin
-					mem_a_addr_next = mem_a_addr + 'd1;
-				end
+			end else if(write_addr >= 12'h800) begin
+				// DRAM address, handled by eth_traffic_gen_axi_dram
+				write_ready = mem_write_ready;
+				write_response = mem_write_response;
+				mem_write_req = 1'b1;
+			end else begin
+				// Invalid address, mark as error
+				write_ready = 1'b1;
+				write_response = 1'b0;
 			end
-
-			default: begin
-				state_next = ST_IDLE;
-			end
-		endcase
+		end
 	end
+
+	// Handle FIFOs
+
+	eth_traffic_gen_fifo U1
+	(
+		.clk(clk),
+		.rst(~rst_n),
+		.fifo_rst(fifo_rst),
+		.trigger(fifo_trigger),
+
+		.ready(fifo_ready),
+
+		.frame_delay_src(frame_delay_src),
+		.frame_delay_wen(frame_delay_we),
+		.frame_delay_req(s_axi_wdata & write_mask),
+		.frame_delay_avail(frame_delay_avail),
+
+		.payload_size_src(payload_size_src),
+		.payload_size_wen(payload_size_we),
+		.payload_size_req(s_axi_wdata[15:0] & write_mask[15:0]),
+		.payload_size_avail(payload_size_avail),
+
+		.frame_delay(frame_delay),
+		.payload_size(payload_size)
+	);
+
+	// Handle DRAM read/write requests
+
+	eth_traffic_gen_axi_dram
+	(
+		.clk(clk),
+		.rst(~rst_n),
+
+		.mem_addr(mem_addr),
+		.mem_wdata(mem_wdata),
+		.mem_we(mem_we),
+		.mem_rdata(mem_rdata),
+
+		.read_req(mem_read_req),
+		.read_addr(s_axi_araddr),
+
+		.read_ready(mem_read_ready),
+		.read_response(mem_read_response),
+		.read_value(mem_read_value),
+
+		.write_req(mem_write_req),
+		.write_addr(write_addr),
+		.write_value(s_axi_wdata),
+		.write_mask(s_axi_wstrb),
+
+		.write_ready(mem_write_ready),
+		.write_response(mem_write_response)
+	);
 endmodule

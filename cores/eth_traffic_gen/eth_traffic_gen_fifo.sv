@@ -8,34 +8,109 @@ module eth_traffic_gen_fifo
 (
 	input logic clk,
 	input logic rst,
+	input logic fifo_rst,
+
 	input logic trigger,
+	output logic ready,
 
-	input logic [31:0] s_axis_tdata,
-	input logic s_axis_tlast,
-	input logic s_axis_tvalid,
-	output logic s_axis_tready,
+	input logic frame_delay_src,
+	input logic frame_delay_wen,
+	input logic [31:0] frame_delay_req,
+	output logic [10:0] frame_delay_avail,
 
-	output logic [31:0] frame_delay
+	input logic payload_size_src,
+	input logic payload_size_wen,
+	input logic [15:0] payload_size_req,
+	output logic [10:0] payload_size_avail,
+
+	output logic [31:0] frame_delay,
+	output logic [15:0] payload_size
 );
-	logic got_delay;
-	logic [31:0] next_delay;
+	logic got_frame_delay, got_payload_size;
+
+	logic tfifo_full, tfifo_empty, tfifo_written, tfifo_read;
+	logic [31:0] tfifo_out;
+
+	logic sfifo_full, sfifo_empty, sfifo_written, sfifo_read;
+	logic [15:0] sfifo_out;
 
 	always_ff @(posedge clk or posedge rst) begin
-		if(rst) begin
-			got_delay <= 1'b0;
-			next_delay <= 32'd0;
+		if(rst | trigger) begin
+			got_frame_delay <= 1'b0;
 			frame_delay <= 32'd0;
-		end else if(trigger) begin
-			got_delay <= 1'b0;
-			next_delay <= 32'd0;
-			frame_delay <= next_delay;
-		end else if(s_axis_tvalid & ~got_delay) begin
-			got_delay <= 1'b1;
-			next_delay <= s_axis_tdata;
+
+			got_payload_size <= 1'b0;
+			payload_size <= 16'd0;
+		end else begin
+			if(tfifo_read | (~frame_delay_src & frame_delay_wen)) begin
+				got_frame_delay <= 1'b1;
+				frame_delay <= tfifo_out;
+			end
+
+			if(sfifo_read | (~payload_size_src & payload_size_wen)) begin
+				got_payload_size <= 1'b1;
+				payload_size <= sfifo_out;
+			end
 		end
 	end
 
 	always_comb begin
-		s_axis_tready = ~got_delay;
+		ready = got_frame_delay & got_payload_size;
 	end
+
+	interframe_times_fifo U0
+	(
+		.clk(clk),
+		.rst(rst | fifo_rst),
+
+		.wr_ack(tfifo_written),
+		.valid(tfifo_read),
+
+		.full(tfifo_full),
+		.din(frame_delay_req),
+		.wr_en(frame_delay_src & frame_delay_wen & ~tfifo_full),
+
+		.empty(tfifo_empty),
+		.dout(tfifo_out),
+		.rd_en(frame_delay_src & ~got_frame_delay)
+	);
+
+	payload_sizes_fifo U1
+	(
+		.clk(clk),
+		.rst(rst | fifo_rst),
+
+		.wr_ack(sfifo_written),
+		.valid(sfifo_read),
+
+		.full(sfifo_full),
+		.din(payload_size_req),
+		.wr_en(payload_size_src & payload_size_wen & ~sfifo_full),
+
+		.empty(sfifo_empty),
+		.dout(sfifo_out),
+		.rd_en(payload_size_src & ~got_payload_size)
+	);
+
+	counter #(11) U2
+	(
+		.clk(clk),
+		.rst(rst | fifo_rst),
+
+		.up(tfifo_written),
+		.down(tfifo_read),
+
+		.count(frame_delay_avail)
+	);
+
+	counter #(11) U3
+	(
+		.clk(clk),
+		.rst(rst | fifo_rst),
+
+		.up(sfifo_written),
+		.down(sfifo_read),
+
+		.count(payload_size_avail)
+	);
 endmodule
