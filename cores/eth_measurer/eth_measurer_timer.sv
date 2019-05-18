@@ -11,6 +11,7 @@ module eth_measurer_timer
 
 	input logic fifo_read,
 	output logic [63:0] fifo_out,
+	output logic [31:0] fifo_len,
 
 	input logic main_tx_begin,
 	input logic main_rx_end,
@@ -20,12 +21,14 @@ module eth_measurer_timer
 	input logic loop_rx_end,
 	input logic loop_rx_timeout
 );
-	logic fifo_full, fifo_empty;
-	logic fifo_write, fifo_write_next;
+	logic fifo_full, fifo_empty, fifo_valid;
+	logic fifo_write, fifo_write_next, fifo_write_ack;
 
 	logic [31:0] timer, timer_next;
 	logic [31:0] time_ping, time_ping_next;
 	logic [31:0] time_pong, time_pong_next;
+	logic [63:0] fifo_value, fifo_out_next;
+	logic [31:0] fifo_len_next;
 
 	always_ff @(posedge clk or posedge rst) begin
 		if(rst) begin
@@ -33,11 +36,15 @@ module eth_measurer_timer
 			time_ping <= 32'd0;
 			time_pong <= 32'd0;
 			fifo_write <= 1'b0;
+			fifo_out <= 64'd0;
+			fifo_len <= 32'd0;
 		end else begin
 			timer <= timer_next;
 			time_ping <= time_ping_next;
 			time_pong <= time_pong_next;
 			fifo_write <= fifo_write_next;
+			fifo_out <= fifo_out_next;
+			fifo_len <= fifo_len_next;
 		end
 	end
 
@@ -46,6 +53,8 @@ module eth_measurer_timer
 		time_ping_next = time_ping;
 		time_pong_next = time_pong;
 		fifo_write_next = 1'b0;
+		fifo_out_next = fifo_out;
+		fifo_len_next = fifo_len;
 
 		if(~rst) begin
 			timer_next = timer + 32'd1;
@@ -65,6 +74,18 @@ module eth_measurer_timer
 				time_pong_next = 32'hFFFFFFFF;
 				fifo_write_next = 1'b1;
 			end
+
+			if(fifo_valid) begin
+				fifo_out_next = fifo_value;
+			end
+
+			if(fifo_write_ack & ~fifo_valid) begin
+				fifo_len_next = fifo_len + 32'd1;
+			end
+
+			if(~fifo_write_ack & fifo_valid) begin
+				fifo_len_next = fifo_len - 32'd1;
+			end
 		end
 	end
 
@@ -76,10 +97,12 @@ module eth_measurer_timer
 		.full(fifo_full),
 		.din({time_pong, time_ping}),
 		.wr_en(fifo_write & ~fifo_full),
+		.wr_ack(fifo_write_ack),
 
 		.empty(fifo_empty),
-		.dout(fifo_out),
-		.rd_en(~fifo_empty & (fifo_read | fifo_full))
+		.dout(fifo_value),
+		.rd_en(~fifo_empty & (fifo_read | fifo_full)),
+		.valid(fifo_valid)
 	);
 endmodule
 

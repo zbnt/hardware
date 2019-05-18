@@ -93,16 +93,18 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 );
 	// axi4_lite registers
 
-	logic [31:0] reg_val[0:35];
-	logic [31:0] reg_in[0:35];
+	logic [31:0] reg_val[0:36];
+	logic [31:0] reg_in[0:36];
 
 	logic [63:0] latency;
+	logic [31:0] latency_fifo_len;
+
 	logic [63:0] main_total_tx_bytes, main_total_tx_pings, main_total_tx_good, main_total_tx_bad;
 	logic [63:0] main_total_rx_bytes, main_total_rx_pings, main_total_rx_good, main_total_rx_bad;
 	logic [63:0] loop_total_tx_bytes, loop_total_tx_pings, loop_total_tx_good, loop_total_tx_bad;
 	logic [63:0] loop_total_rx_bytes, loop_total_rx_pings, loop_total_rx_good, loop_total_rx_bad;
 
-	axi4_lite_reg_bank #(36, 12, 36'b11) U0
+	axi4_lite_reg_bank #(37, 12, 37'b11) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -189,6 +191,8 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 
 		reg_in[34] = latency[31:0];
 		reg_in[35] = latency[63:32];
+
+		reg_in[36] = latency_fifo_len;
 	end
 
 	// traffic coordinator
@@ -395,6 +399,7 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 
 		.fifo_read(reg_val[0][8]),
 		.fifo_out(latency),
+		.fifo_len(latency_fifo_len),
 
 		.main_tx_begin(main_tx_begin),
 		.main_rx_end(main_rx_end),
