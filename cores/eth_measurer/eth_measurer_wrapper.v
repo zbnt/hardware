@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter loop_mac = 48'hDE_AD_BE_EF_01_02, parameter identifier = 32'hCAFECAFE, parameter timeout = 32'd12500000)
+module eth_measurer_w #(parameter main_mac = 48'h7A_65_64_6E_74_6D, parameter loop_mac = 48'h7A_65_64_6E_74_4C, parameter identifier = 32'h50696E47)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -71,27 +71,12 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 	input wire s_axis_loop_tlast,
 	input wire s_axis_loop_tvalid,
 
-	// MAIN_RX_STATS : Reception statistics provided by main TEMAC
+	// Timer
 
-	input wire [27:0] main_rx_stats_vector,
-	input wire main_rx_stats_valid,
-
-	// MAIN_TX_STATS : Transmission statistics provided by main TEMAC
-
-	input wire [31:0] main_tx_stats_vector,
-	input wire main_tx_stats_valid,
-
-	// LOOP_RX_STATS : Reception statistics provided by loopback TEMAC
-
-	input wire [27:0] loop_rx_stats_vector,
-	input wire loop_rx_stats_valid,
-
-	// LOOP_TX_STATS : Transmission statistics provided by loopback TEMAC
-
-	input wire [31:0] loop_tx_stats_vector,
-	input wire loop_tx_stats_valid
+	input wire [63:0] current_time,
+	input wire time_running
 );
-	eth_measurer #(main_mac, loop_mac, identifier, timeout) U0
+	eth_measurer #(main_mac, loop_mac, identifier) U0
 	(
 		// S_AXI
 
@@ -158,25 +143,10 @@ module eth_measurer_w #(parameter main_mac = 48'hDE_AD_BE_EF_01_01, parameter lo
 		.s_axis_loop_tlast(s_axis_loop_tlast),
 		.s_axis_loop_tvalid(s_axis_loop_tvalid),
 
-		// MAIN_RX_STATS
+		// Timer
 
-		.main_rx_stats_vector(main_rx_stats_vector),
-		.main_rx_stats_valid(main_rx_stats_valid),
-
-		// MAIN_TX_STATS
-
-		.main_tx_stats_vector(main_tx_stats_vector),
-		.main_tx_stats_valid(main_tx_stats_valid),
-
-		// LOOP_RX_STATS
-
-		.loop_rx_stats_vector(loop_rx_stats_vector),
-		.loop_rx_stats_valid(loop_rx_stats_valid),
-
-		// LOOP_TX_STATS
-
-		.loop_tx_stats_vector(loop_tx_stats_vector),
-		.loop_tx_stats_valid(loop_tx_stats_valid)
+		.current_time(current_time),
+		.time_running(time_running)
 	);
 endmodule
 

@@ -4,7 +4,143 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifier, parameter timeout)
+/*!
+	\core eth_measurer: Ethernet Latency Measurer
+
+	This module measures the latency between two ethernet interfaces and stores the results in a FIFO.
+	Latency measurement is performed by sending special frames and measuring the time from transmission
+	to arrival on the other network interface. The measurement sequence starts with a _ping_ from the
+	main interface and is followed by a _pong_ from the loopback interface when it receives the previously
+	mentioned _ping_.
+
+	\supports
+		\device zynq Production
+
+	\parameters
+		\int main_mac   : MAC address for the main interface, the one that sends pings.
+		\int loop_mac   : MAC address for the loopback interface, the one that replies to pings with pongs.
+		\int identifier : 32 bits magic constant used to identify ping/pong frames.
+
+	\ports
+		\iface s_axi: Configuration interface from PS.
+			\type AXI4-Lite
+
+			\clk   s_axi_clk
+			\rst_n s_axi_resetn
+
+		\iface m_axis_main: Transmission stream for the main TEMAC.
+			\type AXI4-Stream
+
+			\clk   s_axi_clk
+			\rst_n s_axi_resetn
+
+		\iface m_axis_loop: Transmission stream for the loopback TEMAC.
+			\type AXI4-Stream
+
+			\clk   s_axi_clk
+			\rst_n s_axi_resetn
+
+		\iface s_axis_main: Reception stream for the main TEMAC.
+			\type AXI4-Stream
+
+			\clk   s_axis_main_clk
+			\rst_n s_axis_main_rst
+
+		\iface s_axis_loop: Reception stream for the loopback TEMAC.
+			\type AXI4-Stream
+
+			\clk   s_axis_loop_clk
+			\rst_n s_axis_loop_rst
+
+	\memorymap S_AXI_ADDR
+		\regsize 32
+
+		\reg LM_CFG: Latency measurer configuration register.
+			\access RW
+
+			\field EN     0      Enable statistics collection.
+			\field SRST   1      Software reset, active high, must be set back to 0 again manually.
+
+		\reg LM_PADDING: Frame padding amount.
+			\access RW
+
+			\field PSIZE  0-15  Number of bytes of padding to add to ping/pong frames, must be at least 38.
+
+		\reg LM_DELAY: Delay between ping-pong sequences.
+			\access RW
+
+			\field DELAY  0-31  Number of clock cycles to wait before starting a new ping-pong sequence.
+
+		\reg LM_TIMEOUT: Ping/pong time limit.
+			\access RW
+
+			\field TOUT   0-31   Maximum number of clock cycles to wait for ping/pong reception.
+
+		\reg LM_FIFO_OCCUP: FIFO occupancy.
+			\access RO
+
+			\field FOCCUP 0-15   Number of entries currently stored in the internal FIFO.
+
+		\reg LM_FIFO_POP: Read values from FIFO.
+			\access RW
+
+			\field FPOP   0-31   If set to a value different from 0, read the next set of values from the FIFO and store them in
+			                     the registers. If read, always returns 0.
+
+		\reg LM_TIME_L: Measurement time, lower half.
+			\access RO
+
+			\field TIMEL  0-31   Time at which the latency measurement ended, lower 32 bits.
+
+		\reg LM_TIME_H: Measurement time, upper half.
+			\access RO
+
+			\field TIMEH  0-31   Time at which the latency measurement ended, upper 32 bits.
+
+		\reg LM_PING_LATENCY: Measured ping latency.
+			\access RO
+
+			\field PINGL  0-31   Number of clock cycles elapsed between first byte transmission from main interface and last byte
+			                     reception on loopback interface.
+
+		\reg LM_PONG_LATENCY: Measured pong latency.
+			\access RO
+
+			\field PONGL  0-31   Number of clock cycles elapsed between first byte transmission from loopback interface and last
+			                     byte reception on main interface.
+
+		\reg LM_PP_GOOD_L: Ping-pong sequences completed without error, lower half.
+			\access RO
+
+			\field PPGL   0-31   Number of ping-pongs completed successfully, lower 32 bits.
+
+		\reg LM_PP_GOOD_H: Ping-pong sequences completed without error, upper half.
+			\access RO
+
+			\field PPGH   0-31   Number of ping-pongs completed successfully, upper 32 bits.
+
+		\reg LM_PINGS_LOST_L: Pings not received in time, lower half.
+			\access RO
+
+			\field LPINGL 0-31   Number of pings not received under the maximum time, lower 32 bits.
+
+		\reg LM_PINGS_LOST_H: Pings not received in time, upper half.
+			\access RO
+
+			\field LPINGH 0-31   Number of pings not received under the maximum time, upper 32 bits.
+
+		\reg LM_PONGS_LOST_L: Pongs not received in time, lower half.
+			\access RO
+
+			\field LPONGL 0-31   Number of pongs not received under the maximum time, lower 32 bits.
+
+		\reg LM_PONGS_LOST_H: Pongs not received in time, upper half.
+			\access RO
+
+			\field LPINGH 0-31   Number of pongs not received under the maximum time, upper 32 bits.
+*/
+
+module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifier)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -71,46 +207,22 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	input logic s_axis_loop_tlast,
 	input logic s_axis_loop_tvalid,
 
-	// MAIN_RX_STATS : Reception statistics provided by main TEMAC
+	// Timer
 
-	input logic [27:0] main_rx_stats_vector,
-	input logic main_rx_stats_valid,
-
-	// MAIN_TX_STATS : Transmission statistics provided by main TEMAC
-
-	input logic [31:0] main_tx_stats_vector,
-	input logic main_tx_stats_valid,
-
-	// LOOP_RX_STATS : Reception statistics provided by loopback TEMAC
-
-	input logic [27:0] loop_rx_stats_vector,
-	input logic loop_rx_stats_valid,
-
-	// LOOP_TX_STATS : Transmission statistics provided by loopback TEMAC
-
-	input logic [31:0] loop_tx_stats_vector,
-	input logic loop_tx_stats_valid
+	input logic [63:0] current_time,
+	input logic time_running
 );
 	// axi4_lite registers
 
-	logic [31:0] reg_val[0:36];
-	logic [31:0] reg_in[0:36];
+	logic enable, srst, ping_pong_done;
+	logic [15:0] padding_req;
+	logic [31:0] delay, timeout, ping_time, pong_time;
+	logic [63:0] ping_pongs_good, pings_lost, pongs_lost;
 
-	logic [63:0] latency;
-	logic [31:0] latency_fifo_len;
-
-	logic [63:0] main_total_tx_bytes, main_total_tx_pings, main_total_tx_good, main_total_tx_bad;
-	logic [63:0] main_total_rx_bytes, main_total_rx_pings, main_total_rx_good, main_total_rx_bad;
-	logic [63:0] loop_total_tx_bytes, loop_total_tx_pings, loop_total_tx_good, loop_total_tx_bad;
-	logic [63:0] loop_total_rx_bytes, loop_total_rx_pings, loop_total_rx_good, loop_total_rx_bad;
-
-	axi4_lite_reg_bank #(37, 12, 37'b11) U0
+	eth_measurer_axi U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
-
-		.reg_val(reg_val),
-		.reg_in(reg_in),
 
 		.s_axi_awaddr(s_axi_awaddr),
 		.s_axi_awprot(s_axi_awprot),
@@ -134,97 +246,60 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.s_axi_rdata(s_axi_rdata),
 		.s_axi_rresp(s_axi_rresp),
 		.s_axi_rvalid(s_axi_rvalid),
-		.s_axi_rready(s_axi_rready)
+		.s_axi_rready(s_axi_rready),
+
+		.enable(enable),
+		.srst(srst),
+		.padding(padding_req),
+		.delay(delay),
+		.timeout(timeout),
+
+		.current_time(current_time),
+
+		.ping_pong_done(ping_pong_done),
+		.ping_time(ping_time),
+		.pong_time(pong_time),
+		.ping_pongs_good(ping_pongs_good),
+		.pings_lost(pings_lost),
+		.pongs_lost(pongs_lost)
 	);
-
-	always_comb begin
-		reg_in[0] = {reg_val[0][31:16], 8'd0, reg_val[0][7:0]};
-		reg_in[1] = reg_val[1];
-
-		reg_in[2] = main_total_tx_bytes[31:0];
-		reg_in[3] = main_total_tx_bytes[63:32];
-
-		reg_in[4] = main_total_tx_pings[31:0];
-		reg_in[5] = main_total_tx_pings[63:32];
-
-		reg_in[6] = main_total_tx_good[31:0];
-		reg_in[7] = main_total_tx_good[63:32];
-
-		reg_in[8] = main_total_tx_bad[31:0];
-		reg_in[9] = main_total_tx_bad[63:32];
-
-		reg_in[10] = main_total_rx_bytes[31:0];
-		reg_in[11] = main_total_rx_bytes[63:32];
-
-		reg_in[12] = main_total_rx_pings[31:0];
-		reg_in[13] = main_total_rx_pings[63:32];
-
-		reg_in[14] = main_total_rx_good[31:0];
-		reg_in[15] = main_total_rx_good[63:32];
-
-		reg_in[16] = main_total_rx_bad[31:0];
-		reg_in[17] = main_total_rx_bad[63:32];
-
-		reg_in[18] = loop_total_tx_bytes[31:0];
-		reg_in[19] = loop_total_tx_bytes[63:32];
-
-		reg_in[20] = loop_total_tx_pings[31:0];
-		reg_in[21] = loop_total_tx_pings[63:32];
-
-		reg_in[22] = loop_total_tx_good[31:0];
-		reg_in[23] = loop_total_tx_good[63:32];
-
-		reg_in[24] = loop_total_tx_bad[31:0];
-		reg_in[25] = loop_total_tx_bad[63:32];
-
-		reg_in[26] = loop_total_rx_bytes[31:0];
-		reg_in[27] = loop_total_rx_bytes[63:32];
-
-		reg_in[28] = loop_total_rx_pings[31:0];
-		reg_in[29] = loop_total_rx_pings[63:32];
-
-		reg_in[30] = loop_total_rx_good[31:0];
-		reg_in[31] = loop_total_rx_good[63:32];
-
-		reg_in[32] = loop_total_rx_bad[31:0];
-		reg_in[33] = loop_total_rx_bad[63:32];
-
-		reg_in[34] = latency[31:0];
-		reg_in[35] = latency[63:32];
-
-		reg_in[36] = latency_fifo_len;
-	end
 
 	// traffic coordinator
 
-	logic main_tx_trigger, main_tx_begin, main_rx_end, main_rx_timeout;
-	logic loop_tx_trigger, loop_tx_begin, loop_rx_end, loop_rx_timeout;
+	logic main_tx_trigger, loop_tx_trigger, main_tx_begin, loop_tx_begin;
+	logic [63:0] ping_id, main_rx_ping_id, loop_rx_ping_id;
 	logic [15:0] psize;
 
-	eth_measurer_coord #(timeout) U1
+	eth_measurer_coord U1
 	(
 		.clk(s_axi_clk),
-		.rst(~s_axi_resetn),
-		.enable(reg_val[0][0]),
+		.rst(~s_axi_resetn | srst),
+		.enable(enable & time_running),
 
-		.psize_req(reg_val[0][31:16]),
-		.delay_time(reg_val[1]),
-
-		.main_rx_end(main_rx_end),
-		.loop_rx_end(loop_rx_end),
+		.psize_req(padding_req),
+		.delay_time(delay),
+		.timeout(timeout),
 
 		.psize(psize),
+
+		.ping_id(ping_id),
+		.main_rx_ping_id(main_rx_ping_id),
+		.loop_rx_ping_id(loop_rx_ping_id),
+
 		.main_tx_trigger(main_tx_trigger),
 		.loop_tx_trigger(loop_tx_trigger),
-		.main_rx_timeout(main_rx_timeout),
-		.loop_rx_timeout(loop_rx_timeout)
+		.main_tx_begin(main_tx_begin),
+		.loop_tx_begin(loop_tx_begin),
+
+		.done(ping_pong_done),
+		.ping_time(ping_time),
+		.pong_time(pong_time),
+		.ping_pongs_good(ping_pongs_good),
+		.pings_lost(pings_lost),
+		.pongs_lost(pongs_lost)
 	);
 
 	// main eth interface
-
-	logic main_tx_good, main_tx_bad;
-	logic main_rx_good, main_rx_bad;
-	logic [13:0] main_tx_bytes, main_rx_bytes;
 
 	eth_measurer_tx #(main_mac, identifier) U2
 	(
@@ -235,6 +310,7 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.tx_begin(main_tx_begin),
 
 		.padding_size(psize),
+		.ping_id(ping_id),
 
 		.m_axis_tdata(m_axis_main_tdata),
 		.m_axis_tkeep(m_axis_main_tkeep),
@@ -246,43 +322,18 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	eth_measurer_rx #(loop_mac, identifier) U3
 	(
 		.clk(s_axi_clk),
-		.rst(~s_axi_resetn),
-
 		.clk_rx(s_axis_main_clk),
 		.rst_rx(s_axis_main_rst),
 
-		.rx_end(main_rx_end),
-
-		.rx_bytes(main_rx_bytes),
-		.rx_good(main_rx_good),
-		.rx_bad(main_rx_bad),
+		.ping_id(main_rx_ping_id),
 
 		.s_axis_tdata(s_axis_main_tdata),
 		.s_axis_tkeep(s_axis_main_tkeep),
 		.s_axis_tlast(s_axis_main_tlast),
-		.s_axis_tvalid(s_axis_main_tvalid),
-
-		.rx_stats_vector(main_rx_stats_vector),
-		.rx_stats_valid(main_rx_stats_valid)
+		.s_axis_tvalid(s_axis_main_tvalid)
 	);
 
-	always_comb begin
-		if(s_axi_resetn & main_tx_stats_valid) begin
-			main_tx_bytes = main_tx_stats_vector[18:5];
-			main_tx_good = main_tx_stats_vector[0];
-			main_tx_bad = ~main_tx_stats_vector[0];
-		end else begin
-			main_tx_bytes = 14'd0;
-			main_tx_good = 1'b0;
-			main_tx_bad = 1'b0;
-		end
-	end
-
 	// loopback eth interface
-
-	logic loop_tx_good, loop_tx_bad;
-	logic loop_rx_good, loop_rx_bad;
-	logic [13:0] loop_tx_bytes, loop_rx_bytes;
 
 	eth_measurer_tx #(loop_mac, identifier) U4
 	(
@@ -293,6 +344,7 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 		.tx_begin(loop_tx_begin),
 
 		.padding_size(psize),
+		.ping_id(ping_id),
 
 		.m_axis_tdata(m_axis_loop_tdata),
 		.m_axis_tkeep(m_axis_loop_tkeep),
@@ -304,109 +356,14 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	eth_measurer_rx #(main_mac, identifier) U5
 	(
 		.clk(s_axi_clk),
-		.rst(~s_axi_resetn),
-
 		.clk_rx(s_axis_loop_clk),
 		.rst_rx(s_axis_loop_rst),
 
-		.rx_end(loop_rx_end),
-
-		.rx_bytes(loop_rx_bytes),
-		.rx_good(loop_rx_good),
-		.rx_bad(loop_rx_bad),
+		.ping_id(loop_rx_ping_id),
 
 		.s_axis_tdata(s_axis_loop_tdata),
 		.s_axis_tkeep(s_axis_loop_tkeep),
 		.s_axis_tlast(s_axis_loop_tlast),
-		.s_axis_tvalid(s_axis_loop_tvalid),
-
-		.rx_stats_vector(loop_rx_stats_vector),
-		.rx_stats_valid(loop_rx_stats_valid)
-	);
-
-	always_comb begin
-		if(s_axi_resetn & loop_tx_stats_valid) begin
-			loop_tx_bytes = loop_tx_stats_vector[18:5];
-			loop_tx_good = loop_tx_stats_vector[0];
-			loop_tx_bad = ~loop_tx_stats_vector[0];
-		end else begin
-			loop_tx_bytes = 14'd0;
-			loop_tx_good = 1'b0;
-			loop_tx_bad = 1'b0;
-		end
-	end
-
-	// statistics collection
-
-	eth_measurer_stats U6
-	(
-		.clk(s_axi_clk),
-		.rst(~s_axi_resetn),
-
-		.tx_begin(main_tx_begin),
-		.tx_bytes(main_tx_bytes),
-		.tx_good(main_tx_good),
-		.tx_bad(main_tx_bad),
-
-		.rx_end(main_rx_end),
-		.rx_bytes(main_rx_bytes),
-		.rx_good(main_rx_good),
-		.rx_bad(main_rx_bad),
-
-		.total_tx_bytes(main_total_tx_bytes),
-		.total_tx_pings(main_total_tx_pings),
-		.total_tx_good(main_total_tx_good),
-		.total_tx_bad(main_total_tx_bad),
-
-		.total_rx_bytes(main_total_rx_bytes),
-		.total_rx_pings(main_total_rx_pings),
-		.total_rx_good(main_total_rx_good),
-		.total_rx_bad(main_total_rx_bad)
-	);
-
-	eth_measurer_stats U7
-	(
-		.clk(s_axi_clk),
-		.rst(~s_axi_resetn),
-
-		.tx_begin(loop_tx_begin),
-		.tx_bytes(loop_tx_bytes),
-		.tx_good(loop_tx_good),
-		.tx_bad(loop_tx_bad),
-
-		.rx_end(loop_rx_end),
-		.rx_bytes(loop_rx_bytes),
-		.rx_good(loop_rx_good),
-		.rx_bad(loop_rx_bad),
-
-		.total_tx_bytes(loop_total_tx_bytes),
-		.total_tx_pings(loop_total_tx_pings),
-		.total_tx_good(loop_total_tx_good),
-		.total_tx_bad(loop_total_tx_bad),
-
-		.total_rx_bytes(loop_total_rx_bytes),
-		.total_rx_pings(loop_total_rx_pings),
-		.total_rx_good(loop_total_rx_good),
-		.total_rx_bad(loop_total_rx_bad)
-	);
-
-	// latency collection
-
-	eth_measurer_timer U8
-	(
-		.clk(s_axi_clk),
-		.rst(~s_axi_resetn),
-
-		.fifo_read(reg_val[0][8]),
-		.fifo_out(latency),
-		.fifo_len(latency_fifo_len),
-
-		.main_tx_begin(main_tx_begin),
-		.main_rx_end(main_rx_end),
-		.main_rx_timeout(main_rx_timeout),
-
-		.loop_tx_begin(loop_tx_begin),
-		.loop_rx_end(loop_rx_end),
-		.loop_rx_timeout(loop_rx_timeout)
+		.s_axis_tvalid(s_axis_loop_tvalid)
 	);
 endmodule

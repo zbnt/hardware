@@ -2,10 +2,10 @@
 	"version": "1.0",
 
 	"imports": [
-		"axi4_lite/axi4_lite_reg_bank",
-		"axi4_lite/axi4_lite_slave_basic",
+		"axi4_lite/axi4_lite_slave_rw",
 		"axi4_lite/axi4_lite_slave_read",
 		"axi4_lite/axi4_lite_slave_write",
-		"register_bank"
+		"sync_ffs",
+		"counter"
 	]
 }
