@@ -19,7 +19,7 @@
 		\iface s_axi: Configuration interface from PS.
 			\type AXI4-Lite
 
-			\clk  s_axi_clk
+			\clk   s_axi_clk
 			\rst_n s_axi_resetn
 
 		\iface m_axis: Data stream to MAC.
