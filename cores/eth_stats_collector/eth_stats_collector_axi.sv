@@ -109,7 +109,7 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 	logic [31:0] write_mask;
 	logic [63:0] time_reg, tx_bytes_reg, tx_good_reg, tx_bad_reg, rx_bytes_reg, rx_good_reg, rx_bad_reg;
 
-	logic fifo_read, fifo_written, fifo_full, fifo_empty, fifo_pop;
+	logic fifo_read, fifo_written, fifo_full, fifo_empty, fifo_pop, fifo_busy;
 	logic [15:0] fifo_occupancy;
 	logic [447:0] fifo_out;
 	logic [63:0] fifo_time, fifo_tx_bytes, fifo_tx_good, fifo_tx_bad, fifo_rx_bytes, fifo_rx_good, fifo_rx_bad;
@@ -128,6 +128,9 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 			rx_good_reg <= 64'd0;
 			rx_bad_reg <= 64'd0;
 
+			fifo_pop <= 1'b0;
+			fifo_busy <= 1'b0;
+
 			fifo_time <= 64'd0;
 			fifo_tx_bytes <= 64'd0;
 			fifo_tx_good <= 64'd0;
@@ -139,7 +142,6 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 			// Write to config bits if requested via AXI
 			if(write_req && write_addr[11:2] == 10'd0) begin
 				enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-				srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 				hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
 			end
 
@@ -154,6 +156,19 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 				rx_bad_reg <= rx_bad;
 			end
 
+			if(write_req && write_addr[11:2] == 10'd2 && ~fifo_busy) begin
+				// Special FIFO_POP register
+				fifo_pop <= 1'b1;
+				fifo_busy <= 1'b1;
+			end else begin
+				fifo_pop <= 1'b0;
+			end
+
+			if(~write_req) begin
+				fifo_pop <= 1'b0;
+				fifo_busy <= 1'b0;
+			end
+
 			if(fifo_read) begin
 				fifo_time <= fifo_out[447:384];
 				fifo_tx_bytes <= fifo_out[383:320];
@@ -163,6 +178,11 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 				fifo_rx_good <= fifo_out[127:64];
 				fifo_rx_bad <= fifo_out[63:0];
 			end
+		end
+
+		// SRST must be writable even after it has been set to 1
+		if(rst_n & write_req && write_addr[11:2] == 10'd0) begin
+			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
 
@@ -176,7 +196,6 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 		write_ready = 1'b0;
 		write_response = 1'b0;
 
-		fifo_pop = 1'b0;
 		stats_changed = (tx_bytes != tx_bytes_reg || tx_good != tx_good_reg || tx_bad != tx_bad_reg || rx_bytes != rx_bytes_reg || rx_good != rx_good_reg || rx_bad != rx_bad_reg);
 
 		// Handle read requests
@@ -222,9 +241,6 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 				write_ready = 1'b1;
 				write_response = 1'b1;
 			end else if(write_addr[11:2] == 10'd2) begin
-				// Special FIFO_POP register
-				fifo_pop = 1'b1;
-
 				// Avoid trouble, make the CPU wait until the FIFO has been read
 				// Mark as error if the FIFO is empty
 				// Mark as success if FIFO is disabled.
