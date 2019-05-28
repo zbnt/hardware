@@ -36,8 +36,8 @@
 
 			\field EN     0      Enable traffic generation.
 			\field FRST   1      Reset internal FIFOs.
-			\field FDSRC  2      Frame delay source.
-			\field PSSRC  3      Payload size source.
+			\field FDSRC  2      Frame delay source, see {TG_FDELAY}.
+			\field PSSRC  3      Payload size source, see {TG_PSIZE}.
 
 		\reg TG_STATUS: TGen status register.
 			\access RO
@@ -54,12 +54,16 @@
 		\reg TG_FDELAY: Sleep time after frame transmission.
 			\access RW
 
-			\field FDELAY 0-31   Number of clock cycles to wait before starting to send the next frame.
+			\field FDELAY 0-31   Number of clock cycles to wait before starting to send the next frame. If {FDSRC} is
+			                     set to 0, values written to this register will be effective starting from the next
+			                     frame, otherwise the written value will be pushed into a FIFO.
 
 		\reg TG_PSIZE: Frame payload size.
 			\access RW
 
-			\field PSIZE  0-15   Number of pseudo-random bytes to send.
+			\field PSIZE  0-15   Number of pseudo-random bytes to send. If {PSSRC} is set to 0, values written to this
+			                     register will be effective starting from the next frame, otherwise the written value
+			                     will be pushed into a FIFO.
 
 		\reg TG_FIFO_OCCUP: FIFO occupancy.
 			\access RO

@@ -132,7 +132,7 @@ module eth_traffic_gen_axi
 	logic mem_read_response, mem_write_response;
 	logic [31:0] mem_read_value;
 
-	always_ff @(posedge clk or negedge rst_n) begin
+	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			tx_enable <= 1'b0;
 			frame_delay_src <= 1'b0;
@@ -186,8 +186,8 @@ module eth_traffic_gen_axi
 					3'd0: read_value = {28'd0, frame_delay_src, payload_size_src, fifo_rst, tx_enable};
 					3'd1: read_value = {18'd0, tx_ptr, tx_state, tx_busy};
 					3'd2: read_value = {20'd0, headers_size};
-					3'd3: read_value = {16'd0, payload_size};
-					3'd4: read_value = frame_delay;
+					3'd3: read_value = frame_delay;
+					3'd4: read_value = {16'd0, payload_size};
 					3'd5: read_value = {5'd0, frame_delay_avail, 5'd0, payload_size_avail};
 				endcase
 			end else if(s_axi_araddr >= 12'h800) begin

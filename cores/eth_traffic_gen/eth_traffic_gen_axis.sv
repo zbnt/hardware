@@ -54,7 +54,7 @@ module eth_traffic_gen_axis
 		.value(lfsr_val)
 	);
 
-	always_ff @(posedge clk or posedge rst) begin
+	always_ff @(posedge clk) begin
 		if(rst) begin
 			state <= ST_SEND_HEADERS;
 			count <= 32'd0;

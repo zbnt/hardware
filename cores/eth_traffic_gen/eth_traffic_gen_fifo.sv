@@ -34,20 +34,36 @@ module eth_traffic_gen_fifo
 	logic sfifo_full, sfifo_empty, sfifo_written, sfifo_read;
 	logic [15:0] sfifo_out;
 
-	always_ff @(posedge clk or posedge rst) begin
-		if(rst | trigger) begin
+	always_ff @(posedge clk) begin
+		if(rst) begin
 			got_frame_delay <= 1'b0;
 			frame_delay <= 32'd0;
 
 			got_payload_size <= 1'b0;
 			payload_size <= 16'd0;
 		end else begin
-			if(tfifo_read | (~frame_delay_src & frame_delay_wen)) begin
+			if(~frame_delay_src) begin
+				if(frame_delay_wen) begin
+					got_frame_delay <= 1'b1;
+					frame_delay <= frame_delay_req;
+				end
+			end else if(trigger) begin
+				got_frame_delay <= 1'b0;
+				frame_delay <= 32'd0;
+			end else if(tfifo_read) begin
 				got_frame_delay <= 1'b1;
 				frame_delay <= tfifo_out;
 			end
 
-			if(sfifo_read | (~payload_size_src & payload_size_wen)) begin
+			if(~payload_size_src) begin
+				if(payload_size_wen) begin
+					got_payload_size <= 1'b1;
+					payload_size <= frame_delay_req;
+				end
+			end else if(trigger) begin
+				got_payload_size <= 1'b0;
+				payload_size <= 32'd0;
+			end else if(sfifo_read) begin
 				got_payload_size <= 1'b1;
 				payload_size <= sfifo_out;
 			end
