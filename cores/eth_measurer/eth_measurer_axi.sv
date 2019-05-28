@@ -110,7 +110,7 @@ module eth_measurer_axi
 
 	logic [31:0] write_mask;
 
-	logic fifo_read, fifo_written, fifo_full, fifo_empty, fifo_pop;
+	logic fifo_read, fifo_written, fifo_full, fifo_empty, fifo_pop, fifo_busy;
 	logic [15:0] fifo_occupancy;
 	logic [319:0] fifo_out;
 	logic [63:0] fifo_time, fifo_ping_time, fifo_pong_time, fifo_ping_pongs_good, fifo_pings_lost, fifo_pongs_lost;
@@ -121,6 +121,9 @@ module eth_measurer_axi
 			srst <= srst & rst_n;
 			padding <= 16'd38;
 
+			fifo_pop <= 1'b0;
+			fifo_busy <= 1'b0;
+
 			fifo_time <= 64'd0;
 			fifo_ping_time <= 32'd0;
 			fifo_pong_time <= 32'd0;
@@ -129,11 +132,10 @@ module eth_measurer_axi
 			fifo_pongs_lost <= 64'd0;
 		end else begin
 			// Write to config bits if requested via AXI
-			if(write_req && write_addr[11:4] == 10'd0) begin
+			if(write_req && write_addr[11:4] == 8'd0) begin
 				case(write_addr[3:2])
 					2'd0: begin
 						enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-						srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 					end
 
 					2'd1: begin
@@ -150,6 +152,19 @@ module eth_measurer_axi
 				endcase
 			end
 
+			if(write_req && write_addr[11:2] == 10'd5 && ~fifo_busy) begin
+				// Special FIFO_POP register
+				fifo_pop <= 1'b1;
+				fifo_busy <= 1'b1;
+			end else begin
+				fifo_pop <= 1'b0;
+			end
+
+			if(~write_req) begin
+				fifo_pop <= 1'b0;
+				fifo_busy <= 1'b0;
+			end
+
 			if(fifo_read) begin
 				fifo_time <= fifo_out[319:256];
 				fifo_ping_time <= fifo_out[255:224];
@@ -158,6 +173,11 @@ module eth_measurer_axi
 				fifo_pings_lost <= fifo_out[127:64];
 				fifo_pongs_lost <= fifo_out[63:0];
 			end
+		end
+
+		// SRST must be writable even after it has been set to 1
+		if(rst_n & write_req && write_addr[11:2] == 10'd0) begin
+			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
 
@@ -170,8 +190,6 @@ module eth_measurer_axi
 
 		write_ready = 1'b0;
 		write_response = 1'b0;
-
-		fifo_pop = 1'b0;
 
 		// Handle read requests
 
@@ -214,9 +232,6 @@ module eth_measurer_axi
 				write_ready = 1'b1;
 				write_response = 1'b1;
 			end else if(write_addr[11:2] == 10'd5) begin
-				// Special FIFO_POP register
-				fifo_pop = 1'b1;
-
 				// Avoid trouble, make the CPU wait until the FIFO has been read
 				// Mark as error if the FIFO is empty
 				write_ready = fifo_empty | fifo_read;

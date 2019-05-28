@@ -58,7 +58,7 @@
 		\reg LM_CFG: Latency measurer configuration register.
 			\access RW
 
-			\field EN     0      Enable statistics collection.
+			\field EN     0      Enable latency measurement.
 			\field SRST   1      Software reset, active high, must be set back to 0 again manually.
 
 		\reg LM_PADDING: Frame padding amount.
