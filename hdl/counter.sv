@@ -9,7 +9,7 @@ module counter #(parameter width = 32)
 
 	output logic [width-1:0] count
 );
-	always_ff @(posedge clk or posedge rst) begin
+	always_ff @(posedge clk) begin
 		if(rst) begin
 			count <= '0;
 		end else begin
