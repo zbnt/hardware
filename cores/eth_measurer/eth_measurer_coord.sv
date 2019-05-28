@@ -65,8 +65,8 @@ module eth_measurer_coord
 			pong_time <= pong_time_next;
 
 			ping_pongs_good <= ping_pongs_good_next;
-			pings_lost <= pings_lost;
-			pongs_lost <= pongs_lost;
+			pings_lost <= pings_lost_next;
+			pongs_lost <= pongs_lost_next;
 		end
 	end
 
