@@ -233,9 +233,14 @@ module eth_measurer_axi
 				write_response = 1'b1;
 			end else if(write_addr[11:2] == 10'd5) begin
 				// Avoid trouble, make the CPU wait until the FIFO has been read
-				// Mark as error if the FIFO is empty
-				write_ready = fifo_empty | fifo_read;
-				write_response = ~fifo_empty | fifo_read;
+				// Do nothing if the FIFO is empty
+				if(~fifo_empty) begin
+					write_ready = fifo_read;
+					write_response = 1'b1;
+				end else begin
+					write_ready = 1'b1;
+					write_response = 1'b1;
+				end
 			end else begin
 				// Invalid address, mark as error
 				write_ready = 1'b1;
