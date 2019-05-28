@@ -242,10 +242,14 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 				write_response = 1'b1;
 			end else if(write_addr[11:2] == 10'd2) begin
 				// Avoid trouble, make the CPU wait until the FIFO has been read
-				// Mark as error if the FIFO is empty
-				// Mark as success if FIFO is disabled.
-				write_ready = ~use_fifo | fifo_empty | fifo_read;
-				write_response = ~use_fifo | ~fifo_empty | fifo_read;
+				// Do nothing if FIFO is empty or disabled.
+				if(use_fifo & ~fifo_empty) begin
+					write_ready = fifo_read;
+					write_response = 1'b1;
+				end else begin
+					write_ready = 1'b1;
+					write_response = 1'b1;
+				end
 			end else begin
 				// Invalid address, mark as error
 				write_ready = 1'b1;
