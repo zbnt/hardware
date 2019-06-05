@@ -143,17 +143,19 @@ module eth_traffic_gen_axi
 			// TG_PSIZE and TG_FDELAY writes are handled in a different way in order to support writing to FIFOs, see eth_traffic_gen_fifo.
 			// DRAM access also works in a special way, see eth_traffic_gen_axi_dram.
 
-			case(write_addr[4:2])
-				3'd0: begin
-					tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
-					frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
-					payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
-				end
+			if(write_addr >= 12'd0 && write_addr <= 12'd23) begin
+				case(write_addr[4:2])
+					3'd0: begin
+						tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
+						frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
+						payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
+					end
 
-				3'd2: begin
-					headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
-				end
-			endcase
+					3'd2: begin
+						headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
+					end
+				endcase
+			end
 		end
 	end
 
@@ -184,7 +186,7 @@ module eth_traffic_gen_axi
 
 				case(s_axi_araddr[4:2])
 					3'd0: read_value = {28'd0, frame_delay_src, payload_size_src, fifo_rst, tx_enable};
-					3'd1: read_value = {18'd0, tx_ptr, tx_state, tx_busy};
+					3'd1: read_value = {17'd0, fifo_ready, tx_ptr, tx_state, tx_busy};
 					3'd2: read_value = {20'd0, headers_size};
 					3'd3: read_value = frame_delay;
 					3'd4: read_value = {16'd0, payload_size};
