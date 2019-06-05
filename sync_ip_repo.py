@@ -28,6 +28,24 @@ def scan_modules(path):
 		if os.path.isdir(full_path):
 			scan_modules(full_path)
 
+def sync_files(file_a, file_b, bidir=True):
+	time_a = os.path.getmtime(file_a) if os.path.exists(file_a) else -1
+	time_b = os.path.getmtime(file_b) if os.path.exists(file_b) else -1
+
+	if time_a == -1 and time_b == -1:
+		return -1
+
+	if time_a > time_b:
+		print("\t-", file_a, "=>", file_b)
+		shutil.copy2(file_a, file_b)
+		return 1
+	elif time_a < time_b and bidir:
+		print("\t-", file_b, "=>", file_a)
+		shutil.copy2(file_b, file_a)
+		return 2
+
+	return 0
+
 scan_modules("hdl")
 
 if not os.path.exists("ip_repo"):
@@ -46,8 +64,25 @@ for p in sorted(os.listdir("cores")):
 
 	ip_dir = os.path.join("ip_repo", p + "_" + p_meta.get("version", "1.0"))
 	ip_src_dir = os.path.join(ip_dir, "src")
+	ip_xci_dir = os.path.join(ip_dir, "ip")
+	ip_ui_dir = os.path.join(ip_dir, "ui")
 
-	sources = [(os.path.join(p_dir, f), os.path.join(ip_src_dir, f)) for f in os.listdir(p_dir) if f.split(".")[-1] in ["sv", "v"]]
+	os.makedirs(ip_src_dir, exist_ok=True)
+	os.makedirs(ip_xci_dir, exist_ok=True)
+	os.makedirs(ip_ui_dir, exist_ok=True)
+
+	sources = []
+	cores = []
+
+	for f in os.listdir(p_dir):
+		ext = f.split(".")[-1]
+
+		if ext in ["sv", "v"]:
+			sync_files( os.path.join(p_dir, f), os.path.join(ip_src_dir, f), False )
+		elif ext == "xci":
+			dst_dir = os.path.join(ip_xci_dir, f[:-4])
+			os.makedirs(dst_dir, exist_ok=True)
+			sync_files( os.path.join(p_dir, f), os.path.join(dst_dir, f) )
 
 	for d in p_meta.get("imports", []):
 		if d not in g_modules:
@@ -55,76 +90,31 @@ for p in sorted(os.listdir("cores")):
 			exit(1)
 
 		for df in g_modules[d]:
-			sources.append( (df, os.path.join(ip_src_dir, os.path.basename(df))) )
+			sync_files( df, os.path.join(ip_src_dir, os.path.basename(df)), False )
 
-	if not os.path.exists(ip_dir):
-		os.mkdir(ip_dir)
-
-	if not os.path.exists(ip_src_dir):
-		os.mkdir(ip_src_dir)
-
-	for p_file, ip_file in sources:
-		needs_update = False
-
-		if os.path.exists(ip_file):
-			p_mod_time = os.path.getmtime(p_file)
-			ip_mod_time = os.path.getmtime(ip_file)
-
-			if p_mod_time > ip_mod_time:
-				needs_update = True
-		else:
-			needs_update = True
-
-		if needs_update:
-			print("\t-", p_file, "=>", ip_file)
-			shutil.copy(p_file, ip_file)
-
-	ip_gui_file = os.path.join(ip_dir, os.path.join("xgui", p + "_v" + p_meta.get("version", "1_0").replace(".", "_") + ".tcl"))
+	ip_gui_file = os.path.join(ip_ui_dir, p + "_v" + p_meta.get("version", "1_0").replace(".", "_") + ".tcl")
 	p_gui_file = os.path.join(p_dir, "xgui.tcl")
 
-	if os.path.exists(p_gui_file) or os.path.exists(ip_gui_file):
-		p_time = os.path.getmtime(p_gui_file) if os.path.exists(p_gui_file) else 0
-		ip_time = os.path.getmtime(ip_gui_file) if os.path.exists(ip_gui_file) else 0
-
-		if not os.path.exists(os.path.join(ip_dir, "xgui")):
-			os.mkdir(os.path.join(ip_dir, "xgui"))
-
-		if p_time > ip_time:
-			print("\t-", p_gui_file, "=>", ip_gui_file)
-			shutil.copy2(p_gui_file, ip_gui_file)
-		elif p_time < ip_time:
-			print("\t-", ip_gui_file, "=>", p_gui_file)
-			shutil.copy2(ip_gui_file, p_gui_file)
+	sync_files(ip_gui_file, p_gui_file)
 
 	ip_xml_file = os.path.join(ip_dir, "component.xml")
 	p_xml_file = os.path.join(p_dir, "component.xml")
 
-	if os.path.exists(p_xml_file) or os.path.exists(ip_xml_file):
-		p_time = os.path.getmtime(p_xml_file) if os.path.exists(p_xml_file) else 0
-		ip_time = os.path.getmtime(ip_xml_file) if os.path.exists(ip_xml_file) else 0
+	if sync_files(ip_xml_file, p_xml_file) == 1:
+		with open(p_xml_file, "w") as dst_file:
+			with open(ip_xml_file) as src_file:
+				enableCopy = True
 
-		if p_time > ip_time:
-			print("\t-", p_xml_file, "=>", ip_xml_file)
-			shutil.copy2(p_xml_file, ip_xml_file)
-		elif p_time < ip_time:
-			print("\t-", ip_xml_file, "=>", p_xml_file)
+				for l in src_file:
+					if enableCopy:
+						if l.strip() == "<xilinx:tags>":
+							enableCopy = False
+							continue
 
-			with open(p_xml_file, "w") as dst_file:
-				with open(ip_xml_file) as src_file:
-					enableCopy = True
+						dst_file.write(l)
+					elif l.strip() == "</xilinx:tags>":
+						enableCopy = True
 
-					for l in src_file:
-						if enableCopy:
-							if l.strip() == "<xilinx:tags>":
-								enableCopy = False
-								continue
-
-							dst_file.write(l)
-						elif l.strip() == "</xilinx:tags>":
-							enableCopy = True
-
-			shutil.copystat(ip_xml_file, p_xml_file)
-	else:
-		print("\t[W] File component.xml not found, create it using Vivado.")
+		shutil.copystat(ip_xml_file, p_xml_file)
 
 	print("\t- Done\n")
