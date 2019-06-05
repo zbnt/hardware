@@ -82,6 +82,8 @@ module eth_traffic_gen
 	input logic clk,
 	input logic rst_n,
 
+	input logic ext_enable,
+
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
 	input logic [11:0] s_axi_awaddr,
@@ -187,7 +189,7 @@ module eth_traffic_gen
 		.tx_busy(tx_busy),
 		.tx_state(tx_state),
 
-		.enable(tx_enable),
+		.enable(tx_enable & ext_enable),
 		.fifo_ready(fifo_ready),
 		.headers_size(headers_size),
 		.payload_size(payload_size),

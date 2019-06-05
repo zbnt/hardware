@@ -4,10 +4,12 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_traffic_gen_w
+module eth_traffic_gen_w #(parameter use_ext_enable = 1)
 (
 	input wire clk,
 	input wire rst_n,
+
+	input wire ext_enable,
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -47,6 +49,8 @@ module eth_traffic_gen_w
 	(
 		.clk(clk),
 		.rst_n(rst_n),
+
+		.ext_enable(ext_enable),
 
 		// S_AXI
 
