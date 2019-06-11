@@ -833,47 +833,47 @@
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_read.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_read.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_rw.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_rw.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_write.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/counter.sv</spirit:name>
+        <spirit:name>../../hdl/counter.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_axi.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_axi.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_axi_dram.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_axi_dram.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_axis.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_axis.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_fifo.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_fifo.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/lfsr_64.sv</spirit:name>
+        <spirit:name>../../hdl/lfsr/lfsr_64.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_wrapper.v</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_4ff70cbb</spirit:userFileType>
       </spirit:file>
@@ -913,47 +913,47 @@
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_read.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_read.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_rw.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_rw.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_write.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/counter.sv</spirit:name>
+        <spirit:name>../../hdl/counter.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_axi.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_axi.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_axi_dram.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_axi_dram.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_axis.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_axis.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_fifo.sv</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_fifo.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/lfsr_64.sv</spirit:name>
+        <spirit:name>../../hdl/lfsr/lfsr_64.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_traffic_gen_wrapper.v</spirit:name>
+        <spirit:name>hdl/eth_traffic_gen_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
@@ -980,7 +980,7 @@
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/eth_traffic_gen_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/cfg_ui.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_e7847be8</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
@@ -989,30 +989,6 @@
   </spirit:fileSets>
   <spirit:description>Ethernet traffic generator</spirit:description>
   <spirit:parameters>
-    <spirit:parameter>
-      <spirit:name>C_S_AXI_BASEADDR</spirit:name>
-      <spirit:displayName>C S AXI BASEADDR</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.C_S_AXI_BASEADDR" spirit:order="9" spirit:bitStringLength="32">0xFFFFFFFF</spirit:value>
-      <spirit:vendorExtensions>
-        <xilinx:parameterInfo>
-          <xilinx:enablement>
-            <xilinx:isEnabled xilinx:id="PARAM_ENABLEMENT.C_S_AXI_BASEADDR">false</xilinx:isEnabled>
-          </xilinx:enablement>
-        </xilinx:parameterInfo>
-      </spirit:vendorExtensions>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>C_S_AXI_HIGHADDR</spirit:name>
-      <spirit:displayName>C S AXI HIGHADDR</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.C_S_AXI_HIGHADDR" spirit:order="10" spirit:bitStringLength="32">0x00000000</spirit:value>
-      <spirit:vendorExtensions>
-        <xilinx:parameterInfo>
-          <xilinx:enablement>
-            <xilinx:isEnabled xilinx:id="PARAM_ENABLEMENT.C_S_AXI_HIGHADDR">false</xilinx:isEnabled>
-          </xilinx:enablement>
-        </xilinx:parameterInfo>
-      </spirit:vendorExtensions>
-    </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
       <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">tcp_traffic_gen_v1_0</spirit:value>
@@ -1033,10 +1009,6 @@
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Traffic Generator</xilinx:displayName>
       <xilinx:coreRevision>4</xilinx:coreRevision>
-      <xilinx:upgrades>
-        <xilinx:canUpgradeFrom>user.org:user:tcp_traffic_gen:1.0</xilinx:canUpgradeFrom>
-        <xilinx:canUpgradeFrom>user.org:user:eth_traffic_gen:1.0</xilinx:canUpgradeFrom>
-      </xilinx:upgrades>
       <xilinx:coreCreationDateTime>2019-06-05T03:08:44Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

@@ -369,11 +369,11 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogsynthesis_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>src/mem_streamer.sv</spirit:name>
+        <spirit:name>hdl/mem_streamer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/mem_streamer_wrapper.v</spirit:name>
+        <spirit:name>hdl/mem_streamer_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_010f44be</spirit:userFileType>
       </spirit:file>
@@ -381,18 +381,18 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogbehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>src/mem_streamer.sv</spirit:name>
+        <spirit:name>hdl/mem_streamer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/mem_streamer_wrapper.v</spirit:name>
+        <spirit:name>hdl/mem_streamer_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/mem_streamer_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/cfg_ui.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_be699da3</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
@@ -445,9 +445,6 @@
       </xilinx:taxonomies>
       <xilinx:displayName>Memory Streamer</xilinx:displayName>
       <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:upgrades>
-        <xilinx:canUpgradeFrom>user.org:user:mem_streamer:1.0</xilinx:canUpgradeFrom>
-      </xilinx:upgrades>
       <xilinx:coreCreationDateTime>2019-05-18T10:19:50Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

@@ -682,35 +682,35 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogsynthesis_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>src/counter.sv</spirit:name>
+        <spirit:name>../../hdl/counter.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/register_bank.sv</spirit:name>
+        <spirit:name>../../hdl/register_bank.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_basic.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_basic.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_read.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_read.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_write.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/simple_timer.sv</spirit:name>
+        <spirit:name>hdl/simple_timer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/simple_timer_wrapper.v</spirit:name>
+        <spirit:name>hdl/simple_timer_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_reg_bank.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_reg_bank.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_2cb2ec41</spirit:userFileType>
       </spirit:file>
@@ -718,42 +718,42 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogbehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>src/counter.sv</spirit:name>
+        <spirit:name>../../hdl/counter.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/register_bank.sv</spirit:name>
+        <spirit:name>../../hdl/register_bank.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_basic.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_basic.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_read.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_read.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_write.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/simple_timer.sv</spirit:name>
+        <spirit:name>hdl/simple_timer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/simple_timer_wrapper.v</spirit:name>
+        <spirit:name>hdl/simple_timer_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_reg_bank.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_reg_bank.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/simple_timer_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/cfg_ui.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_f92e9879</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
@@ -777,9 +777,6 @@
       </xilinx:taxonomies>
       <xilinx:displayName>Simple AXI timer</xilinx:displayName>
       <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:upgrades>
-        <xilinx:canUpgradeFrom>user.org:user:simple_timer:1.0</xilinx:canUpgradeFrom>
-      </xilinx:upgrades>
       <xilinx:coreCreationDateTime>2019-05-27T18:16:54Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>

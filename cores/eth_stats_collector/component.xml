@@ -857,39 +857,39 @@
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_read.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_read.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_rw.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_rw.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_write.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/counter.sv</spirit:name>
+        <spirit:name>../../hdl/counter.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_adder.sv</spirit:name>
+        <spirit:name>hdl/eth_stats_adder.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_collector.sv</spirit:name>
+        <spirit:name>hdl/eth_stats_collector.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_collector_axi.sv</spirit:name>
+        <spirit:name>hdl/eth_stats_collector_axi.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/sync_ffs.sv</spirit:name>
+        <spirit:name>../../hdl/sync_ffs.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_collector_wrapper.v</spirit:name>
+        <spirit:name>hdl/eth_stats_collector_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_ce8f046e</spirit:userFileType>
       </spirit:file>
@@ -911,39 +911,39 @@
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_read.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_read.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_rw.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_rw.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/axi4_lite_slave_write.sv</spirit:name>
+        <spirit:name>../../hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/counter.sv</spirit:name>
+        <spirit:name>../../hdl/counter.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_adder.sv</spirit:name>
+        <spirit:name>hdl/eth_stats_adder.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_collector.sv</spirit:name>
+        <spirit:name>hdl/eth_stats_collector.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_collector_axi.sv</spirit:name>
+        <spirit:name>hdl/eth_stats_collector_axi.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/sync_ffs.sv</spirit:name>
+        <spirit:name>../../hdl/sync_ffs.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/eth_stats_collector_wrapper.v</spirit:name>
+        <spirit:name>hdl/eth_stats_collector_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
@@ -960,7 +960,7 @@
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/eth_stats_collector_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/cfg_ui.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_017eeac4</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
@@ -994,9 +994,6 @@
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Statistics Collector</xilinx:displayName>
       <xilinx:coreRevision>3</xilinx:coreRevision>
-      <xilinx:upgrades>
-        <xilinx:canUpgradeFrom>user.org:user:eth_stats_collector:1.0</xilinx:canUpgradeFrom>
-      </xilinx:upgrades>
       <xilinx:coreCreationDateTime>2019-06-04T04:39:34Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
