@@ -185,7 +185,7 @@ module eth_traffic_gen_axi
 				read_response = 1'b1;
 
 				case(s_axi_araddr[4:2])
-					3'd0: read_value = {28'd0, frame_delay_src, payload_size_src, fifo_rst, tx_enable};
+					3'd0: read_value = {28'd0, payload_size_src, frame_delay_src, fifo_rst, tx_enable};
 					3'd1: read_value = {17'd0, fifo_ready, tx_ptr, tx_state, tx_busy};
 					3'd2: read_value = {20'd0, headers_size};
 					3'd3: read_value = frame_delay;
