@@ -119,8 +119,8 @@ module eth_traffic_gen_axi
 	logic frame_delay_src;
 	logic payload_size_src;
 
-	logic frame_delay_we;
-	logic payload_size_we;
+	logic frame_delay_we, frame_delay_wbusy;
+	logic payload_size_we, payload_size_wbusy;
 
 	logic [10:0] frame_delay_avail;
 	logic [10:0] payload_size_avail;
@@ -135,6 +135,7 @@ module eth_traffic_gen_axi
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			tx_enable <= 1'b0;
+			fifo_rst <= 1'b0;
 			frame_delay_src <= 1'b0;
 			payload_size_src <= 1'b0;
 			headers_size <= 12'd14;
@@ -143,10 +144,11 @@ module eth_traffic_gen_axi
 			// TG_PSIZE and TG_FDELAY writes are handled in a different way in order to support writing to FIFOs, see eth_traffic_gen_fifo.
 			// DRAM access also works in a special way, see eth_traffic_gen_axi_dram.
 
-			if(write_addr >= 12'd0 && write_addr <= 12'd23) begin
+			if(write_addr[11:5] == 7'd0) begin
 				case(write_addr[4:2])
 					3'd0: begin
 						tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
+						fifo_rst <= (s_axi_wdata[1] & write_mask[1]) | (fifo_rst & ~write_mask[1]);
 						frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
 						payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
 					end
@@ -154,8 +156,31 @@ module eth_traffic_gen_axi
 					3'd2: begin
 						headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
 					end
+
+					3'd3: begin
+						if(~frame_delay_wbusy) begin
+							frame_delay_we <= 1'b1;
+							frame_delay_wbusy <= 1'b1;
+						end else begin
+							frame_delay_we <= 1'b0;
+						end
+					end
+
+					3'd4: begin
+						if(~payload_size_wbusy) begin
+							payload_size_we <= 1'b1;
+							payload_size_wbusy <= 1'b1;
+						end else begin
+							payload_size_we <= 1'b0;
+						end
+					end
 				endcase
 			end
+		end else begin
+			frame_delay_we <= 1'b0;
+			payload_size_we <= 1'b0;
+			frame_delay_wbusy <= 1'b0;
+			payload_size_wbusy <= 1'b0;
 		end
 	end
 
@@ -168,10 +193,6 @@ module eth_traffic_gen_axi
 
 		write_ready = 1'b0;
 		write_response = 1'b0;
-
-		fifo_rst = 1'b0;
-		frame_delay_we = 1'b0;
-		payload_size_we = 1'b0;
 
 		mem_read_req = 1'b0;
 		mem_write_req = 1'b0;
@@ -208,16 +229,10 @@ module eth_traffic_gen_axi
 		// Handle write requests
 
 		if(write_req) begin
-			if(write_addr >= 12'd0 && write_addr <= 12'd23) begin
+			if(write_addr <= 12'd23) begin
 				// Register address
 				write_ready = 1'b1;
 				write_response = (write_addr[4:2] != 3'd1 && write_addr[4:2] != 3'd5);
-
-				case(write_addr[4:2])
-					3'd0: fifo_rst = s_axi_wdata[1] & write_mask[1];
-					3'd3: frame_delay_we = 1'b1;
-					3'd4: payload_size_we = 1'b1;
-				endcase
 			end else if(write_addr >= 12'h800) begin
 				// DRAM address, handled by eth_traffic_gen_axi_dram
 				write_ready = mem_write_ready;

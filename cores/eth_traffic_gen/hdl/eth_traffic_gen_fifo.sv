@@ -88,7 +88,7 @@ module eth_traffic_gen_fifo
 
 		.empty(tfifo_empty),
 		.dout(tfifo_out),
-		.rd_en(frame_delay_src & ~got_frame_delay)
+		.rd_en(((frame_delay_src & ~got_frame_delay) | tfifo_full) & ~tfifo_empty)
 	);
 
 	payload_sizes_fifo U1
@@ -105,7 +105,7 @@ module eth_traffic_gen_fifo
 
 		.empty(sfifo_empty),
 		.dout(sfifo_out),
-		.rd_en(payload_size_src & ~got_payload_size)
+		.rd_en(((payload_size_src & ~got_payload_size) | sfifo_full) & ~sfifo_empty)
 	);
 
 	counter #(11) U2

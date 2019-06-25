@@ -1,3 +1,6 @@
 /ip_repo/
 
+/cores/*/ip/*/*
+!/cores/*/ip/*/*.xci
+
 .directory
