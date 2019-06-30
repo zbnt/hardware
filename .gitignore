@@ -1,6 +1,8 @@
-/ip_repo/
-
 /cores/*/ip/*/*
 !/cores/*/ip/*/*.xci
+
+/hw
+
+/projects/*/vivado
 
 .directory
