@@ -146,13 +146,12 @@ module simple_timer
 
 	// counter
 
-	counter #(64) U1
+	counter_big #(64) U1
 	(
 		.clk(clk),
 		.rst(~rst_n | srst),
 
-		.up(time_running),
-		.down(1'b0),
+		.enable(time_running),
 
 		.count(current_time)
 	);
