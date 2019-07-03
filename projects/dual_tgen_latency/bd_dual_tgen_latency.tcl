@@ -1,6 +1,6 @@
 
 ################################################################
-# This is a generated script based on design: bd_dual_tgen
+# This is a generated script based on design: bd_dual_tgen_latency
 #
 # Though there are limitations about the generated script,
 # the main purpose of this utility is to make learning
@@ -35,7 +35,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 ################################################################
 
 # To test this script, run the following commands from Vivado Tcl console:
-# source bd_dual_tgen_script.tcl
+# source bd_dual_tgen_latency_script.tcl
 
 # If there is no project opened, this script will create a
 # project, but make sure you do not have an existing project
@@ -50,7 +50,7 @@ if { $list_projs eq "" } {
 
 # CHANGE DESIGN NAME HERE
 variable design_name
-set design_name bd_dual_tgen
+set design_name bd_dual_tgen_latency
 
 # If you do not already have an existing IP Integrator design open,
 # you can create a design using the following command:

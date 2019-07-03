@@ -2,7 +2,7 @@
 # Create project
 
 cd [file dirname [info script]]
-create_project -force zbnt_hw_dual_tgen -part xc7z020clg484-1 vivado
+create_project -force zbnt_hw_dual_tgen_latency -part xc7z020clg484-1 vivado
 set_property BOARD_PART em.avnet.com:zed:part0:1.4 [current_project]
 
 # Load source files
@@ -16,8 +16,8 @@ update_ip_catalog -rebuild
 
 # Create block diagram
 
-source bd_dual_tgen.tcl
-read_verilog [make_wrapper -top -files [get_files bd_dual_tgen.bd]]
+source bd_dual_tgen_latency.tcl
+read_verilog [make_wrapper -top -files [get_files bd_dual_tgen_latency.bd]]
 
 # Create synthesis run
 
