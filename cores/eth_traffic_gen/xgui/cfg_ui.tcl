@@ -18,24 +18,6 @@ proc validate_PARAM_VALUE.use_ext_enable { PARAM_VALUE.use_ext_enable } {
 	return true
 }
 
-proc update_PARAM_VALUE.C_S_AXI_BASEADDR { PARAM_VALUE.C_S_AXI_BASEADDR } {
-	# Procedure called to update C_S_AXI_BASEADDR when any of the dependent parameters in the arguments change
-}
-
-proc validate_PARAM_VALUE.C_S_AXI_BASEADDR { PARAM_VALUE.C_S_AXI_BASEADDR } {
-	# Procedure called to validate C_S_AXI_BASEADDR
-	return true
-}
-
-proc update_PARAM_VALUE.C_S_AXI_HIGHADDR { PARAM_VALUE.C_S_AXI_HIGHADDR } {
-	# Procedure called to update C_S_AXI_HIGHADDR when any of the dependent parameters in the arguments change
-}
-
-proc validate_PARAM_VALUE.C_S_AXI_HIGHADDR { PARAM_VALUE.C_S_AXI_HIGHADDR } {
-	# Procedure called to validate C_S_AXI_HIGHADDR
-	return true
-}
-
 
 proc update_MODELPARAM_VALUE.use_ext_enable { MODELPARAM_VALUE.use_ext_enable PARAM_VALUE.use_ext_enable } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value

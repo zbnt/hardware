@@ -345,7 +345,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>92603d88</spirit:value>
+            <spirit:value>985fce28</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -367,7 +367,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>92603d88</spirit:value>
+            <spirit:value>985fce28</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -381,7 +381,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>e7847be8</spirit:value>
+            <spirit:value>a457075f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -875,7 +875,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_traffic_gen_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_4ff70cbb</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_03f162b1</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -982,7 +982,7 @@
       <spirit:file>
         <spirit:name>xgui/cfg_ui.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_e7847be8</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_a457075f</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1008,17 +1008,17 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Traffic Generator</xilinx:displayName>
-      <xilinx:coreRevision>4</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-06-05T03:08:44Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>5</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-07-04T19:25:35Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="c8aa84d0"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="0e6fd9f0"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="1c2c6e67"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="de1017bb"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c3a7316a"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="5c4b0977"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="21ae23a4"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="39df5b94"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="d517d8b6"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

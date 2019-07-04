@@ -121,6 +121,7 @@ module eth_traffic_gen
 	logic fifo_trigger;
 	logic fifo_ready;
 
+	logic glob_enable;
 	logic tx_enable;
 	logic tx_busy;
 	logic [1:0] tx_state;
@@ -131,6 +132,14 @@ module eth_traffic_gen
 	logic [7:0] mem_a_wdata, mem_a_rdata, mem_b_rdata;
 	logic [10:0] mem_a_addr, mem_b_addr;
 	logic mem_a_we;
+
+	always_ff @(posedge clk) begin
+		if(~rst_n) begin
+			glob_enable <= 1'b0;
+		end else begin
+			glob_enable <= tx_enable & ext_enable;
+		end
+	end
 
 	eth_traffic_gen_axi U0
 	(
@@ -189,7 +198,7 @@ module eth_traffic_gen
 		.tx_busy(tx_busy),
 		.tx_state(tx_state),
 
-		.enable(tx_enable & ext_enable),
+		.enable(glob_enable),
 		.fifo_ready(fifo_ready),
 		.headers_size(headers_size),
 		.payload_size(payload_size),
