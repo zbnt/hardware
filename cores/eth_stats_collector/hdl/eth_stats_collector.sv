@@ -226,11 +226,13 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 
 	// TX statistics, no CDC needed here
 
+	logic enable_tx;
+
 	eth_stats_adder U2
 	(
 		.clk(clk),
 		.rst_n(rst_n & ~srst),
-		.enable(enable & (~use_time | time_running)),
+		.enable(enable_tx),
 
 		.valid(tx_stats_valid),
 		.frame_length(tx_stats_vector[18:5]),
@@ -240,6 +242,14 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 		.total_good(tx_good),
 		.total_bad(tx_bad)
 	);
+
+	always_ff @(posedge clk) begin
+		if(~rst_n | srst) begin
+			enable_tx <= 1'b0;
+		end else begin
+			enable_tx <= enable & (~use_time | time_running);
+		end
+	end
 
 	// RX statistics, these signals come from another clock domain, so CDC is needed
 
