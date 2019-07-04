@@ -59,16 +59,18 @@ module eth_frame_pattern_mem
 
 	// clock domain crossing
 
-	sync_ffs #(43, 2) U1
+	bus_cdc #(43, 2) U1
 	(
-		.clk(mem_pb_clk),
+		.clk_src(clk),
+		.clk_dst(mem_pb_clk),
 		.data_in({mem_pa_wdata, mem_pa_addr, mem_pa_we, mem_pa_req}),
 		.data_out({mem_pa_wdata_cdc, mem_pa_addr_cdc, mem_pa_we_cdc, mem_pa_req_cdc})
 	);
 
-	sync_ffs #(31, 2) U2
+	bus_cdc #(31, 2) U2
 	(
-		.clk(clk),
+		.clk_src(mem_pb_clk),
+		.clk_dst(clk),
 		.data_in({mem_pa_rdata_cdc, mem_pa_ack_cdc}),
 		.data_out({mem_pa_rdata, mem_pa_ack})
 	);

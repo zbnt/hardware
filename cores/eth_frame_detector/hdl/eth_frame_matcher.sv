@@ -89,14 +89,16 @@ module eth_frame_matcher
 
 	sync_ffs #(4, 2) U0
 	(
-		.clk(s_axis_clk),
+		.clk_src(clk),
+		.clk_dst(s_axis_clk),
 		.data_in({rst_n, match_en}),
 		.data_out({rst_n_cdc, match_en_cdc})
 	);
 
 	sync_ffs #(5, 2) U1
 	(
-		.clk(clk),
+		.clk_src(s_axis_clk),
+		.clk_dst(clk),
 		.data_in({frame_match, frame_match_id}),
 		.data_out({match, match_id})
 	);

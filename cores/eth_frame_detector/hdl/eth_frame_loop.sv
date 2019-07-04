@@ -77,10 +77,19 @@ module eth_frame_loop
 		pause_val[15:1] = {15{pause_val[0]}};
 	end
 
-	sync_ffs #(2, 2) U1
+	sync_ffs #(1, 2) U1
 	(
-		.clk(clk),
-		.data_in({fifo_prog_full, fifo_prog_empty}),
-		.data_out({fifo_prog_full_cdc, fifo_prog_empty_cdc})
+		.clk_src(m_axis_clk),
+		.clk_dst(clk),
+		.data_in({fifo_prog_empty}),
+		.data_out({fifo_prog_empty_cdc})
+	);
+
+	sync_ffs #(1, 2) U2
+	(
+		.clk_src(s_axis_clk),
+		.clk_dst(clk),
+		.data_in({fifo_prog_full}),
+		.data_out({fifo_prog_full_cdc})
 	);
 endmodule
