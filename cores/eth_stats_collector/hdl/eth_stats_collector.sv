@@ -261,16 +261,18 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 		.total_bad(rx_bad_cdc)
 	);
 
-	sync_ffs #(192, 2) U4
+	bus_cdc #(192, 2) U4
 	(
-		.clk(clk),
+		.clk_src(clk_rx),
+		.clk_dst(clk),
 		.data_in({rx_bytes_cdc, rx_good_cdc, rx_bad_cdc}),
 		.data_out({rx_bytes, rx_good, rx_bad})
 	);
 
 	sync_ffs #(2, 2) U5
 	(
-		.clk(clk_rx),
+		.clk_src(clk),
+		.clk_dst(clk_rx),
 		.data_in({rst_n & ~srst, enable & (~use_time | time_running)}),
 		.data_out({rst_rx_n, enable_rx})
 	);
