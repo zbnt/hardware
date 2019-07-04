@@ -197,10 +197,10 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 mdio_loop
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 mdio_main
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii_loop
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii_main
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 mdio_a
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 mdio_b
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii_a
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii_b
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_detector
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_mac_a
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_mac_b
@@ -223,7 +223,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.Frame_Filter {false} \
    CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
+   CONFIG.Make_MDIO_External {true} \
    CONFIG.Management_Frequency {125.00} \
    CONFIG.Number_of_Table_Entries {0} \
    CONFIG.Physical_Interface {RGMII} \
@@ -239,7 +239,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.Frame_Filter {false} \
    CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
+   CONFIG.Make_MDIO_External {true} \
    CONFIG.Management_Frequency {125.00} \
    CONFIG.Number_of_Table_Entries {0} \
    CONFIG.Physical_Interface {RGMII} \
@@ -264,8 +264,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins rgmii_loop] [get_bd_intf_pins eth3_mac/rgmii]
-  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins mdio_loop] [get_bd_intf_pins eth3_mac/mdio_internal]
+  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins rgmii_b] [get_bd_intf_pins eth3_mac/rgmii]
   connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins s_axi_mac_b] [get_bd_intf_pins eth3_mac/s_axi]
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins s_axi_mac_a] [get_bd_intf_pins eth2_mac/s_axi]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_detector] [get_bd_intf_pins detector/S_AXI]
@@ -275,10 +274,11 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   connect_bd_intf_net -intf_net detector_M_AXIS_A_PAUSE [get_bd_intf_pins detector/M_AXIS_A_PAUSE] [get_bd_intf_pins eth2_mac/s_axis_pause]
   connect_bd_intf_net -intf_net detector_M_AXIS_B [get_bd_intf_pins detector/M_AXIS_B] [get_bd_intf_pins eth3_mac/s_axis_tx]
   connect_bd_intf_net -intf_net detector_M_AXIS_B_PAUSE [get_bd_intf_pins detector/M_AXIS_B_PAUSE] [get_bd_intf_pins eth3_mac/s_axis_pause]
-  connect_bd_intf_net -intf_net eth1_mac_mdio_internal [get_bd_intf_pins mdio_main] [get_bd_intf_pins eth2_mac/mdio_internal]
-  connect_bd_intf_net -intf_net eth1_mac_rgmii [get_bd_intf_pins rgmii_main] [get_bd_intf_pins eth2_mac/rgmii]
+  connect_bd_intf_net -intf_net eth1_mac_rgmii [get_bd_intf_pins rgmii_a] [get_bd_intf_pins eth2_mac/rgmii]
   connect_bd_intf_net -intf_net eth2_mac_m_axis_rx [get_bd_intf_pins detector/S_AXIS_A] [get_bd_intf_pins eth2_mac/m_axis_rx]
+  connect_bd_intf_net -intf_net eth2_mac_mdio_external [get_bd_intf_pins mdio_a] [get_bd_intf_pins eth2_mac/mdio_external]
   connect_bd_intf_net -intf_net eth3_mac_m_axis_rx [get_bd_intf_pins detector/S_AXIS_B] [get_bd_intf_pins eth3_mac/m_axis_rx]
+  connect_bd_intf_net -intf_net eth3_mac_mdio_external [get_bd_intf_pins mdio_b] [get_bd_intf_pins eth3_mac/mdio_external]
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins detector/current_time] [get_bd_pins eth2_stats/current_time] [get_bd_pins eth3_stats/current_time]
@@ -361,7 +361,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.Frame_Filter {false} \
    CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
+   CONFIG.Make_MDIO_External {true} \
    CONFIG.Management_Frequency {125.00} \
    CONFIG.Number_of_Table_Entries {0} \
    CONFIG.Physical_Interface {RGMII} \
@@ -390,9 +390,9 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
-  connect_bd_intf_net -intf_net eth1_mac_mdio_internal [get_bd_intf_pins mdio] [get_bd_intf_pins mac/mdio_internal]
   connect_bd_intf_net -intf_net eth1_mac_rgmii [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/rgmii]
   connect_bd_intf_net -intf_net eth1_tgen_M_AXIS [get_bd_intf_pins mac/s_axis_tx] [get_bd_intf_pins tgen/M_AXIS]
+  connect_bd_intf_net -intf_net mac_mdio_external [get_bd_intf_pins mdio] [get_bd_intf_pins mac/mdio_external]
   connect_bd_intf_net -intf_net ps_interconnect_M02_AXI [get_bd_intf_pins s_axi_mac] [get_bd_intf_pins mac/s_axi]
   connect_bd_intf_net -intf_net ps_interconnect_M03_AXI [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
 
@@ -474,12 +474,12 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
    CONFIG.Enable_MDIO {true} \
    CONFIG.Frame_Filter {false} \
    CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
+   CONFIG.Make_MDIO_External {true} \
    CONFIG.Management_Frequency {125.00} \
    CONFIG.Management_Interface {true} \
    CONFIG.Number_of_Table_Entries {0} \
    CONFIG.Physical_Interface {RGMII} \
-   CONFIG.Statistics_Counters {true} \
+   CONFIG.Statistics_Counters {false} \
    CONFIG.SupportLevel {1} \
  ] $mac
 
@@ -504,8 +504,8 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
-  connect_bd_intf_net -intf_net eth0_mac_mdio_internal [get_bd_intf_pins mdio] [get_bd_intf_pins mac/mdio_internal]
   connect_bd_intf_net -intf_net eth0_mac_rgmii [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/rgmii]
+  connect_bd_intf_net -intf_net mac_mdio_external [get_bd_intf_pins mdio] [get_bd_intf_pins mac/mdio_external]
   connect_bd_intf_net -intf_net mem_streamer_0_M_AXIS [get_bd_intf_pins mac/s_axis_tx] [get_bd_intf_pins tgen/M_AXIS]
   connect_bd_intf_net -intf_net ps_interconnect_M01_AXI [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
   connect_bd_intf_net -intf_net ps_main_axi_periph_M00_AXI [get_bd_intf_pins s_axi_mac] [get_bd_intf_pins mac/s_axi]
@@ -568,7 +568,7 @@ proc create_root_design { parentCell } {
   # Create interface ports
   set DDR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR ]
   set FIXED_IO [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO ]
-  set ethfmc_p0_mdio [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 ethfmc_p0_mdio ]
+  set ethfmc_p0_mdio [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:mdio_io:1.0 ethfmc_p0_mdio ]
   set ethfmc_p0_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 ethfmc_p0_rgmii ]
   set ethfmc_p1_mdio [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:mdio_rtl:1.0 ethfmc_p1_mdio ]
   set ethfmc_p1_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 ethfmc_p1_rgmii ]
@@ -1044,14 +1044,14 @@ proc create_root_design { parentCell } {
   set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:simple_timer:1.0 simple_timer ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net eth0_mac_mdio_external [get_bd_intf_ports ethfmc_p0_mdio] [get_bd_intf_pins eth0/mdio]
   connect_bd_intf_net -intf_net eth0_mac_rgmii [get_bd_intf_ports ethfmc_p0_rgmii] [get_bd_intf_pins eth0/rgmii]
+  connect_bd_intf_net -intf_net eth0_mdio [get_bd_intf_ports ethfmc_p0_mdio] [get_bd_intf_pins eth0/mdio]
   connect_bd_intf_net -intf_net eth1_mac_mdio_internal [get_bd_intf_ports ethfmc_p1_mdio] [get_bd_intf_pins eth1/mdio]
   connect_bd_intf_net -intf_net eth1_mac_rgmii [get_bd_intf_ports ethfmc_p1_rgmii] [get_bd_intf_pins eth1/rgmii]
-  connect_bd_intf_net -intf_net eth2_mdio [get_bd_intf_ports ethfmc_p2_mdio] [get_bd_intf_pins mitm/mdio_main]
-  connect_bd_intf_net -intf_net eth2_mdio_loop [get_bd_intf_ports ethfmc_p3_mdio] [get_bd_intf_pins mitm/mdio_loop]
-  connect_bd_intf_net -intf_net eth2_rgmii [get_bd_intf_ports ethfmc_p2_rgmii] [get_bd_intf_pins mitm/rgmii_main]
-  connect_bd_intf_net -intf_net eth2_rgmii_loop [get_bd_intf_ports ethfmc_p3_rgmii] [get_bd_intf_pins mitm/rgmii_loop]
+  connect_bd_intf_net -intf_net eth2_mdio [get_bd_intf_ports ethfmc_p2_mdio] [get_bd_intf_pins mitm/mdio_a]
+  connect_bd_intf_net -intf_net eth2_mdio_loop [get_bd_intf_ports ethfmc_p3_mdio] [get_bd_intf_pins mitm/mdio_b]
+  connect_bd_intf_net -intf_net eth2_rgmii [get_bd_intf_ports ethfmc_p2_rgmii] [get_bd_intf_pins mitm/rgmii_a]
+  connect_bd_intf_net -intf_net eth2_rgmii_loop [get_bd_intf_ports ethfmc_p3_rgmii] [get_bd_intf_pins mitm/rgmii_b]
   connect_bd_intf_net -intf_net ps_interconnect_M11_AXI [get_bd_intf_pins ps_interconnect/M11_AXI] [get_bd_intf_pins simple_timer/S_AXI]
   connect_bd_intf_net -intf_net ps_main_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins ps_main/DDR]
   connect_bd_intf_net -intf_net ps_main_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins ps_main/FIXED_IO]
