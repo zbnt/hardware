@@ -24,7 +24,7 @@ set_property -dict { PACKAGE_PIN U14   IOSTANDARD LVCMOS33 } [get_ports { led[7]
 # ETH0
 
 set_property -dict { PACKAGE_PIN K18   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p0_rst]
-set_property -dict { PACKAGE_PIN L22   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p0_mdio_mdio_io]
+set_property -dict { PACKAGE_PIN L22   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p0_mdio_io]
 set_property -dict { PACKAGE_PIN J18   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p0_mdio_mdc]
 set_property -dict { PACKAGE_PIN M19   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p0_rgmii_rxc]
 set_property -dict { PACKAGE_PIN M22   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p0_rgmii_txc]
@@ -42,7 +42,7 @@ set_property -dict { PACKAGE_PIN T16   IOSTANDARD LVCMOS25 } [get_ports { ethfmc
 # ETH1
 
 set_property -dict { PACKAGE_PIN J17   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p1_rst]
-set_property -dict { PACKAGE_PIN K20   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p1_mdio_mdio_io]
+set_property -dict { PACKAGE_PIN K20   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p1_mdio_io]
 set_property -dict { PACKAGE_PIN M17   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p1_mdio_mdc]
 set_property -dict { PACKAGE_PIN N19   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p1_rgmii_rxc]
 set_property -dict { PACKAGE_PIN N18   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p1_rgmii_txc]
@@ -60,7 +60,7 @@ set_property -dict { PACKAGE_PIN K21   IOSTANDARD LVCMOS25 } [get_ports { ethfmc
 # ETH2
 
 set_property -dict { PACKAGE_PIN A19   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p2_rst]
-set_property -dict { PACKAGE_PIN C22   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p2_mdio_mdio_io]
+set_property -dict { PACKAGE_PIN C22   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p2_mdio_io]
 set_property -dict { PACKAGE_PIN A18   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p2_mdio_mdc]
 set_property -dict { PACKAGE_PIN B19   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p2_rgmii_rxc]
 set_property -dict { PACKAGE_PIN E19   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p2_rgmii_txc]
@@ -78,7 +78,7 @@ set_property -dict { PACKAGE_PIN E20   IOSTANDARD LVCMOS25 } [get_ports { ethfmc
 # ETH3
 
 set_property -dict { PACKAGE_PIN A22   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p3_rst]
-set_property -dict { PACKAGE_PIN A21   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p3_mdio_mdio_io]
+set_property -dict { PACKAGE_PIN A21   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p3_mdio_io]
 set_property -dict { PACKAGE_PIN B15   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p3_mdio_mdc]
 set_property -dict { PACKAGE_PIN D20   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p3_rgmii_rxc]
 set_property -dict { PACKAGE_PIN A17   IOSTANDARD LVCMOS25 } [get_ports ethfmc_p3_rgmii_txc]
