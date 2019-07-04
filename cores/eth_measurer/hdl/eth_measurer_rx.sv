@@ -62,9 +62,10 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 
 	// cross clock domains using synchronizer flip-flops
 
-	sync_ffs #(64, 2) U0
+	bus_cdc #(64, 2) U0
 	(
-		.clk(clk),
+		.clk_src(clk_rx),
+		.clk_dst(clk),
 		.data_in(ping_id_cdc),
 		.data_out(ping_id)
 	);
