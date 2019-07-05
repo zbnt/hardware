@@ -523,10 +523,10 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   connect_bd_net -net mac_rx_statistics_vector [get_bd_pins mac/rx_statistics_vector] [get_bd_pins stats/rx_stats_vector]
   connect_bd_net -net mac_tx_statistics_valid [get_bd_pins mac/tx_statistics_valid] [get_bd_pins stats/tx_stats_valid]
   connect_bd_net -net mac_tx_statistics_vector [get_bd_pins mac/tx_statistics_vector] [get_bd_pins stats/tx_stats_vector]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins s_axi_aresetn] [get_bd_pins mac/glbl_rstn] [get_bd_pins mac/s_axi_resetn] [get_bd_pins reset/peripheral_aresetn] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins s_axi_aresetn] [get_bd_pins mac/s_axi_resetn] [get_bd_pins reset/peripheral_aresetn] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins reset/ext_reset_in]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins mac/rx_axi_rstn] [get_bd_pins mac/tx_axi_rstn] [get_bd_pins mac_rst/dout]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins mac/glbl_rstn] [get_bd_pins mac/rx_axi_rstn] [get_bd_pins mac/tx_axi_rstn] [get_bd_pins mac_rst/dout]
 
   # Restore current instance
   current_bd_instance $oldCurInst
