@@ -1,11 +1,32 @@
 
-# Create project and generate bitstream
+cd [file dirname [info script]]
 
-source create_project.tcl
-launch_runs impl_1 -to_step write_bitstream -jobs 16
-wait_on_run impl_1
+# Get number of jobs to use
+
+if { [info exists ::env(NUM_JOBS) ] } {
+	set jobs $::env(NUM_JOBS)
+} else {
+	set jobs [exec nproc]
+}
+
+# Create project and generate bitstream, if needed
+
+if { ![file exists vivado/zbnt_hw_dual_tgen_latency.xpr ] } {
+	source create_project.tcl
+} else {
+	open_project vivado/zbnt_hw_dual_tgen_latency.xpr
+}
+
+if { [get_property needs_refresh [get_runs impl_1]] } {
+	launch_runs impl_1 -to_step write_bitstream -jobs $jobs
+	wait_on_run impl_1
+}
 
 # Copy bitstream to output directory
 
 file mkdir ../../hw
-file copy -force vivado/zbnt_hw_dual_tgen_latency.runs/impl_1/bd_dual_tgen_latency_wrapper.bin ../../hw/bd_dual_tgen_latency.bin
+file copy -force vivado/zbnt_hw_dual_tgen_latency.runs/impl_1/bd_dual_tgen_latency_wrapper.bin ../../hw/dual_tgen_latency.bin
+
+# Generate json file
+
+exec python3 ../../hwdef_to_json.py vivado/zbnt_hw_dual_tgen_latency.runs/impl_1/bd_dual_tgen_latency_wrapper.hwdef ../../hw/dual_tgen_latency.json
