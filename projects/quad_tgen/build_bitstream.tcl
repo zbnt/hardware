@@ -17,7 +17,7 @@ if { ![file exists vivado/zbnt_hw_quad_tgen.xpr ] } {
 	open_project vivado/zbnt_hw_quad_tgen.xpr
 }
 
-if { [get_property needs_refresh [get_runs impl_1]] } {
+if { [get_property needs_refresh [get_runs impl_1]] || [get_property status [get_runs impl_1]] == "Not started" } {
 	launch_runs impl_1 -to_step write_bitstream -jobs $jobs
 	wait_on_run impl_1
 }
