@@ -38,6 +38,7 @@
 			\field FRST   1      Reset internal FIFOs.
 			\field FDSRC  2      Frame delay source, see {TG_FDELAY}.
 			\field PSSRC  3      Payload size source, see {TG_PSIZE}.
+			\field BURST  4      Enable burst mode.
 
 		\reg TG_STATUS: TGen status register.
 			\access RO
@@ -70,6 +71,12 @@
 
 			\field FDFOCC 0-10   Number of values in the frame delay FIFO.
 			\field PSFOCC 16-26  Number of values in the payload size FIFO.
+
+		\reg TG_BURST_PARAMS: Burst mode parameters.
+			\access RW
+
+			\field TMON   0-15   Number of milliseconds to keep transmitter on.
+			\field TMOFF  16-31  Number of milliseconds to wait before enabling the transmitter again.
 
 		\mem FRAME_HEADERS: Headers for the generated frames.
 			\access RW
@@ -129,6 +136,9 @@ module eth_traffic_gen
 	logic [15:0] payload_size;
 	logic [31:0] frame_delay;
 
+	logic use_burst, burst_enable;
+	logic [15:0] burst_on_time, burst_off_time;
+
 	logic [7:0] mem_a_wdata, mem_a_rdata, mem_b_rdata;
 	logic [10:0] mem_a_addr, mem_b_addr;
 	logic mem_a_we;
@@ -137,7 +147,7 @@ module eth_traffic_gen
 		if(~rst_n) begin
 			glob_enable <= 1'b0;
 		end else begin
-			glob_enable <= tx_enable & ext_enable;
+			glob_enable <= tx_enable & ext_enable & (burst_enable | ~use_burst);
 		end
 	end
 
@@ -186,7 +196,11 @@ module eth_traffic_gen
 
 		.headers_size(headers_size),
 		.payload_size(payload_size),
-		.frame_delay(frame_delay)
+		.frame_delay(frame_delay),
+
+		.use_burst(use_burst),
+		.burst_on_time(burst_on_time),
+		.burst_off_time(burst_off_time)
 	);
 
 	eth_traffic_gen_axis U1
@@ -225,6 +239,18 @@ module eth_traffic_gen
 
 		.dpra(mem_b_addr),
 		.dpo(mem_b_rdata)
+	);
+
+	eth_traffic_gen_burst U3
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.use_burst(use_burst),
+		.burst_on_time(burst_on_time),
+		.burst_off_time(burst_off_time),
+
+		.burst_enable(burst_enable)
 	);
 endmodule
 

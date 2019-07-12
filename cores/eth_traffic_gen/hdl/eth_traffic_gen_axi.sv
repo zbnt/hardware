@@ -57,7 +57,11 @@ module eth_traffic_gen_axi
 
 	output logic [11:0] headers_size,
 	output logic [15:0] payload_size,
-	output logic [31:0] frame_delay
+	output logic [31:0] frame_delay,
+
+	output logic use_burst,
+	output logic [15:0] burst_on_time,
+	output logic [15:0] burst_off_time
 );
 	// Handle AXI4-Lite requests
 
@@ -138,7 +142,10 @@ module eth_traffic_gen_axi
 			fifo_rst <= 1'b0;
 			frame_delay_src <= 1'b0;
 			payload_size_src <= 1'b0;
+			use_burst <= 1'b0;
 			headers_size <= 12'd14;
+			burst_on_time <= 16'd0;
+			burst_off_time <= 16'd0;
 		end else if(write_req) begin
 			// TG_CFG and TG_HSIZE work like regular registers.
 			// TG_PSIZE and TG_FDELAY writes are handled in a different way in order to support writing to FIFOs, see eth_traffic_gen_fifo.
@@ -151,6 +158,7 @@ module eth_traffic_gen_axi
 						fifo_rst <= (s_axi_wdata[1] & write_mask[1]) | (fifo_rst & ~write_mask[1]);
 						frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
 						payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
+						use_burst <= (s_axi_wdata[4] & write_mask[4]) | (use_burst & ~write_mask[4]);
 					end
 
 					3'd2: begin
@@ -173,6 +181,11 @@ module eth_traffic_gen_axi
 						end else begin
 							payload_size_we <= 1'b0;
 						end
+					end
+
+					3'd6: begin
+						burst_on_time <= (s_axi_wdata[15:0] & write_mask[15:0]) | (burst_on_time & ~write_mask[15:0]);
+						burst_off_time <= (s_axi_wdata[31:16] & write_mask[31:16]) | (burst_off_time & ~write_mask[31:16]);
 					end
 				endcase
 			end
@@ -200,18 +213,19 @@ module eth_traffic_gen_axi
 		// Handle read requests
 
 		if(read_req) begin
-			if(s_axi_araddr >= 12'd0 && s_axi_araddr <= 12'd23) begin
+			if(s_axi_araddr >= 12'd0 && s_axi_araddr <= 12'd27) begin
 				// Register address
 				read_ready = 1'b1;
 				read_response = 1'b1;
 
 				case(s_axi_araddr[4:2])
-					3'd0: read_value = {28'd0, payload_size_src, frame_delay_src, fifo_rst, tx_enable};
+					3'd0: read_value = {27'd0, use_burst, payload_size_src, frame_delay_src, fifo_rst, tx_enable};
 					3'd1: read_value = {17'd0, fifo_ready, tx_ptr, tx_state, tx_busy};
 					3'd2: read_value = {20'd0, headers_size};
 					3'd3: read_value = frame_delay;
 					3'd4: read_value = {16'd0, payload_size};
 					3'd5: read_value = {5'd0, frame_delay_avail, 5'd0, payload_size_avail};
+					3'd6: read_value = {burst_off_time, burst_on_time};
 				endcase
 			end else if(s_axi_araddr >= 12'h800) begin
 				// DRAM address, handled by eth_traffic_gen_axi_dram
@@ -229,7 +243,7 @@ module eth_traffic_gen_axi
 		// Handle write requests
 
 		if(write_req) begin
-			if(write_addr <= 12'd23) begin
+			if(write_addr <= 12'd27) begin
 				// Register address
 				write_ready = 1'b1;
 				write_response = (write_addr[4:2] != 3'd1 && write_addr[4:2] != 3'd5);

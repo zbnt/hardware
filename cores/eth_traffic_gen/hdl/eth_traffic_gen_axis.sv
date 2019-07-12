@@ -102,7 +102,7 @@ module eth_traffic_gen_axis
 							if(&mem_addr || mem_addr >= hsize - 12'd1) begin
 								if(psize != 16'd0) begin
 									state_next = ST_SEND_PAYLOAD;
-									count_next = 32'd0;
+									count_next = 32'd1;
 								end else if(fdelay == 16'd0) begin
 									count_next = 32'd0;
 									m_axis_tlast = 1'b1;
@@ -142,7 +142,7 @@ module eth_traffic_gen_axis
 					endcase
 
 					if(m_axis_tready) begin
-						if(count[15:0] >= psize - 16'd1) begin
+						if(count[15:0] >= psize) begin
 							count_next = 32'd0;
 							m_axis_tlast = 1'b1;
 
