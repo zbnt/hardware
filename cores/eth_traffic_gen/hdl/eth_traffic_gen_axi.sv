@@ -287,7 +287,7 @@ module eth_traffic_gen_axi
 
 	// Handle DRAM read/write requests
 
-	eth_traffic_gen_axi_dram
+	eth_traffic_gen_axi_dram U2
 	(
 		.clk(clk),
 		.rst(~rst_n),
