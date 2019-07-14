@@ -69,8 +69,8 @@
 		\reg TG_FIFO_OCCUP: FIFO occupancy.
 			\access RO
 
-			\field FDFOCC 0-10   Number of values in the frame delay FIFO.
-			\field PSFOCC 16-26  Number of values in the payload size FIFO.
+			\field PSFOCC 0-10   Number of values in the payload size FIFO.
+			\field FDFOCC 16-26  Number of values in the frame delay FIFO.
 
 		\reg TG_BURST_PARAMS: Burst mode parameters.
 			\access RW
