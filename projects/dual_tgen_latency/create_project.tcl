@@ -4,6 +4,7 @@
 cd [file dirname [info script]]
 create_project -force zbnt_hw_dual_tgen_latency -part xc7z020clg484-1 vivado
 set_property BOARD_PART em.avnet.com:zed:part0:1.4 [current_project]
+set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
 
 # Load source files
 
