@@ -196,7 +196,7 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 		write_ready = 1'b0;
 		write_response = 1'b0;
 
-		stats_changed = (tx_bytes != tx_bytes_reg || tx_good != tx_good_reg || tx_bad != tx_bad_reg || rx_bytes != rx_bytes_reg || rx_good != rx_good_reg || rx_bad != rx_bad_reg);
+		stats_changed = (tx_bytes != tx_bytes_reg || rx_bytes != rx_bytes_reg);
 
 		// Handle read requests
 
