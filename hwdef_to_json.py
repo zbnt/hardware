@@ -5,6 +5,7 @@
 #
 
 import os
+import re
 import sys
 import json
 import zipfile
@@ -39,8 +40,15 @@ for m in root.findall("MODULES/MODULE"):
 			for p in m.findall("./PORTS/PORT"):
 				for c in p.findall("./CONNECTIONS/CONNECTION"):
 					portName = p.attrib["NAME"]
-					connModule = c.attrib["INSTANCE"]
+					connModule = c.attrib["INSTANCE"][::-1].lower()
 					connPort = c.attrib["PORT"]
+
+					match = re.search("([0-4]hte)", connModule)
+
+					if match != None:
+						connModule = match.group(1)[::-1]
+					else:
+						connModule = "?"
 
 					if connPort[0] in "tr" and connPort[1:] in ["x_axis_mac_tdata", "x_statistics_vector"]:
 						moduleInfo["connections"][portName] = connModule
