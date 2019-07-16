@@ -24,7 +24,7 @@ module axi4_lite_slave_write #(parameter addr_width = 7, parameter data_width = 
 	output logic s_axi_bvalid,
 	input logic s_axi_bready
 );
-	enum logic [1:0] {ST_W_WAIT_ADDR, ST_W_WAIT_DATA, ST_W_RESPONSE} state, state_next;
+	enum logic [1:0] {ST_W_WAIT_ADDR, ST_W_WAIT_DATA, ST_W_WAIT_DONE, ST_W_RESPONSE} state, state_next;
 
 	logic awready_next;
 	logic [addr_width-1:0] write_addr_next;
@@ -87,27 +87,34 @@ module axi4_lite_slave_write #(parameter addr_width = 7, parameter data_width = 
 
 			ST_W_WAIT_DATA: begin
 				if(s_axi_wvalid) begin
-					state_next = ST_W_RESPONSE;
 					wready_next = 1'd0;
 					write_req = 1'b1;
 
 					if(write_ready) begin
+						state_next = ST_W_RESPONSE;
 						bresp_next = {~write_response, 1'b0};
 						bvalid_next = 1'b1;
+					end else begin
+						state_next = ST_W_WAIT_DONE;
 					end
 				end
 			end
 
-			ST_W_RESPONSE: begin
+			ST_W_WAIT_DONE: begin
 				write_req = 1'b1;
 
-				if(s_axi_bvalid & s_axi_bready) begin
+				if(write_ready) begin
+					state_next = ST_W_RESPONSE;
+					bresp_next = {~write_response, 1'b0};
+					bvalid_next = 1'b1;
+				end
+			end
+
+			ST_W_RESPONSE: begin
+				if(s_axi_bready) begin
 					state_next = ST_W_WAIT_ADDR;
 					awready_next = 1'b1;
 					bvalid_next = 1'b0;
-				end else if(write_ready) begin
-					bresp_next = {~write_response, 1'b0};
-					bvalid_next = 1'b1;
 				end
 			end
 		endcase
