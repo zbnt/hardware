@@ -1,5 +1,5 @@
 
-module axi4_lite_slave_read #(parameter addr_width = 7)
+module axi4_lite_slave_read #(parameter addr_width = 7, parameter data_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -8,14 +8,14 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 
 	input logic read_ready,
 	input logic read_response,
-	input logic [31:0] read_value,
+	input logic [data_width-1:0] read_value,
 
 	input logic [addr_width-1:0] s_axi_araddr,
 	input logic [2:0] s_axi_arprot,
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [data_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
@@ -25,17 +25,17 @@ module axi4_lite_slave_read #(parameter addr_width = 7)
 	logic arready_next;
 
 	logic rvalid_next;
-	logic [31:0] rdata_next;
 	logic [1:0] rresp_next;
+	logic [data_width-1:0] rdata_next;
 
-	always_ff @(posedge clk or negedge rst_n) begin
+	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state <= ST_R_WAIT_ADDR;
 
 			s_axi_arready <= 1'b0;
 
 			s_axi_rvalid <= 1'b0;
-			s_axi_rdata <= 32'd0;
+			s_axi_rdata <= '0;
 			s_axi_rresp <= 2'd0;
 		end else begin
 			state <= state_next;

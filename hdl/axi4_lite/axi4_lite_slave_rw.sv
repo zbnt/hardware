@@ -1,6 +1,5 @@
-`timescale 1ns / 1ps
 
-module axi4_lite_slave_rw #(parameter addr_width = 7)
+module axi4_lite_slave_rw #(parameter addr_width = 7, parameter data_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -15,15 +14,15 @@ module axi4_lite_slave_rw #(parameter addr_width = 7)
 
 	input logic read_ready,
 	input logic read_response,
-	input logic [31:0] read_value,
+	input logic [data_width-1:0] read_value,
 
 	input logic [addr_width-1:0] s_axi_awaddr,
 	input logic [2:0] s_axi_awprot,
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [data_width-1:0] s_axi_wdata,
+	input logic [(data_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -36,12 +35,12 @@ module axi4_lite_slave_rw #(parameter addr_width = 7)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [data_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
 );
-	axi4_lite_slave_read #(addr_width) U0
+	axi4_lite_slave_read #(addr_width, data_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -63,7 +62,7 @@ module axi4_lite_slave_rw #(parameter addr_width = 7)
 		.s_axi_rready(s_axi_rready)
 	);
 
-	axi4_lite_slave_write #(addr_width) U1
+	axi4_lite_slave_write #(addr_width, data_width) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),

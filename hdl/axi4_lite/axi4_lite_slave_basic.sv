@@ -1,13 +1,12 @@
-`timescale 1ns / 1ps
 
-module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
+module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7, parameter data_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
 
-	input logic [31:0] reg_vals[0:num_regs-1],
-	output logic [addr_width-1:0] reg_write_idx,
-	output logic [31:0] reg_write_value,
+	input logic [data_width-1:0] reg_vals[0:num_regs-1],
+	output logic [$clog2(num_regs)-1:0] reg_write_idx,
+	output logic [data_width-1:0] reg_write_value,
 	output logic reg_write_enable,
 
 	input logic [addr_width-1:0] s_axi_awaddr,
@@ -15,8 +14,8 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [data_width-1:0] s_axi_wdata,
+	input logic [(data_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -29,18 +28,18 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [data_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
 );
 	logic read_req, write_req;
 	logic read_response, write_response;
-	logic [31:0] read_value;
+	logic [data_width-1:0] read_value;
 
 	logic [addr_width-1:0] write_addr;
 
-	axi4_lite_slave_read #(addr_width) U0
+	axi4_lite_slave_read #(addr_width, data_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -62,7 +61,7 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 		.s_axi_rready(s_axi_rready)
 	);
 
-	axi4_lite_slave_write #(addr_width) U1
+	axi4_lite_slave_write #(addr_width, data_width) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -89,20 +88,29 @@ module axi4_lite_slave_basic #(parameter num_regs = 2, parameter addr_width = 7)
 	);
 
 	always_comb begin
-		read_response = s_axi_araddr[addr_width-1:2] < num_regs;
-		read_value = read_response ? reg_vals[s_axi_araddr[addr_width-1:2]] : 32'd0;
+		if(s_axi_araddr[addr_width-1:$clog2(data_width/8)] < num_regs) begin
+			read_response = 1'b1;
+			read_value = reg_vals[s_axi_araddr[addr_width-1:$clog2(data_width/8)]];
+		end else begin
+			read_response = 1'b0;
+			read_value = '0;
+		end
 	end
 
 	always_comb begin
-		write_response = write_addr[addr_width-1:2] < num_regs;
+		write_response = write_addr[addr_width-1:$clog2(data_width/8)] < num_regs;
 
 		if(write_response & write_req) begin
-			logic [31:0] reg_write_mask;
-			reg_write_mask = {{8{s_axi_wstrb[3]}}, {8{s_axi_wstrb[2]}}, {8{s_axi_wstrb[1]}}, {8{s_axi_wstrb[0]}}};
-
 			reg_write_enable = 1'b1;
-			reg_write_idx = write_addr[addr_width-1:2];
-			reg_write_value = reg_vals[reg_write_idx] & ~reg_write_mask | s_axi_wdata & reg_write_mask;
+			reg_write_idx = write_addr[$clog2(num_regs)+$clog2(data_width/8)-1:$clog2(data_width/8)];
+
+			for(int i = 0; i < data_width; i += 8) begin
+				if(s_axi_wstrb[i/8]) begin
+					reg_write_value[i+7:i] = s_axi_wdata[i+7:i];
+				end else begin
+					reg_write_value[i+7:i] = reg_vals[reg_write_idx][i+7:i];
+				end
+			end
 		end else begin
 			reg_write_enable = 1'b0;
 			reg_write_idx = '0;

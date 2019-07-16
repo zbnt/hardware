@@ -1,5 +1,5 @@
 
-module axi4_lite_slave_write #(parameter addr_width = 7)
+module axi4_lite_slave_write #(parameter addr_width = 7, parameter data_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -15,8 +15,8 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [data_width-1:0] s_axi_wdata,
+	input logic [(data_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -34,7 +34,7 @@ module axi4_lite_slave_write #(parameter addr_width = 7)
 	logic bvalid_next;
 	logic [1:0] bresp_next;
 
-	always_ff @(posedge clk or negedge rst_n) begin
+	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state <= ST_W_WAIT_ADDR;
 

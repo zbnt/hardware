@@ -1,10 +1,9 @@
-`timescale 1ns / 1ps
 
 module register_bank #(parameter num_regs = 2, parameter addr_width = 7, parameter allow_write = {num_regs{1'b1}}, parameter reg_width = 32)
 (
 	input logic clk,
 	input logic write_enable,
-	input logic [addr_width-1:0] write_index,
+	input logic [$clog2(num_regs):0] write_index,
 	input logic [reg_width-1:0] write_value,
 	input logic [reg_width-1:0] reg_in[0:num_regs-1],
 	output logic [reg_width-1:0] reg_val[0:num_regs-1]

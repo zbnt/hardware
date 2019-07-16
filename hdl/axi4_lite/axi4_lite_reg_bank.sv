@@ -1,20 +1,19 @@
-`timescale 1ns / 1ps
 
-module axi4_lite_reg_bank #(parameter num_regs = 2, parameter addr_width = 7, parameter allow_write = {num_regs{1'b1}})
+module axi4_lite_reg_bank #(parameter num_regs = 2, parameter addr_width = 7, parameter allow_write = {num_regs{1'b1}}, parameter data_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
 
-	output logic [31:0] reg_val[0:num_regs-1],
-	input logic [31:0] reg_in[0:num_regs-1],
+	output logic [data_width-1:0] reg_val[0:num_regs-1],
+	input logic [data_width-1:0] reg_in[0:num_regs-1],
 
 	input logic [addr_width-1:0] s_axi_awaddr,
 	input logic [2:0] s_axi_awprot,
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [data_width-1:0] s_axi_wdata,
+	input logic [(data_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -27,16 +26,16 @@ module axi4_lite_reg_bank #(parameter num_regs = 2, parameter addr_width = 7, pa
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [data_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
 );
-	logic [addr_width-1:0] reg_write_idx;
-	logic [31:0] reg_write_value;
+	logic [$clog2(num_regs)-1:0] reg_write_idx;
+	logic [data_width-1:0] reg_write_value;
 	logic reg_write_enable;
 
-	axi4_lite_slave_basic #(num_regs, addr_width) U0
+	axi4_lite_slave_basic #(num_regs, addr_width, data_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -71,7 +70,7 @@ module axi4_lite_reg_bank #(parameter num_regs = 2, parameter addr_width = 7, pa
 		.s_axi_rready(s_axi_rready)
 	);
 
-	register_bank #(num_regs, addr_width, allow_write) U1
+	register_bank #(num_regs, addr_width, allow_write, data_width) U1
 	(
 		.clk(clk),
 		.write_enable(reg_write_enable),
