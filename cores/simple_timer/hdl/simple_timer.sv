@@ -54,7 +54,7 @@
 			\field CNTH   0-31   Current count stored in the timer, upper 32 bits.
 */
 
-module simple_timer
+module simple_timer #(parameter axi_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -69,8 +69,8 @@ module simple_timer
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [axi_width-1:0] s_axi_wdata,
+	input logic [(axi_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -83,26 +83,23 @@ module simple_timer
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [axi_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready
 );
 	// axi4_lite registers
 
-	logic [31:0] reg_val[0:5];
-	logic [31:0] reg_in[0:5];
-
-	logic enable, srst;
+	logic enable;
+	logic srst;
 	logic [63:0] max_count;
 
-	axi4_lite_reg_bank #(6, 12, 6'b1101) U0
+	simple_timer_axi #(axi_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.reg_val(reg_val),
-		.reg_in(reg_in),
+		// S_AXI
 
 		.s_axi_awaddr(s_axi_awaddr),
 		.s_axi_awprot(s_axi_awprot),
@@ -126,23 +123,18 @@ module simple_timer
 		.s_axi_rdata(s_axi_rdata),
 		.s_axi_rresp(s_axi_rresp),
 		.s_axi_rvalid(s_axi_rvalid),
-		.s_axi_rready(s_axi_rready)
+		.s_axi_rready(s_axi_rready),
+
+		// Registers
+
+		.enable(enable),
+		.srst(srst),
+
+		.running(time_running),
+
+		.max_count(max_count),
+		.current_count(current_time)
 	);
-
-	always_comb begin
-		enable = reg_val[0][0];
-		srst = reg_val[0][1];
-		max_count = {reg_val[3], reg_val[2]};
-
-		time_running = (enable & ~srst & rst_n) && (current_time < max_count);
-
-		reg_in[0] = ~srst ? reg_val[0] : 32'b10;
-		reg_in[1] = {31'd0, time_running};
-		reg_in[2] = ~srst ? reg_val[2] : 32'd0;
-		reg_in[3] = ~srst ? reg_val[3] : 32'd0;
-		reg_in[4] = current_time[31:0];
-		reg_in[5] = current_time[63:32];
-	end
 
 	// counter
 
@@ -155,4 +147,8 @@ module simple_timer
 
 		.count(current_time)
 	);
+
+	always_comb begin
+		time_running = (enable & ~srst & rst_n) && (current_time < max_count);
+	end
 endmodule

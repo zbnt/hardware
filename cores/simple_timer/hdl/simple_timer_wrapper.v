@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module simple_timer_w
+module simple_timer_w #(parameter axi_width = 32)
 (
 	input wire clk,
 	input wire rst_n,
@@ -19,8 +19,8 @@ module simple_timer_w
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
 
-	input wire [31:0] s_axi_wdata,
-	input wire [3:0] s_axi_wstrb,
+	input wire [axi_width-1:0] s_axi_wdata,
+	input wire [(axi_width/8)-1:0] s_axi_wstrb,
 	input wire s_axi_wvalid,
 	output wire s_axi_wready,
 
@@ -33,12 +33,12 @@ module simple_timer_w
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
 
-	output wire [31:0] s_axi_rdata,
+	output wire [axi_width-1:0] s_axi_rdata,
 	output wire [1:0] s_axi_rresp,
 	output wire s_axi_rvalid,
 	input wire s_axi_rready
 );
-	simple_timer U0
+	simple_timer #(axi_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
