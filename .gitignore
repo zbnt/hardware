@@ -3,6 +3,6 @@
 
 /hw
 
-/projects/*/vivado
+/projects/*/*/vivado
 
 .directory
