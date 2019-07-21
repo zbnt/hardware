@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_w #(parameter use_time = 1, parameter use_fifo = 1)
+module eth_stats_collector_w #(parameter use_timer = 1, parameter enable_fifo = 1)
 (
 	input wire clk,
 	input wire clk_rx,
@@ -49,14 +49,14 @@ module eth_stats_collector_w #(parameter use_time = 1, parameter use_fifo = 1)
 	input wire [31:0] tx_stats_vector,
 	input wire tx_stats_valid
 );
-	eth_stats_collector #(use_time, use_fifo) U0
+	eth_stats_collector #(enable_fifo) U0
 	(
 		.clk(clk),
 		.clk_rx(clk_rx),
 		.rst_n(rst_n),
 
-		.current_time(current_time),
-		.time_running(time_running),
+		.current_time(use_timer ? current_time : 64'd0),
+		.time_running(~use_timer | time_running),
 
 		// S_AXI
 

@@ -15,10 +15,10 @@
 		\device zynq Production
 
 	\parameters
-		\bool use_time : Enables the use of a reference 64 bit timer for keeping track of time. If set to 1, statistics will be
-		                 collected only if the timer is running.
+		\bool use_timer   : Enables the use of a reference 64 bit timer for keeping track of time. If set to 1, statistics will be
+		                    collected only if the timer is running.
 
-		\bool use_fifo : Enables the use of a FIFO for storing statistics.
+		\bool enable_fifo : Enables the use of a FIFO for storing statistics.
 
 	\ports
 		\iface s_axi: Configuration interface from PS.
@@ -45,6 +45,8 @@
 			                     read from registers will be the ones set at the moment this bit was set to 1. This allows you to
 			                     save a snapshot of the statistics without reading values from two or more different states. This
 			                     field is ignored if the core was configured with the FIFO enabled.
+			\field EFIFO  3      Enables the use of a FIFO for storing statistics, writing to this bit has no effect if the core
+						   was generated with enable_fifo equal to 0.
 
 		\reg SC_FIFO_OCCUP: FIFO occupancy.
 			\access RO
@@ -133,7 +135,7 @@
 			\field TFBH   0-31   Number of frames not properly received, upper 32 bits.
 */
 
-module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
+module eth_stats_collector #(parameter enable_fifo = 1)
 (
 	input logic clk,
 	input logic clk_rx,
@@ -183,7 +185,7 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 	logic enable, srst;
 	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad;
 
-	eth_stats_collector_axi #(use_fifo) U0
+	eth_stats_collector_axi #(enable_fifo) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -215,7 +217,7 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 		.enable(enable),
 		.srst(srst),
 
-		.current_time(use_time ? current_time : 64'd0),
+		.current_time(current_time),
 		.tx_bytes(tx_bytes),
 		.tx_good(tx_good),
 		.tx_bad(tx_bad),
@@ -247,7 +249,7 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 		if(~rst_n | srst) begin
 			enable_tx <= 1'b0;
 		end else begin
-			enable_tx <= enable & (~use_time | time_running);
+			enable_tx <= enable & time_running;
 		end
 	end
 
@@ -283,7 +285,7 @@ module eth_stats_collector #(parameter use_time = 1, parameter use_fifo = 1)
 	(
 		.clk_src(clk),
 		.clk_dst(clk_rx),
-		.data_in({rst_n & ~srst, enable & (~use_time | time_running)}),
+		.data_in({rst_n & ~srst, enable & time_running}),
 		.data_out({rst_rx_n, enable_rx})
 	);
 endmodule

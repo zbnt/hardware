@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_axi #(parameter use_fifo = 1)
+module eth_stats_collector_axi #(parameter enable_fifo = 1)
 (
 	input logic clk,
 	input logic rst_n,
@@ -105,7 +105,7 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 
 	// Read/write registers as requested
 
-	logic hold, stats_changed;
+	logic hold, stats_changed, use_fifo;
 	logic [31:0] write_mask;
 	logic [63:0] time_reg, tx_bytes_reg, tx_good_reg, tx_bad_reg, rx_bytes_reg, rx_good_reg, rx_bad_reg;
 
@@ -119,6 +119,7 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 			enable <= 1'b0;
 			srst <= srst & rst_n;
 			hold <= 1'b0;
+			use_fifo <= 1'b0;
 
 			time_reg <= 64'd0;
 			tx_bytes_reg <= 64'd0;
@@ -143,10 +144,14 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 			if(write_req && write_addr[11:2] == 10'd0) begin
 				enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 				hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
+
+				if(enable_fifo) begin
+					use_fifo <= (s_axi_wdata[3] & write_mask[3]) | (use_fifo & ~write_mask[3]);
+				end
 			end
 
 			// Update the stored values if they changed and either hold is set to 0 or FIFO is enabled
-			if(stats_changed & (use_fifo | ~hold)) begin
+			if(stats_changed & ((enable_fifo & use_fifo) | ~hold)) begin
 				time_reg <= current_time;
 				tx_bytes_reg <= tx_bytes;
 				tx_good_reg <= tx_good;
@@ -207,24 +212,24 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 				read_response = 1'b1;
 
 				case(s_axi_araddr[6:2])
-					5'd00: read_value = {29'd0, hold, srst, enable};
+					5'd00: read_value = {28'd0, use_fifo, hold, srst, enable};
 					5'd01: read_value = {16'd0, fifo_occupancy};
 					5'd02: read_value = 32'd0;
 					5'd03: read_value = 32'd0;
-					5'd04: read_value = use_fifo ? fifo_time[31:0]      : time_reg[31:0];
-					5'd05: read_value = use_fifo ? fifo_time[63:32]     : time_reg[63:32];
-					5'd06: read_value = use_fifo ? fifo_tx_bytes[31:0]  : tx_bytes_reg[31:0];
-					5'd07: read_value = use_fifo ? fifo_tx_bytes[63:32] : tx_bytes_reg[63:32];
-					5'd08: read_value = use_fifo ? fifo_tx_good[31:0]   : tx_good_reg[31:0];
-					5'd09: read_value = use_fifo ? fifo_tx_good[63:32]  : tx_good_reg[63:32];
-					5'd10: read_value = use_fifo ? fifo_tx_bad[31:0]    : tx_bad_reg[31:0];
-					5'd11: read_value = use_fifo ? fifo_tx_bad[63:32]   : tx_bad_reg[63:32];
-					5'd12: read_value = use_fifo ? fifo_rx_bytes[31:0]  : rx_bytes_reg[31:0];
-					5'd13: read_value = use_fifo ? fifo_rx_bytes[63:32] : rx_bytes_reg[63:32];
-					5'd14: read_value = use_fifo ? fifo_rx_good[31:0]   : rx_good_reg[31:0];
-					5'd15: read_value = use_fifo ? fifo_rx_good[63:32]  : rx_good_reg[63:32];
-					5'd16: read_value = use_fifo ? fifo_rx_bad[31:0]    : rx_bad_reg[31:0];
-					5'd17: read_value = use_fifo ? fifo_rx_bad[63:32]   : rx_bad_reg[63:32];
+					5'd04: read_value = (enable_fifo & use_fifo) ? fifo_time[31:0]      : time_reg[31:0];
+					5'd05: read_value = (enable_fifo & use_fifo) ? fifo_time[63:32]     : time_reg[63:32];
+					5'd06: read_value = (enable_fifo & use_fifo) ? fifo_tx_bytes[31:0]  : tx_bytes_reg[31:0];
+					5'd07: read_value = (enable_fifo & use_fifo) ? fifo_tx_bytes[63:32] : tx_bytes_reg[63:32];
+					5'd08: read_value = (enable_fifo & use_fifo) ? fifo_tx_good[31:0]   : tx_good_reg[31:0];
+					5'd09: read_value = (enable_fifo & use_fifo) ? fifo_tx_good[63:32]  : tx_good_reg[63:32];
+					5'd10: read_value = (enable_fifo & use_fifo) ? fifo_tx_bad[31:0]    : tx_bad_reg[31:0];
+					5'd11: read_value = (enable_fifo & use_fifo) ? fifo_tx_bad[63:32]   : tx_bad_reg[63:32];
+					5'd12: read_value = (enable_fifo & use_fifo) ? fifo_rx_bytes[31:0]  : rx_bytes_reg[31:0];
+					5'd13: read_value = (enable_fifo & use_fifo) ? fifo_rx_bytes[63:32] : rx_bytes_reg[63:32];
+					5'd14: read_value = (enable_fifo & use_fifo) ? fifo_rx_good[31:0]   : rx_good_reg[31:0];
+					5'd15: read_value = (enable_fifo & use_fifo) ? fifo_rx_good[63:32]  : rx_good_reg[63:32];
+					5'd16: read_value = (enable_fifo & use_fifo) ? fifo_rx_bad[31:0]    : rx_bad_reg[31:0];
+					5'd17: read_value = (enable_fifo & use_fifo) ? fifo_rx_bad[63:32]   : rx_bad_reg[63:32];
 				endcase
 			end else begin
 				// Invalid address, mark as error
@@ -243,7 +248,7 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 			end else if(write_addr[11:2] == 10'd2) begin
 				// Avoid trouble, make the CPU wait until the FIFO has been read
 				// Do nothing if FIFO is empty or disabled.
-				if(use_fifo & ~fifo_empty) begin
+				if(enable_fifo & ~fifo_empty) begin
 					write_ready = fifo_read;
 					write_response = 1'b1;
 				end else begin
@@ -258,7 +263,7 @@ module eth_stats_collector_axi #(parameter use_fifo = 1)
 		end
 	end
 
-	if(use_fifo) begin
+	if(enable_fifo) begin
 		stats_fifo U1
 		(
 			.clk(clk),
