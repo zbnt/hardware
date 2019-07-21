@@ -135,7 +135,7 @@
 			\field TFBH   0-31   Number of frames not properly received, upper 32 bits.
 */
 
-module eth_stats_collector #(parameter enable_fifo = 1)
+module eth_stats_collector #(parameter axi_width = 32, parameter enable_fifo = 1)
 (
 	input logic clk,
 	input logic clk_rx,
@@ -151,8 +151,8 @@ module eth_stats_collector #(parameter enable_fifo = 1)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [axi_width-1:0] s_axi_wdata,
+	input logic [(axi_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -165,7 +165,7 @@ module eth_stats_collector #(parameter enable_fifo = 1)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [axi_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -185,7 +185,7 @@ module eth_stats_collector #(parameter enable_fifo = 1)
 	logic enable, srst;
 	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad;
 
-	eth_stats_collector_axi #(enable_fifo) U0
+	eth_stats_collector_axi #(axi_width, enable_fifo) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),

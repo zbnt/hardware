@@ -351,7 +351,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>dd6cc37e</spirit:value>
+            <spirit:value>ea436304</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -373,7 +373,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>dd6cc37e</spirit:value>
+            <spirit:value>ea436304</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -387,7 +387,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>eab2cab2</spirit:value>
+            <spirit:value>25ab5952</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -564,7 +564,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">31</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.axi_width&apos;)) - 1)">31</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -581,7 +581,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">3</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="((spirit:decode(id(&apos;MODELPARAM_VALUE.axi_width&apos;)) / 8) - 1)">3</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -727,7 +727,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">31</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.axi_width&apos;)) - 1)">31</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -854,6 +854,11 @@
         <spirit:displayName>Enable Fifo</spirit:displayName>
         <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.enable_fifo">true</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>axi_width</spirit:name>
+        <spirit:displayName>Axi Width</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.axi_width">32</spirit:value>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
@@ -865,6 +870,11 @@
       <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
+    </spirit:choice>
+    <spirit:choice>
+      <spirit:name>choice_list_a3c0ae87</spirit:name>
+      <spirit:enumeration>32</spirit:enumeration>
+      <spirit:enumeration>64</spirit:enumeration>
     </spirit:choice>
     <spirit:choice>
       <spirit:name>choice_pairs_ce1226b1</spirit:name>
@@ -894,7 +904,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_stats_collector_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_1b0e5e2e</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_a2cdb1a0</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -965,7 +975,7 @@
       <spirit:file>
         <spirit:name>xgui/eth_stats_collector_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_eab2cab2</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_25ab5952</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1003,6 +1013,11 @@
       <spirit:displayName>Enable FIFO</spirit:displayName>
       <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.enable_fifo">true</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>axi_width</spirit:name>
+      <spirit:displayName>AXI Data Width</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.axi_width" spirit:choiceRef="choice_list_a3c0ae87">32</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -1014,17 +1029,17 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Statistics Collector</xilinx:displayName>
-      <xilinx:coreRevision>12</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-07-21T08:03:51Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>13</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-07-21T09:11:16Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e34f36de"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="b26e8bc8"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="098fb190"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="b577691e"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="9f237862"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="a5133114"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="cc25c86c"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="b88017e2"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="31d905ee"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="ced79321"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
