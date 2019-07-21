@@ -140,7 +140,7 @@
 			\field LPINGH 0-31   Number of pongs not received under the maximum time, upper 32 bits.
 */
 
-module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifier)
+module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_mac, parameter identifier)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -152,8 +152,8 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [axi_width-1:0] s_axi_wdata,
+	input logic [(axi_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -166,7 +166,7 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [axi_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -219,7 +219,7 @@ module eth_measurer #(parameter main_mac, parameter loop_mac, parameter identifi
 	logic [31:0] delay, timeout, ping_time, pong_time;
 	logic [63:0] ping_pongs_good, pings_lost, pongs_lost;
 
-	eth_measurer_axi U0
+	eth_measurer_axi #(axi_width) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
