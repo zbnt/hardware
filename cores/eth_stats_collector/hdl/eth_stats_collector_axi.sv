@@ -186,7 +186,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 		end
 
 		// SRST must be writable even after it has been set to 1
-		if(rst_n & write_req && write_addr[11:$clog2(axi_width/8)] == 10'd0) begin
+		if(rst_n & write_req && write_addr[11:$clog2(axi_width/8)] == '0) begin
 			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
@@ -268,7 +268,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 			if(write_addr >= 12'd0 && write_addr <= 12'd71) begin
 				write_response = 1'b1;
 
-				if(use_fifo && write_addr[11:$clog2(axi_width/8)] == 10'd64/axi_width && (axi_width == 32 || |s_axi_wstrb[7:4])) begin
+				if(use_fifo && ~fifo_empty && write_addr[11:$clog2(axi_width/8)] == 10'd64/axi_width && (axi_width == 32 || |s_axi_wstrb[7:4])) begin
 					// Wait until FIFO has been read
 					write_ready = fifo_read;
 				end else begin
