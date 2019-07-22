@@ -56,7 +56,7 @@ module eth_stats_collector_w #(parameter axi_width = 32, parameter use_timer = 1
 		.rst_n(rst_n),
 
 		.current_time(use_timer ? current_time : 64'd0),
-		.time_running(~use_timer | time_running),
+		.time_running(~|use_timer | time_running),
 
 		// S_AXI
 

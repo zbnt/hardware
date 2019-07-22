@@ -351,7 +351,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ea436304</spirit:value>
+            <spirit:value>21eeef05</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -373,7 +373,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ea436304</spirit:value>
+            <spirit:value>21eeef05</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -867,14 +867,14 @@
       <spirit:enumeration>32</spirit:enumeration>
     </spirit:choice>
     <spirit:choice>
+      <spirit:name>choice_list_99ba8646</spirit:name>
+      <spirit:enumeration>32</spirit:enumeration>
+      <spirit:enumeration>64</spirit:enumeration>
+    </spirit:choice>
+    <spirit:choice>
       <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
-    </spirit:choice>
-    <spirit:choice>
-      <spirit:name>choice_list_a3c0ae87</spirit:name>
-      <spirit:enumeration>32</spirit:enumeration>
-      <spirit:enumeration>64</spirit:enumeration>
     </spirit:choice>
     <spirit:choice>
       <spirit:name>choice_pairs_ce1226b1</spirit:name>
@@ -904,7 +904,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_stats_collector_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_a2cdb1a0</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_1e612d2b</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1016,7 +1016,7 @@
     <spirit:parameter>
       <spirit:name>axi_width</spirit:name>
       <spirit:displayName>AXI Data Width</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.axi_width" spirit:choiceRef="choice_list_a3c0ae87">32</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.axi_width" spirit:choiceRef="choice_list_99ba8646">32</spirit:value>
     </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
@@ -1029,17 +1029,17 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Statistics Collector</xilinx:displayName>
-      <xilinx:coreRevision>13</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-07-21T09:11:16Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>14</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-07-22T00:40:25Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e34f36de"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="b26e8bc8"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="cc25c86c"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="7cbb7bc4"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="b88017e2"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="31d905ee"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="ced79321"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="70817fac"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

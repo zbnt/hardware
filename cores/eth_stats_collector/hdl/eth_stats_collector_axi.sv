@@ -54,7 +54,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 	logic read_req;
 	logic read_ready;
 	logic read_response;
-	logic [31:0] read_value;
+	logic [axi_width-1:0] read_value;
 
 	logic write_req;
 	logic write_ready;
@@ -194,7 +194,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 	always_comb begin
 		read_ready = 1'b0;
 		read_response = 1'b0;
-		read_value = 32'd0;
+		read_value = '0;
 
 		write_ready = 1'b0;
 		write_response = 1'b0;
@@ -208,7 +208,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 		// Handle read requests
 
 		if(read_req) begin
-			if(s_axi_araddr >= 12'd0 && s_axi_araddr <= 12'd71) begin
+			if(s_axi_araddr <= 12'd71) begin
 				// Register address
 				read_ready = 1'b1;
 				read_response = 1'b1;
@@ -265,7 +265,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 		// Handle write requests
 
 		if(write_req) begin
-			if(write_addr >= 12'd0 && write_addr <= 12'd71) begin
+			if(write_addr <= 12'd71) begin
 				write_response = 1'b1;
 
 				if(use_fifo && ~fifo_empty && write_addr[11:$clog2(axi_width/8)] == 10'd64/axi_width && (axi_width == 32 || |s_axi_wstrb[7:4])) begin
