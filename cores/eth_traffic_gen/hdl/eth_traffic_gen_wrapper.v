@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_traffic_gen_w #(parameter use_ext_enable = 1)
+module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 1)
 (
 	input wire clk,
 	input wire rst_n,
@@ -18,8 +18,8 @@ module eth_traffic_gen_w #(parameter use_ext_enable = 1)
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
 
-	input wire [31:0] s_axi_wdata,
-	input wire [3:0] s_axi_wstrb,
+	input wire [axi_width-1:0] s_axi_wdata,
+	input wire [(axi_width/8)-1:0] s_axi_wstrb,
 	input wire s_axi_wvalid,
 	output wire s_axi_wready,
 
@@ -32,7 +32,7 @@ module eth_traffic_gen_w #(parameter use_ext_enable = 1)
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
 
-	output wire [31:0] s_axi_rdata,
+	output wire [axi_width-1:0] s_axi_rdata,
 	output wire [1:0] s_axi_rresp,
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
@@ -45,7 +45,7 @@ module eth_traffic_gen_w #(parameter use_ext_enable = 1)
 	output wire m_axis_tvalid,
 	input wire m_axis_tready
 );
-	eth_traffic_gen U0
+	eth_traffic_gen #(axi_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),

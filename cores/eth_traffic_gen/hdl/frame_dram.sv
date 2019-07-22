@@ -4,22 +4,25 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module frame_dram
+module frame_dram #(parameter axi_width = 32)
 (
 	input logic clk,
 
 	input logic [10:0] a,
-	input logic [7:0] d,
-	output logic [7:0] spo,
-	input logic we,
+	input logic [axi_width-1:0] d,
+	output logic [axi_width-1:0] spo,
+	input logic [(axi_width/8)-1:0] we,
 
 	input logic [10:0] dpra,
 	output logic [7:0] dpo
 );
+	logic [axi_width-1:0] dpo_full;
+	logic [7:0] dpo_bytes[0:(axi_width/8)-1];
+
 	xpm_memory_dpdistram
 	#(
-		.ADDR_WIDTH_A(11),
-		.ADDR_WIDTH_B(11),
+		.ADDR_WIDTH_A(11 - $clog2(axi_width/8)),
+		.ADDR_WIDTH_B(11 - $clog2(axi_width/8)),
 		.BYTE_WRITE_WIDTH_A(8),
 		.CLOCKING_MODE("common_clock"),
 		.MEMORY_INIT_FILE("none"),
@@ -27,8 +30,8 @@ module frame_dram
 		.MEMORY_OPTIMIZATION("true"),
 		.MEMORY_SIZE(16384),
 		.MESSAGE_CONTROL(0),
-		.READ_DATA_WIDTH_A(8),
-		.READ_DATA_WIDTH_B(8),
+		.READ_DATA_WIDTH_A(axi_width),
+		.READ_DATA_WIDTH_B(axi_width),
 		.READ_LATENCY_A(0),
 		.READ_LATENCY_B(0),
 		.READ_RESET_VALUE_A("0"),
@@ -37,7 +40,7 @@ module frame_dram
 		.RST_MODE_B("SYNC"),
 		.USE_EMBEDDED_CONSTRAINT(0),
 		.USE_MEM_INIT(0),
-		.WRITE_DATA_WIDTH_A(8)
+		.WRITE_DATA_WIDTH_A(axi_width)
 	)
 	U0
 	(
@@ -47,13 +50,13 @@ module frame_dram
 		.rsta(1'b0),
 		.rstb(1'b0),
 
-		.addra(a),
+		.addra(a[10:$clog2(axi_width/8)]),
 		.dina(d),
 		.douta(spo),
 		.wea(we),
 
-		.addrb(dpra),
-		.doutb(dpo),
+		.addrb(dpra[10:$clog2(axi_width/8)]),
+		.doutb(dpo_full),
 
 		.ena(1'b1),
 		.enb(1'b1),
@@ -61,4 +64,14 @@ module frame_dram
 		.regcea(1'b1),
 		.regceb(1'b1)
 	);
+
+	for(genvar i = 0; i < axi_width/8; ++i) begin
+		always_comb begin
+			dpo_bytes[i] = dpo_full[i*8+7:i*8];
+		end
+	end
+
+	always_comb begin
+		dpo = dpo_bytes[dpra[$clog2(axi_width/8)-1:0]];
+	end
 endmodule

@@ -84,7 +84,7 @@
 			\size  2048
 */
 
-module eth_traffic_gen
+module eth_traffic_gen #(parameter axi_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -98,8 +98,8 @@ module eth_traffic_gen
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [axi_width-1:0] s_axi_wdata,
+	input logic [(axi_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -112,7 +112,7 @@ module eth_traffic_gen
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [axi_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -139,9 +139,10 @@ module eth_traffic_gen
 	logic use_burst, burst_enable;
 	logic [15:0] burst_on_time, burst_off_time;
 
-	logic [7:0] mem_a_wdata, mem_a_rdata, mem_b_rdata;
+	logic [axi_width-1:0] mem_a_wdata, mem_a_rdata;
+	logic [7:0] mem_b_rdata;
 	logic [10:0] mem_a_addr, mem_b_addr;
-	logic mem_a_we;
+	logic [(axi_width/8)-1:0] mem_a_we;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -151,7 +152,7 @@ module eth_traffic_gen
 		end
 	end
 
-	eth_traffic_gen_axi U0
+	eth_traffic_gen_axi #(axi_width) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -228,7 +229,7 @@ module eth_traffic_gen
 		.m_axis_tready(m_axis_tready)
 	);
 
-	frame_dram U2
+	frame_dram #(axi_width) U2
 	(
 		.clk(clk),
 
