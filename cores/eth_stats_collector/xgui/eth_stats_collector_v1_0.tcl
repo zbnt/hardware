@@ -3,12 +3,15 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
   #Adding Page
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
-  set axi_width [ipgui::add_param $IPINST -name "axi_width" -parent ${Page_0} -widget comboBox]
-  set_property tooltip {Width of the AXI bus, in bytes.} ${axi_width}
-  set use_timer [ipgui::add_param $IPINST -name "use_timer" -parent ${Page_0}]
-  set_property tooltip {Enables the use of a reference 64 bit timer for keeping track of time. If enabled, statistics will be collected only if the timer is running.} ${use_timer}
-  set enable_fifo [ipgui::add_param $IPINST -name "enable_fifo" -parent ${Page_0}]
+  set axi_width [ipgui::add_param $IPINST -name "axi_width" -parent ${Page_0} -layout horizontal]
+  set_property tooltip {Width of the AXI bus, in bits.} ${axi_width}
+  #Adding Group
+  set Other_options [ipgui::add_group $IPINST -name "Other options" -parent ${Page_0} -layout horizontal]
+  set enable_fifo [ipgui::add_param $IPINST -name "enable_fifo" -parent ${Other_options}]
   set_property tooltip {Enables the use of a FIFO for storing statistics.} ${enable_fifo}
+  set use_timer [ipgui::add_param $IPINST -name "use_timer" -parent ${Other_options}]
+  set_property tooltip {Enables the use of a reference 64 bit timer for keeping track of time. If enabled, statistics will be collected only if the timer is running.} ${use_timer}
+
 
 
 }

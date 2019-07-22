@@ -163,7 +163,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 
 			if(write_req) begin
 				// Write to config bits if requested via AXI
-				if(write_req && write_addr[11:$clog2(axi_width/8)] == 10'd0) begin
+				if(write_addr[11:$clog2(axi_width/8)] == '0) begin
 					enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 					hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
 
@@ -173,11 +173,27 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 				end
 
 				// Special FIFO_POP register
-				if(use_fifo && ~fifo_busy && write_addr[11:$clog2(axi_width/8)] == 10'd64/axi_width && (axi_width == 32 || |s_axi_wstrb[7:4])) begin
-					fifo_pop <= 1'b1;
-					fifo_busy <= 1'b1;
-				end else begin
-					fifo_pop <= 1'b0;
+				if(axi_width == 32) begin
+					if(use_fifo && ~fifo_busy && write_addr[11:2] == 10'd2) begin
+						fifo_pop <= 1'b1;
+						fifo_busy <= 1'b1;
+					end else begin
+						fifo_pop <= 1'b0;
+					end
+				end else if(axi_width == 64) begin
+					if(use_fifo && ~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
+						fifo_pop <= 1'b1;
+						fifo_busy <= 1'b1;
+					end else begin
+						fifo_pop <= 1'b0;
+					end
+				end else if(axi_width == 128) begin
+					if(use_fifo && ~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
+						fifo_pop <= 1'b1;
+						fifo_busy <= 1'b1;
+					end else begin
+						fifo_pop <= 1'b0;
+					end
 				end
 			end else begin
 				fifo_pop <= 1'b0;
@@ -266,13 +282,21 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 
 		if(write_req) begin
 			if(write_addr <= 12'd71) begin
+				write_ready = 1'b1;
 				write_response = 1'b1;
 
-				if(use_fifo && ~fifo_empty && write_addr[11:$clog2(axi_width/8)] == 10'd64/axi_width && (axi_width == 32 || |s_axi_wstrb[7:4])) begin
-					// Wait until FIFO has been read
-					write_ready = fifo_read;
-				end else begin
-					write_ready = 1'b1;
+				if(axi_width == 32) begin
+					if(use_fifo && ~fifo_busy && write_addr[11:2] == 10'd2) begin
+						write_ready = fifo_read;
+					end
+				end else if(axi_width == 64) begin
+					if(use_fifo && ~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
+						write_ready = fifo_read;
+					end
+				end else if(axi_width == 128) begin
+					if(use_fifo && ~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
+						write_ready = fifo_read;
+					end
 				end
 			end else begin
 				write_ready = 1'b1;
