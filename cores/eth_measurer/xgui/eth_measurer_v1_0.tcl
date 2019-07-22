@@ -3,14 +3,17 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
   #Adding Page
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
-  set axi_width [ipgui::add_param $IPINST -name "axi_width" -parent ${Page_0} -widget comboBox]
-  set_property tooltip {Width of the AXI bus, in bytes.} ${axi_width}
-  set main_mac [ipgui::add_param $IPINST -name "main_mac" -parent ${Page_0}]
+  set axi_width [ipgui::add_param $IPINST -name "axi_width" -parent ${Page_0} -layout horizontal]
+  set_property tooltip {Width of the AXI bus, in bits.} ${axi_width}
+  #Adding Group
+  set Frame_options [ipgui::add_group $IPINST -name "Frame options" -parent ${Page_0}]
+  set main_mac [ipgui::add_param $IPINST -name "main_mac" -parent ${Frame_options}]
   set_property tooltip {MAC address for the main interface} ${main_mac}
-  set loop_mac [ipgui::add_param $IPINST -name "loop_mac" -parent ${Page_0}]
+  set loop_mac [ipgui::add_param $IPINST -name "loop_mac" -parent ${Frame_options}]
   set_property tooltip {MAC address for the loopback interface} ${loop_mac}
-  set identifier [ipgui::add_param $IPINST -name "identifier" -parent ${Page_0}]
+  set identifier [ipgui::add_param $IPINST -name "identifier" -parent ${Frame_options}]
   set_property tooltip {Identifier for the ping/pong frames} ${identifier}
+
 
 
 }
