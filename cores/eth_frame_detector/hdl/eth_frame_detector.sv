@@ -62,6 +62,9 @@
 			\field FPOP   0-31   If set to a value different from 0, read the next set of values from the FIFO and store them in
 			                     the registers. If read, always returns 0.
 
+		\reg FD_RSVD: Reserved.
+			\access RO
+
 		\reg FD_TIME_L: Detection time, lower half.
 			\access RO
 
@@ -93,7 +96,7 @@
 			\size  3072
 */
 
-module eth_frame_detector
+module eth_frame_detector #(parameter axi_width = 32)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -105,8 +108,8 @@ module eth_frame_detector
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [31:0] s_axi_wdata,
-	input logic [3:0] s_axi_wstrb,
+	input logic [axi_width-1:0] s_axi_wdata,
+	input logic [(axi_width/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -119,7 +122,7 @@ module eth_frame_detector
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [31:0] s_axi_rdata,
+	output logic [axi_width-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -187,10 +190,10 @@ module eth_frame_detector
 	logic [10:0] mem_a_pa_addr;
 	logic [10:0] mem_b_pa_addr;
 
-	logic [29:0] mem_a_pa_wdata, mem_a_pa_rdata;
-	logic [29:0] mem_b_pa_wdata, mem_b_pa_rdata;
+	logic [30*(axi_width/32)-1:0] mem_a_pa_wdata, mem_a_pa_rdata;
+	logic [30*(axi_width/32)-1:0] mem_b_pa_wdata, mem_b_pa_rdata;
 
-	eth_frame_detector_axi U0
+	eth_frame_detector_axi #(axi_width) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -371,7 +374,7 @@ module eth_frame_detector
 
 	// Memory for storing patterns, one for each direction
 
-	eth_frame_pattern_mem U5
+	eth_frame_pattern_mem #(axi_width) U5
 	(
 		.clk(s_axi_clk),
 
@@ -392,7 +395,7 @@ module eth_frame_detector
 		.mem_pb_rdata(mem_a_pb_data)
 	);
 
-	eth_frame_pattern_mem U6
+	eth_frame_pattern_mem #(axi_width) U6
 	(
 		.clk(s_axi_clk),
 

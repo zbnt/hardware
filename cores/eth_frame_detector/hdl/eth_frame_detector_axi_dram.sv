@@ -4,18 +4,18 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axi_dram
+module eth_frame_detector_axi_dram #(parameter axi_width = 32)
 (
 	input logic clk,
 	input logic rst_n,
 
 	input logic read_req,
-	input logic [10:0] read_addr,
+	input logic [12:0] read_addr,
 
 	input logic write_req,
-	input logic [31:0] write_mask,
-	input logic [10:0] write_addr,
-	input logic [29:0] write_data,
+	input logic [axi_width-1:0] write_mask,
+	input logic [12:0] write_addr,
+	input logic [axi_width-1:0] write_data,
 
 	output logic done,
 
@@ -26,15 +26,23 @@ module eth_frame_detector_axi_dram
 	input logic mem_ack,
 
 	output logic [10:0] mem_addr,
-	output logic [29:0] mem_wdata,
-	input logic [29:0] mem_rdata
+	output logic [30*(axi_width/32)-1:0] mem_wdata,
+	input logic [30*(axi_width/32)-1:0] mem_rdata
 );
 	enum logic [1:0] {ST_IDLE, ST_READ_MEM, ST_WRITE_MEM} state, state_next;
 
 	logic mem_ack_prev;
 	logic mem_write_pending;
+	logic [30*(axi_width/32)-1:0] write_mask_q;
 
-	logic [29:0] write_mask_q;
+	for(genvar i = 0; i < axi_width/32; ++i) begin
+		always_ff @(posedge clk) begin
+			if(rst_n && state == ST_IDLE && write_req) begin
+				write_mask_q[i*30+29:i*30] <= write_mask[i*32+29:i*32];
+				mem_wdata[i*30+29:i*30] <= write_data[i*32+29:i*32];
+			end
+		end
+	end
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -44,7 +52,7 @@ module eth_frame_detector_axi_dram
 			mem_we <= 1'b0;
 
 			mem_addr <= 11'd0;
-			mem_wdata <= 30'd0;
+			mem_wdata <= '0;
 
 			done <= 1'b0;
 			mem_write_pending <= 1'b0;
@@ -52,20 +60,11 @@ module eth_frame_detector_axi_dram
 			case(state)
 				ST_IDLE: begin
 					if(write_req) begin
-						mem_req <= 1'b1;
+						state <= ST_READ_MEM;
+						mem_we <= 1'b0;
 						mem_addr <= write_addr;
-						mem_wdata <= write_data;
-
-						write_mask_q <= write_mask[29:0];
-
-						if(&write_mask) begin
-							state <= ST_WRITE_MEM;
-							mem_we <= 1'b1;
-						end else begin
-							state <= ST_READ_MEM;
-							mem_we <= 1'b0;
-							mem_write_pending <= 1'b1;
-						end
+						mem_req <= 1'b1;
+						mem_write_pending <= 1'b1;
 					end else if(read_req) begin
 						state <= ST_READ_MEM;
 						mem_we <= 1'b0;

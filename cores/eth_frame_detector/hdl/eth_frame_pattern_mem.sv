@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_pattern_mem
+module eth_frame_pattern_mem #(parameter axi_width = 32)
 (
 	input logic clk,
 
@@ -15,20 +15,20 @@ module eth_frame_pattern_mem
 	output logic mem_pa_ack,
 
 	input logic [10:0] mem_pa_addr,
-	input logic [29:0] mem_pa_wdata,
-	output logic [29:0] mem_pa_rdata,
+	input logic [30*(axi_width/32)-1:0] mem_pa_wdata,
+	output logic [30*(axi_width/32)-1:0] mem_pa_rdata,
 
 	// MEM_PB
 
 	input logic mem_pb_clk,
 	input logic [10:0] mem_pb_addr,
-	output logic [29:0] mem_pb_rdata
+	output logic [30*(axi_width/32)-1:0] mem_pb_rdata
 );
 	// mem_pb_clk clock domain
 
 	logic mem_wenable;
 	logic [10:0] mem_pa_addr_cdc;
-	logic [29:0] mem_pa_wdata_cdc, mem_pa_rdata_cdc;
+	logic [30*(axi_width/32)-1:0] mem_pa_wdata_cdc, mem_pa_rdata_cdc;
 	logic mem_pa_req_cdc, mem_pa_ack_cdc, mem_pa_we_cdc;
 
 	always_ff @(posedge mem_pb_clk) begin
@@ -44,7 +44,7 @@ module eth_frame_pattern_mem
 		end
 	end
 
-	pattern_mem U0
+	pattern_mem #(axi_width) U0
 	(
 		.clk(mem_pb_clk),
 
@@ -59,7 +59,7 @@ module eth_frame_pattern_mem
 
 	// clock domain crossing
 
-	bus_cdc #(43, 2) U1
+	bus_cdc #(13 + 30*(axi_width/32), 2) U1
 	(
 		.clk_src(clk),
 		.clk_dst(mem_pb_clk),
@@ -67,7 +67,7 @@ module eth_frame_pattern_mem
 		.data_out({mem_pa_wdata_cdc, mem_pa_addr_cdc, mem_pa_we_cdc, mem_pa_req_cdc})
 	);
 
-	bus_cdc #(31, 2) U2
+	bus_cdc #(1 + 30*(axi_width/32), 2) U2
 	(
 		.clk_src(mem_pb_clk),
 		.clk_dst(clk),
