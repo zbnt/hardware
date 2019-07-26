@@ -1,7 +1,7 @@
 
 # zbnt_hw
 
-HDL code for ZBNT, a configurable network tester for the [ZedBoard](http://www.zedboard.org/product/zedboard)
+HDL code for ZBNT, a configurable network tester for Xilinx FPGAs/SoCs
 
 ## Related projects
 
@@ -12,9 +12,10 @@ HDL code for ZBNT, a configurable network tester for the [ZedBoard](http://www.z
 
 ### Hardware
 
-* [ZedBoard](http://www.zedboard.org/product/zedboard)
-* [Ethernet FMC](http://ethernetfmc.com/)
-	* **Warning:** The included projects were made for the 2.5V version of the Ethernet FMC, if you have the 1.8V version you'll have to edit the constraints and block designs, refer to [the official documentation](http://ethernetfmc.com/using-the-1-8v-version-with-the-zedboard/).
+This repository includes block designs for the following boards:
+
+* [ZedBoard](http://www.zedboard.org/product/zedboard) with [Ethernet FMC](http://ethernetfmc.com) **(2.5V version only)**
+* [NetFPGA-1G-CML](https://store.digilentinc.com/netfpga-1g-cml-kintex-7-fpga-development-board)
 
 ### Software
 
@@ -32,15 +33,27 @@ HDL code for ZBNT, a configurable network tester for the [ZedBoard](http://www.z
 1. Clone this repository, make sure all dependencies are installed before proceeding.
 2. Add Vivado tools to PATH by sourcing the `settings64.sh` script in the installation directory:
 
-~~~~
+```bash
 source /opt/Xilinx/Vivado/2018.3/settings64.sh
-~~~~
+```
 
 3. `cd` to the root directory of this repository and run `make`
-	* By default, the scripts will try to use the amount of threads in your CPU as the number of parallel jobs when building each project, you can override this by setting the `NUM_JOBS` environment variable.
-	* This process can use a considerable amount of RAM, try reducing the amount of parallel jobs if you run out of memory.
+
+```bash
+# Build bitstreams for all supported devices
+make
+
+# Build bitstreams only for the specified device
+make zedboard
+make netfpga_1g_cml
+
+# Use the NUM_JOBS environment variable to control the number of parallel jobs
+# By default it will use one parallel job for each thread in your CPU
+NUM_JOBS=2 make zedboard
+```
 
 ## License
 
-Unless otherwise noted, files in this repository are subject to the terms of the Mozilla Public License, v.2.0.
-Check [LICENSE.txt](https://github.com/oscar-rc1/zbnt_hw/blob/master/LICENSE.txt) or [https://mozilla.org/MPL/2.0/]() for more details.
+* The source code included in this repository is subject to the terms of the Mozilla Public License, v2.0. A copy is available in [LICENSE.txt](https://github.com/oscar-rc1/zbnt_hw/blob/master/LICENSE.txt) and [Mozilla's website](https://mozilla.org/MPL/2.0).
+* The block designs depend on IP cores available for free in the Xilinx Vivado Design Suite, and licensed under the terms of the [Xilinx End User License](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_3/end-user-license-agreement.pdf). The source code for those cores is not distributed as part of this repository.
+* The block designs depend on the Xilinx Tri-Mode Ethernet MAC core, licensed under the terms of the [Core License Agreement](https://www.xilinx.com/products/intellectual-property/license/core-license-agreement.html). The source code for that core is not distributed as part of this repository.
