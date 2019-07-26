@@ -4,5 +4,6 @@
 /hw
 
 /projects/*/*/vivado
+/projects/*/hw
 
 .directory

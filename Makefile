@@ -1,14 +1,14 @@
 
-PROJECT_BUILD_SCRIPTS = $(wildcard projects/*/build_bitstream.tcl)
-PROJECT_VIVADO_DIRS = $(wildcard projects/*/vivado)
+.PHONY: all zedboard netfpga_1g_cml clean
 
-.PHONY: bitstreams clean
+all: zedboard netfpga_1g_cml
 
-bitstreams:
-	for p in ${PROJECT_BUILD_SCRIPTS}; \
-	do \
-		vivado -mode batch -source $$p -nolog -nojournal; \
-	done;
+zedboard:
+	$(MAKE) -C projects/zedboard all
+
+netfpga_1g_cml:
+	$(MAKE) -C projects/netfpga_1g_cml all
 
 clean:
-	-rm -r ${PROJECT_VIVADO_DIRS}
+	$(MAKE) -C projects/zedboard clean
+	$(MAKE) -C projects/netfpga_1g_cml clean
