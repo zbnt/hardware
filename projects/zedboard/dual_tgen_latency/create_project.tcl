@@ -12,7 +12,7 @@ read_xdc Zedboard.xdc
 
 # Set path to IP repository
 
-set_property IP_REPO_PATHS ../../cores [current_fileset]
+set_property IP_REPO_PATHS ../../../cores [current_fileset]
 update_ip_catalog -rebuild
 
 # Create block diagram
