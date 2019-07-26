@@ -37,7 +37,10 @@ module eth_frame_detector_axi_dram #(parameter axi_width = 32)
 
 	for(genvar i = 0; i < axi_width/32; ++i) begin
 		always_ff @(posedge clk) begin
-			if(rst_n && state == ST_IDLE && write_req) begin
+			if(~rst_n) begin
+				write_mask_q <= '0;
+				mem_wdata <= '0;
+			end else if(state == ST_IDLE && write_req) begin
 				write_mask_q[i*30+29:i*30] <= write_mask[i*32+29:i*32];
 				mem_wdata[i*30+29:i*30] <= write_data[i*32+29:i*32];
 			end
@@ -52,7 +55,6 @@ module eth_frame_detector_axi_dram #(parameter axi_width = 32)
 			mem_we <= 1'b0;
 
 			mem_addr <= 11'd0;
-			mem_wdata <= '0;
 
 			done <= 1'b0;
 			mem_write_pending <= 1'b0;
