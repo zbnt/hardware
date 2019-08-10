@@ -1,0 +1,1 @@
+../../../external/verilog-ethernet/syn/rgmii_phy_if.tcl
