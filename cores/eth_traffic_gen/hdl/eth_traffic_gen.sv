@@ -35,10 +35,8 @@
 			\access RW
 
 			\field EN     0      Enable traffic generation.
-			\field FRST   1      Reset internal FIFOs.
-			\field FDSRC  2      Frame delay source, see {TG_FDELAY}.
-			\field PSSRC  3      Payload size source, see {TG_PSIZE}.
-			\field BURST  4      Enable burst mode.
+			\field SRST   1      Software reset.
+			\field BURST  2      Enable burst mode.
 
 		\reg TG_STATUS: TGen status register.
 			\access RO
@@ -55,22 +53,13 @@
 		\reg TG_FDELAY: Sleep time after frame transmission.
 			\access RW
 
-			\field FDELAY 0-31   Number of clock cycles to wait before starting to send the next frame. If {FDSRC} is
-			                     set to 0, values written to this register will be effective starting from the next
-			                     frame, otherwise the written value will be pushed into a FIFO.
+			\field FDELAY 0-31   Number of clock cycles to wait before starting to send the next frame.
 
 		\reg TG_PSIZE: Frame payload size.
 			\access RW
 
-			\field PSIZE  0-15   Number of pseudo-random bytes to send. If {PSSRC} is set to 0, values written to this
-			                     register will be effective starting from the next frame, otherwise the written value
-			                     will be pushed into a FIFO.
-
-		\reg TG_FIFO_OCCUP: FIFO occupancy.
-			\access RO
-
-			\field PSFOCC 0-10   Number of values in the payload size FIFO.
-			\field FDFOCC 16-26  Number of values in the frame delay FIFO.
+			\field PSIZE  0-15   Number of pseudo-random bytes to send. Values written to this register will be
+			                     effective starting from the next frame.
 
 		\reg TG_BURST_PARAMS: Burst mode parameters.
 			\access RW
@@ -125,9 +114,6 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
 );
-	logic fifo_trigger;
-	logic fifo_ready;
-
 	logic glob_enable;
 	logic tx_enable;
 	logic tx_busy;
@@ -140,7 +126,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	logic [15:0] burst_on_time, burst_off_time;
 
 	logic [axi_width-1:0] mem_a_wdata, mem_a_rdata;
-	logic [7:0] mem_b_rdata;
+	logic [axi_width-1:0] mem_b_rdata;
 	logic [10:0] mem_a_addr, mem_b_addr;
 	logic [(axi_width/8)-1:0] mem_a_we;
 
@@ -186,9 +172,6 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.mem_we(mem_a_we),
 		.mem_rdata(mem_a_rdata),
 
-		.fifo_trigger(fifo_trigger),
-		.fifo_ready(fifo_ready),
-
 		.tx_enable(tx_enable),
 
 		.tx_busy(tx_busy),
@@ -204,17 +187,15 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.burst_off_time(burst_off_time)
 	);
 
-	eth_traffic_gen_axis U1
+	eth_traffic_gen_axis #(axi_width) U1
 	(
 		.clk(clk),
 		.rst(~rst_n),
 
-		.tx_begin(fifo_trigger),
 		.tx_busy(tx_busy),
 		.tx_state(tx_state),
 
 		.enable(glob_enable),
-		.fifo_ready(fifo_ready),
 		.headers_size(headers_size),
 		.payload_size(payload_size),
 		.frame_delay(frame_delay),

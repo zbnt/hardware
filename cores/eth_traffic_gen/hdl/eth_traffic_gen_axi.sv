@@ -42,11 +42,6 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 	output logic [(axi_width/8)-1:0] mem_we,
 	input logic [axi_width-1:0] mem_rdata,
 
-	// FIFOs
-
-	input logic fifo_trigger,
-	output logic fifo_ready,
-
 	// Registers
 
 	output logic tx_enable,
@@ -119,152 +114,112 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 	// Read/write registers as requested
 
-	logic fifo_rst;
-
-	logic frame_delay_src,  frame_delay_we, frame_delay_wbusy;
-	logic [10:0] frame_delay_avail;
-	logic [31:0] frame_delay_req;
-
-	logic payload_size_src, payload_size_we, payload_size_wbusy;
-	logic [10:0] payload_size_avail;
-	logic [15:0] payload_size_req;
-
 	logic [axi_width-1:0] write_mask;
-
-	logic mem_write_req;
+	logic mem_wdone, mem_rdone;
+	logic srst;
 
 	always_ff @(posedge clk) begin
-		if(~rst_n) begin
+		if(~rst_n | srst) begin
 			tx_enable <= 1'b0;
-			fifo_rst <= 1'b0;
-			frame_delay_src <= 1'b0;
-			frame_delay_req <= 32'd0;
-			payload_size_src <= 1'b0;
-			payload_size_req <= 16'd0;
+			srst <= srst & rst_n;
 			use_burst <= 1'b0;
+
 			headers_size <= 12'd14;
+			frame_delay <= 32'd12;
+			payload_size <= 16'd46;
+
 			burst_on_time <= 16'd0;
 			burst_off_time <= 16'd0;
-		end else if(write_req && write_addr[11:5] == 7'd0) begin
-			// TG_CFG and TG_HSIZE work like regular registers.
-			// TG_PSIZE and TG_FDELAY writes are handled in a different way in order to support writing to FIFOs, see eth_traffic_gen_fifo.
-			// DRAM access also works in a special way, see eth_traffic_gen_axi_dram.
 
-			if(axi_width == 32) begin
-				case(write_addr[4:2])
-					3'd0: begin
-						tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
-						fifo_rst <= (s_axi_wdata[1] & write_mask[1]) | (fifo_rst & ~write_mask[1]);
-						frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
-						payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
-						use_burst <= (s_axi_wdata[4] & write_mask[4]) | (use_burst & ~write_mask[4]);
-					end
-
-					3'd2: begin
-						headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
-					end
-
-					3'd3: begin
-						if(~frame_delay_wbusy) begin
-							frame_delay_we <= 1'b1;
-							frame_delay_wbusy <= 1'b1;
-							frame_delay_req <= s_axi_wdata & write_mask;
-						end else begin
-							frame_delay_we <= 1'b0;
-						end
-					end
-
-					3'd4: begin
-						if(~payload_size_wbusy) begin
-							payload_size_we <= 1'b1;
-							payload_size_wbusy <= 1'b1;
-							payload_size_req <= s_axi_wdata[15:0] & write_mask[15:0];
-						end else begin
-							payload_size_we <= 1'b0;
-						end
-					end
-
-					3'd6: begin
-						burst_on_time <= (s_axi_wdata[15:0] & write_mask[15:0]) | (burst_on_time & ~write_mask[15:0]);
-						burst_off_time <= (s_axi_wdata[31:16] & write_mask[31:16]) | (burst_off_time & ~write_mask[31:16]);
-					end
-				endcase
-			end else if(axi_width == 64) begin
-				case(write_addr[4:3])
-					2'd0: begin
-						tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
-						fifo_rst <= (s_axi_wdata[1] & write_mask[1]) | (fifo_rst & ~write_mask[1]);
-						frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
-						payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
-						use_burst <= (s_axi_wdata[4] & write_mask[4]) | (use_burst & ~write_mask[4]);
-					end
-
-					2'd1: begin
-						headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
-
-						if(~frame_delay_wbusy && |s_axi_wstrb[7:4]) begin
-							frame_delay_we <= 1'b1;
-							frame_delay_wbusy <= 1'b1;
-							frame_delay_req <= s_axi_wdata[63:32] & write_mask[63:32];
-						end else begin
-							frame_delay_we <= 1'b0;
-						end
-					end
-
-					2'd2: begin
-						if(~payload_size_wbusy && |s_axi_wstrb[1:0]) begin
-							payload_size_we <= 1'b1;
-							payload_size_wbusy <= 1'b1;
-							payload_size_req <= s_axi_wdata[15:0] & write_mask[15:0];
-						end else begin
-							payload_size_we <= 1'b0;
-						end
-					end
-
-					2'd3: begin
-						burst_on_time <= (s_axi_wdata[15:0] & write_mask[15:0]) | (burst_on_time & ~write_mask[15:0]);
-						burst_off_time <= (s_axi_wdata[31:16] & write_mask[31:16]) | (burst_off_time & ~write_mask[31:16]);
-					end
-				endcase
-			end else if(axi_width == 128) begin
-				case(write_addr[4])
-					1'd0: begin
-						tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
-						fifo_rst <= (s_axi_wdata[1] & write_mask[1]) | (fifo_rst & ~write_mask[1]);
-						frame_delay_src <= (s_axi_wdata[2] & write_mask[2]) | (frame_delay_src & ~write_mask[2]);
-						payload_size_src <= (s_axi_wdata[3] & write_mask[3]) | (payload_size_src & ~write_mask[3]);
-						use_burst <= (s_axi_wdata[4] & write_mask[4]) | (use_burst & ~write_mask[4]);
-
-						headers_size <= (s_axi_wdata[75:64] & write_mask[75:64]) | (headers_size & ~write_mask[75:64]);
-
-						if(~frame_delay_wbusy && |s_axi_wstrb[15:12]) begin
-							frame_delay_we <= 1'b1;
-							frame_delay_wbusy <= 1'b1;
-							frame_delay_req <= s_axi_wdata[127:96] & write_mask[127:96];
-						end else begin
-							frame_delay_we <= 1'b0;
-						end
-					end
-
-					1'd1: begin
-						if(~payload_size_wbusy && |s_axi_wstrb[1:0]) begin
-							payload_size_we <= 1'b1;
-							payload_size_wbusy <= 1'b1;
-							payload_size_req <= s_axi_wdata[15:0] & write_mask[15:0];
-						end else begin
-							payload_size_we <= 1'b0;
-						end
-
-						burst_on_time <= (s_axi_wdata[79:64] & write_mask[79:64]) | (burst_on_time & ~write_mask[79:64]);
-						burst_off_time <= (s_axi_wdata[95:80] & write_mask[95:80]) | (burst_off_time & ~write_mask[95:80]);
-					end
-				endcase
-			end
+			mem_wdone <= 1'b0;
+			mem_rdone <= 1'b0;
+			mem_addr <= 11'd0;
+			mem_wdata <= '0;
+			mem_we <= '0;
 		end else begin
-			frame_delay_we <= 1'b0;
-			payload_size_we <= 1'b0;
-			frame_delay_wbusy <= 1'b0;
-			payload_size_wbusy <= 1'b0;
+			mem_rdone <= 1'b0;
+			mem_wdone <= 1'b0;
+			mem_we <= '0;
+
+			if(read_req && s_axi_araddr >= 12'h800) begin
+				mem_addr <= s_axi_araddr[10:0];
+				mem_rdone <= 1'b1;
+			end else if(write_req && write_addr >= 12'h800) begin
+				mem_addr <= write_addr[10:0];
+				mem_wdata <= s_axi_wdata;
+				mem_we <= s_axi_wstrb;
+				mem_wdone <= 1'b1;
+			end
+
+			if(write_req && write_addr[11:5] == 7'd0) begin
+				if(axi_width == 32) begin
+					case(write_addr[4:2])
+						3'd0: begin
+							tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
+							srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
+							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
+						end
+
+						3'd2: begin
+							headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
+						end
+
+						3'd3: begin
+							frame_delay <= (s_axi_wdata & write_mask) | (frame_delay & ~write_mask);
+						end
+
+						3'd4: begin
+							payload_size <= (s_axi_wdata[15:0] & write_mask[15:0]) | (payload_size & ~write_mask[15:0]);
+						end
+
+						3'd5: begin
+							burst_on_time <= (s_axi_wdata[15:0] & write_mask[15:0]) | (burst_on_time & ~write_mask[15:0]);
+							burst_off_time <= (s_axi_wdata[31:16] & write_mask[31:16]) | (burst_off_time & ~write_mask[31:16]);
+						end
+					endcase
+				end else if(axi_width == 64) begin
+					case(write_addr[4:3])
+						2'd0: begin
+							tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
+							srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
+							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
+						end
+
+						2'd1: begin
+							headers_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (headers_size & ~write_mask[11:0]);
+							frame_delay <= (s_axi_wdata[63:32] & write_mask[63:32]) | (frame_delay & ~write_mask[63:32]);
+						end
+
+						2'd2: begin
+							payload_size <= (s_axi_wdata[15:0] & write_mask[15:0]) | (payload_size & ~write_mask[15:0]);
+							burst_on_time <= (s_axi_wdata[47:32] & write_mask[47:32]) | (burst_on_time & ~write_mask[47:32]);
+							burst_off_time <= (s_axi_wdata[63:48] & write_mask[63:48]) | (burst_off_time & ~write_mask[63:48]);
+						end
+					endcase
+				end else if(axi_width == 128) begin
+					case(write_addr[4])
+						1'd0: begin
+							tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
+							srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
+							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
+
+							headers_size <= (s_axi_wdata[75:64] & write_mask[75:64]) | (headers_size & ~write_mask[75:64]);
+							frame_delay <= (s_axi_wdata[127:96] & write_mask[127:96]) | (frame_delay & ~write_mask[127:96]);
+						end
+
+						1'd1: begin
+							payload_size <= (s_axi_wdata[15:0] & write_mask[15:0]) | (payload_size & ~write_mask[15:0]);
+							burst_on_time <= (s_axi_wdata[47:32] & write_mask[47:32]) | (burst_on_time & ~write_mask[47:32]);
+							burst_off_time <= (s_axi_wdata[63:48] & write_mask[63:48]) | (burst_off_time & ~write_mask[63:48]);
+						end
+					endcase
+				end
+			end
+		end
+
+		// SRST must be writable even after it has been set to 1
+		if(rst_n & write_req && write_addr[11:$clog2(axi_width/8)] == '0) begin
+			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
 
@@ -275,10 +230,6 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 		write_ready = 1'b0;
 		write_response = 1'b0;
-
-		mem_addr = '0;
-		mem_wdata = '0;
-		mem_we = '0;
 
 		for(int i = 0; i < axi_width; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -294,40 +245,37 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 				if(axi_width == 32) begin
 					case(s_axi_araddr[4:2])
-						3'd0: read_value = {27'd0, use_burst, payload_size_src, frame_delay_src, fifo_rst, tx_enable};
-						3'd1: read_value = {17'd0, fifo_ready, tx_ptr, tx_state, tx_busy};
+						3'd0: read_value = {29'd0, use_burst, srst, tx_enable};
+						3'd1: read_value = {18'd0, tx_ptr, tx_state, tx_busy};
 						3'd2: read_value = {20'd0, headers_size};
 						3'd3: read_value = frame_delay;
 						3'd4: read_value = {16'd0, payload_size};
-						3'd5: read_value = {5'd0, frame_delay_avail, 5'd0, payload_size_avail};
-						3'd6: read_value = {burst_off_time, burst_on_time};
+						3'd5: read_value = {burst_off_time, burst_on_time};
 					endcase
 				end else if(axi_width == 64) begin
 					case(s_axi_araddr[4:3])
-						2'd0: read_value = {17'd0, fifo_ready, tx_ptr, tx_state, tx_busy, 27'd0, use_burst, payload_size_src, frame_delay_src, fifo_rst, tx_enable};
+						2'd0: read_value = {18'd0, tx_ptr, tx_state, tx_busy, 29'd0, use_burst, srst, tx_enable};
 						2'd1: read_value = {frame_delay, 20'd0, headers_size};
-						2'd2: read_value = {5'd0, frame_delay_avail, 5'd0, payload_size_avail, 16'd0, payload_size};
-						2'd3: read_value = {32'd0, burst_off_time, burst_on_time};
+						2'd2: read_value = {burst_off_time, burst_on_time, 16'd0, payload_size};
 					endcase
 				end else if(axi_width == 128) begin
 					case(s_axi_araddr[4])
 						2'd0: begin
-							read_value[63:0] = {17'd0, fifo_ready, tx_ptr, tx_state, tx_busy, 27'd0, use_burst, payload_size_src, frame_delay_src, fifo_rst, tx_enable};
+							read_value[63:0] = {18'd0, tx_ptr, tx_state, tx_busy, 29'd0, use_burst, srst, tx_enable};
 							read_value[127:64] = {frame_delay, 20'd0, headers_size};
 						end
 
 						2'd1: begin
-							read_value[63:0] = {5'd0, frame_delay_avail, 5'd0, payload_size_avail, 16'd0, payload_size};
-							read_value[127:64] = {32'd0, burst_off_time, burst_on_time};
+							read_value[63:0] = {burst_off_time, burst_on_time, 16'd0, payload_size};
+							read_value[127:64] = 64'd0;
 						end
 					endcase
 				end
 			end else if(s_axi_araddr >= 12'h800) begin
 				// DRAM address
-				read_ready = 1'b1;
+				read_ready = mem_rdone;
 				read_response = 1'b1;
 				read_value = mem_rdata;
-				mem_addr = s_axi_araddr[10:0];
 			end else begin
 				// Invalid address, mark as error
 				read_ready = 1'b1;
@@ -344,12 +292,8 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 				write_response = 1'b1;
 			end else if(write_addr >= 12'h800) begin
 				// DRAM address
-				write_ready = 1'b1;
+				write_ready = mem_wdone;
 				write_response = 1'b1;
-
-				mem_addr = write_addr[10:0];
-				mem_wdata = s_axi_wdata;
-				mem_we = s_axi_wstrb;
 			end else begin
 				// Invalid address, mark as error
 				write_ready = 1'b1;
@@ -357,29 +301,4 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			end
 		end
 	end
-
-	// Handle FIFOs
-
-	eth_traffic_gen_fifo U1
-	(
-		.clk(clk),
-		.rst(~rst_n),
-		.fifo_rst(fifo_rst),
-		.trigger(fifo_trigger),
-
-		.ready(fifo_ready),
-
-		.frame_delay_src(frame_delay_src),
-		.frame_delay_wen(frame_delay_we),
-		.frame_delay_req(frame_delay_req),
-		.frame_delay_avail(frame_delay_avail),
-
-		.payload_size_src(payload_size_src),
-		.payload_size_wen(payload_size_we),
-		.payload_size_req(payload_size_req),
-		.payload_size_avail(payload_size_avail),
-
-		.frame_delay(frame_delay),
-		.payload_size(payload_size)
-	);
 endmodule
