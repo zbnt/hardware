@@ -7,8 +7,9 @@
 module eth_measurer_rx #(parameter src_mac, parameter identifier)
 (
 	input logic clk,
+	input logic rst,
+
 	input logic clk_rx,
-	input logic rst_rx,
 
 	output logic [63:0] ping_id,
 
@@ -19,6 +20,7 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid
 );
+	logic rst_rx;
 	logic [15:0] count, count_next;
 	logic [207:0] rx_buffer, rx_buffer_next;
 
@@ -68,5 +70,13 @@ module eth_measurer_rx #(parameter src_mac, parameter identifier)
 		.clk_dst(clk),
 		.data_in(ping_id_cdc),
 		.data_out(ping_id)
+	);
+
+	sync_ffs #(1, 2) U1
+	(
+		.clk_src(clk),
+		.clk_dst(clk_rx),
+		.data_in(rst),
+		.data_out(rst_rx)
 	);
 endmodule

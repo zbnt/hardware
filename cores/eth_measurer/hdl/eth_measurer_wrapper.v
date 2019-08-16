@@ -46,7 +46,6 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 	// S_AXIS_MAIN : AXI4-Stream slave interface (from TEMAC of main iface)
 
 	input wire s_axis_main_clk,
-	input wire s_axis_main_rst,
 
 	input wire [7:0] s_axis_main_tdata,
 	input wire s_axis_main_tkeep,
@@ -64,7 +63,6 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 	// S_AXIS_LOOP : AXI4-Stream slave interface (from TEMAC of loopback iface)
 
 	input wire s_axis_loop_clk,
-	input wire s_axis_loop_rst,
 
 	input wire [7:0] s_axis_loop_tdata,
 	input wire s_axis_loop_tkeep,
@@ -118,7 +116,6 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 		// S_AXIS_MAIN
 
 		.s_axis_main_clk(s_axis_main_clk),
-		.s_axis_main_rst(s_axis_main_rst),
 
 		.s_axis_main_tdata(s_axis_main_tdata),
 		.s_axis_main_tkeep(s_axis_main_tkeep),
@@ -136,7 +133,6 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 		// S_AXIS_LOOP
 
 		.s_axis_loop_clk(s_axis_loop_clk),
-		.s_axis_loop_rst(s_axis_loop_rst),
 
 		.s_axis_loop_tdata(s_axis_loop_tdata),
 		.s_axis_loop_tkeep(s_axis_loop_tkeep),

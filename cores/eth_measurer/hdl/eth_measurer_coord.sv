@@ -40,10 +40,15 @@ module eth_measurer_coord
 	logic [31:0] count, count_next, ping_time_next, pong_time_next;
 	logic [63:0] ping_pongs_good_next, pings_lost_next, pongs_lost_next;
 
+	logic main_tx_trigger_next, loop_tx_trigger_next;
+
 	always_ff @(posedge clk) begin
 		if(rst) begin
 			state <= ST_DELAY;
 			ping_id <= 64'd0;
+
+			main_tx_trigger <= 1'b0;
+			loop_tx_trigger <= 1'b0;
 
 			done <= 1'b0;
 			count <= 32'd0;
@@ -57,6 +62,9 @@ module eth_measurer_coord
 		end else begin
 			state <= state_next;
 			ping_id <= ping_id_next;
+
+			main_tx_trigger <= main_tx_trigger_next;
+			loop_tx_trigger <= loop_tx_trigger_next;
 
 			done <= done_next;
 			count <= count_next;
@@ -84,8 +92,8 @@ module eth_measurer_coord
 		pings_lost_next = pings_lost;
 		pongs_lost_next = pongs_lost;
 
-		main_tx_trigger = 1'b0;
-		loop_tx_trigger = 1'b0;
+		main_tx_trigger_next = 1'b0;
+		loop_tx_trigger_next = 1'b0;
 
 		if(~rst) begin
 			count_next = count + 32'd1;
@@ -97,7 +105,7 @@ module eth_measurer_coord
 							state_next = ST_WAIT_PING_TX;
 							count_next = 32'd0;
 							psize_next = psize_req;
-							main_tx_trigger = 1'b1;
+							main_tx_trigger_next = 1'b1;
 						end
 					end else begin
 						count_next = 32'd0;
@@ -117,7 +125,7 @@ module eth_measurer_coord
 						state_next = ST_WAIT_PONG_TX;
 						count_next = 32'd0;
 						ping_time_next = count + 32'd1;
-						loop_tx_trigger = 1'b1;
+						loop_tx_trigger_next = 1'b1;
 					end else if(timeout == 32'd0 || count >= timeout - 32'd1) begin
 						// Ping not received
 						state_next = ST_DELAY;

@@ -13,9 +13,6 @@
 	main interface and is followed by a _pong_ from the loopback interface when it receives the previously
 	mentioned _ping_.
 
-	\supports
-		\device zynq Production
-
 	\parameters
 		\int main_mac   : MAC address for the main interface, the one that sends pings.
 		\int loop_mac   : MAC address for the loopback interface, the one that replies to pings with pongs.
@@ -44,13 +41,11 @@
 			\type AXI4-Stream
 
 			\clk   s_axis_main_clk
-			\rst_n s_axis_main_rst
 
 		\iface s_axis_loop: Reception stream for the loopback TEMAC.
 			\type AXI4-Stream
 
 			\clk   s_axis_loop_clk
-			\rst_n s_axis_loop_rst
 
 	\memorymap S_AXI_ADDR
 		\regsize 32
@@ -182,7 +177,6 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	// S_AXIS_MAIN : AXI4-Stream slave interface (from TEMAC of main iface)
 
 	input logic s_axis_main_clk,
-	input logic s_axis_main_rst,
 
 	input logic [7:0] s_axis_main_tdata,
 	input logic s_axis_main_tkeep,
@@ -200,7 +194,6 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	// S_AXIS_LOOP : AXI4-Stream slave interface (from TEMAC of loopback iface)
 
 	input logic s_axis_loop_clk,
-	input logic s_axis_loop_rst,
 
 	input logic [7:0] s_axis_loop_tdata,
 	input logic s_axis_loop_tkeep,
@@ -301,6 +294,8 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 
 	// main eth interface
 
+	logic main_rx_rst;
+
 	eth_measurer_tx #(main_mac, identifier) U2
 	(
 		.clk(s_axi_clk),
@@ -322,8 +317,9 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	eth_measurer_rx #(loop_mac, identifier) U3
 	(
 		.clk(s_axi_clk),
+		.rst(~s_axi_resetn),
+
 		.clk_rx(s_axis_main_clk),
-		.rst_rx(s_axis_main_rst),
 
 		.ping_id(main_rx_ping_id),
 
@@ -334,6 +330,8 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	);
 
 	// loopback eth interface
+
+	logic loop_rx_rst;
 
 	eth_measurer_tx #(loop_mac, identifier) U4
 	(
@@ -356,8 +354,9 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	eth_measurer_rx #(main_mac, identifier) U5
 	(
 		.clk(s_axi_clk),
+		.rst(~s_axi_resetn),
+
 		.clk_rx(s_axis_loop_clk),
-		.rst_rx(s_axis_loop_rst),
 
 		.ping_id(loop_rx_ping_id),
 
