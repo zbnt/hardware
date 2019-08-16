@@ -762,14 +762,15 @@
     <xilinx:coreExtensions>
       <xilinx:supportedFamilies>
         <xilinx:family xilinx:lifeCycle="Production">zynq</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">kintex7{xc7k325tffg676-1}</xilinx:family>
+        <xilinx:family xilinx:lifeCycle="Production">kintex7</xilinx:family>
+        <xilinx:family xilinx:lifeCycle="Production">zynquplus</xilinx:family>
       </xilinx:supportedFamilies>
       <xilinx:taxonomies>
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Simple AXI Timer</xilinx:displayName>
-      <xilinx:coreRevision>13</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-07-22T08:37:21Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>15</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-08-11T03:22:19Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
