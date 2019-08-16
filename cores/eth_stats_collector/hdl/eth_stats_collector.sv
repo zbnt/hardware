@@ -7,12 +7,9 @@
 /*!
 	\core eth_stats_collector: Ethernet Statistics Collector
 
-	This module collects ethernet traffic statistics using the vectors provided by Xilinx's TEMAC IP core. If provided with a reference
+	This module collects ethernet traffic statistics using the AXI4-Stream interfaces provided by the MAC. If provided with a reference
 	timer, it can keep track of the times at which the values changed, and optionally store these values in a FIFO, allowing them to be
-	read from the Zynq PS without losing intermediate states as long as the FIFO doesn't overflow.
-
-	\supports
-		\device zynq Production
+	read from the PS without losing intermediate states as long as the FIFO doesn't overflow.
 
 	\parameters
 		\bool use_timer   : Enables the use of a reference 64 bit timer for keeping track of time. If set to 1, statistics will be
@@ -27,11 +24,17 @@
 			\clk   clk
 			\rst_n rst_n
 
-		\port rx_stats_vector: Reception statistics vector provided by TEMAC.
-		\port rx_stats_valid: Valid flag for {rx_stats_vector}.
+		\iface AXIS_TX: Transmission stream.
+			\type AXI4-Stream
 
-		\port tx_stats_vector: Transmission statistics vector provided by TEMAC.
-		\port tx_stats_valid: Valid flag for {tx_stats_vector}.
+			\clk   clk
+			\rst_n rst_n
+
+		\iface AXIS_RX: Reception stream.
+			\type AXI4-Stream
+
+			\clk   clk_rx
+			\rst_n rst_n
 
 	\memorymap S_AXI_ADDR
 		\regsize 32
@@ -61,8 +64,10 @@
 			                     the registers. If read, always returns 0. This field is ignored if the core was configured with
 			                     the FIFO disabled.
 
-		\reg SC_RSVD: Reserved.
-			\access RO
+		\reg SC_SAMPLING_PERIOD: Sampling period.
+			\access RW
+
+			\field STIME  0-31   Number of clock cycles to wait before checking if the statistics have changed again.
 
 		\reg SC_TIME_L: Statistics time, lower half.
 			\access RO
@@ -170,20 +175,23 @@ module eth_stats_collector #(parameter axi_width = 32, parameter enable_fifo = 1
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
 
-	// RX_STATS : Reception statistics provided by TEMAC
+	// AXIS_TX
 
-	input logic [27:0] rx_stats_vector,
-	input logic rx_stats_valid,
+	input logic axis_tx_tready,
+	input logic axis_tx_tvalid,
+	input logic axis_tx_tlast,
 
-	// TX_STATS : Transmission statistics provided by TEMAC
+	// AXIS_RX
 
-	input logic [31:0] tx_stats_vector,
-	input logic tx_stats_valid
+	input logic axis_rx_tvalid,
+	input logic axis_rx_tlast,
+	input logic axis_rx_tuser
 );
 	// axi4_lite registers
 
 	logic enable, srst;
 	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad;
+	logic [5:0] stats_id;
 
 	eth_stats_collector_axi #(axi_width, enable_fifo) U0
 	(
@@ -218,6 +226,7 @@ module eth_stats_collector #(parameter axi_width = 32, parameter enable_fifo = 1
 		.srst(srst),
 
 		.current_time(current_time),
+		.stats_id(stats_id),
 		.tx_bytes(tx_bytes),
 		.tx_good(tx_good),
 		.tx_bad(tx_bad),
@@ -228,21 +237,37 @@ module eth_stats_collector #(parameter axi_width = 32, parameter enable_fifo = 1
 
 	// TX statistics, no CDC needed here
 
-	logic enable_tx;
+	logic enable_tx, tx_frame_good, tx_valid;
+	logic [15:0] tx_frame_length;
 
-	eth_stats_adder U2
+	eth_stats_counter_tx U2
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.axis_tx_tready(axis_tx_tready),
+		.axis_tx_tvalid(axis_tx_tvalid),
+		.axis_tx_tlast(axis_tx_tlast),
+
+		.frame_bytes(tx_frame_length),
+		.frame_good(tx_frame_good),
+		.valid(tx_valid)
+	);
+
+	eth_stats_adder U3
 	(
 		.clk(clk),
 		.rst_n(rst_n & ~srst),
 		.enable(enable_tx),
 
-		.valid(tx_stats_valid),
-		.frame_length(tx_stats_vector[18:5]),
-		.frame_good(tx_stats_vector[0]),
+		.valid(tx_valid),
+		.frame_length(tx_frame_length),
+		.frame_good(tx_frame_good),
 
 		.total_bytes(tx_bytes),
 		.total_good(tx_good),
-		.total_bad(tx_bad)
+		.total_bad(tx_bad),
+		.stats_id(stats_id[2:0])
 	);
 
 	always_ff @(posedge clk) begin
@@ -255,37 +280,55 @@ module eth_stats_collector #(parameter axi_width = 32, parameter enable_fifo = 1
 
 	// RX statistics, these signals come from another clock domain, so CDC is needed
 
-	logic rst_rx_n, enable_rx;
+	logic enable_rx, rx_frame_good, rx_valid;
+	logic [1:0] rst_rx_n;
+	logic [2:0] rx_stats_id;
+	logic [15:0] rx_frame_length;
 	logic [63:0] rx_bytes_cdc, rx_good_cdc, rx_bad_cdc;
 
-	eth_stats_adder U3
+	eth_stats_counter_rx U4
 	(
 		.clk(clk_rx),
-		.rst_n(rst_rx_n),
+		.rst_n(rst_rx_n[1]),
+
+		.axis_rx_tvalid(axis_rx_tvalid),
+		.axis_rx_tlast(axis_rx_tlast),
+		.axis_rx_tuser(axis_rx_tuser),
+
+		.frame_bytes(rx_frame_length),
+		.frame_good(rx_frame_good),
+		.valid(rx_valid)
+	);
+
+	eth_stats_adder U5
+	(
+		.clk(clk_rx),
+		.rst_n(rst_rx_n[0]),
 		.enable(enable_rx),
 
-		.valid(rx_stats_valid),
-		.frame_length(rx_stats_vector[18:5]),
-		.frame_good(rx_stats_vector[0]),
+		.valid(rx_valid),
+		.frame_length(rx_frame_length),
+		.frame_good(rx_frame_good),
 
 		.total_bytes(rx_bytes_cdc),
 		.total_good(rx_good_cdc),
-		.total_bad(rx_bad_cdc)
+		.total_bad(rx_bad_cdc),
+		.stats_id(rx_stats_id)
 	);
 
-	bus_cdc #(192, 2) U4
+	bus_cdc #(195, 2) U6
 	(
 		.clk_src(clk_rx),
 		.clk_dst(clk),
-		.data_in({rx_bytes_cdc, rx_good_cdc, rx_bad_cdc}),
-		.data_out({rx_bytes, rx_good, rx_bad})
+		.data_in({rx_stats_id, rx_bytes_cdc, rx_good_cdc, rx_bad_cdc}),
+		.data_out({stats_id[5:3], rx_bytes, rx_good, rx_bad})
 	);
 
-	sync_ffs #(2, 2) U5
+	sync_ffs #(3, 2) U7
 	(
 		.clk_src(clk),
 		.clk_dst(clk_rx),
-		.data_in({rst_n & ~srst, enable & time_running}),
+		.data_in({rst_n, rst_n & ~srst, enable & time_running}),
 		.data_out({rst_rx_n, enable_rx})
 	);
 endmodule

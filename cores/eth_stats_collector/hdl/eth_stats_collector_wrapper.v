@@ -39,15 +39,17 @@ module eth_stats_collector_w #(parameter axi_width = 32, parameter use_timer = 1
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
 
-	// RX_STATS : Reception statistics provided by TEMAC
+	// AXIS_TX
 
-	input wire [27:0] rx_stats_vector,
-	input wire rx_stats_valid,
+	input wire axis_tx_tready,
+	input wire axis_tx_tvalid,
+	input wire axis_tx_tlast,
 
-	// TX_STATS : Transmission statistics provided by TEMAC
+	// AXIS_RX
 
-	input wire [31:0] tx_stats_vector,
-	input wire tx_stats_valid
+	input wire axis_rx_tvalid,
+	input wire axis_rx_tlast,
+	input wire axis_rx_tuser
 );
 	eth_stats_collector #(axi_width, enable_fifo) U0
 	(
@@ -84,15 +86,17 @@ module eth_stats_collector_w #(parameter axi_width = 32, parameter use_timer = 1
 		.s_axi_rvalid(s_axi_rvalid),
 		.s_axi_rready(s_axi_rready),
 
-		// RX_STATS
+		// AXIS_TX
 
-		.rx_stats_vector(rx_stats_vector),
-		.rx_stats_valid(rx_stats_valid),
+		.axis_tx_tready(axis_tx_tready),
+		.axis_tx_tvalid(axis_tx_tvalid),
+		.axis_tx_tlast(axis_tx_tlast),
 
-		// TX_STATS
+		// AXIS_RX
 
-		.tx_stats_vector(tx_stats_vector),
-		.tx_stats_valid(tx_stats_valid)
+		.axis_rx_tvalid(axis_rx_tvalid),
+		.axis_rx_tlast(axis_rx_tlast),
+		.axis_rx_tuser(axis_rx_tuser)
 	);
 endmodule
 
