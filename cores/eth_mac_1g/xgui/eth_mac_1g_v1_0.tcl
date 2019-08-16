@@ -25,7 +25,6 @@ proc update_PARAM_VALUE.use_clk90 { PARAM_VALUE.use_clk90 PARAM_VALUE.iface_type
 		set_property enabled true $use_clk90
 	} else {
 		set_property enabled false $use_clk90
-		set_property value [gen_USERPARAMETER_use_clk90_VALUE $values(iface_type)] $use_clk90
 	}
 }
 

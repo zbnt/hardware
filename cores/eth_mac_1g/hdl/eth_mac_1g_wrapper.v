@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_mac_1g_w #(parameter iface_type = "RGMII", parameter family_name = "7-Series", parameter use_clk90 = 1)
+module eth_mac_1g_w #(parameter iface_type = "GMII", parameter family_name = "7-Series", parameter use_clk90 = 0)
 (
 	// Clock signals
 
@@ -14,7 +14,7 @@ module eth_mac_1g_w #(parameter iface_type = "RGMII", parameter family_name = "7
 
 	// Reset
 
-	input wire gtx_rst,
+	input wire gtx_rst_n,
 
 	// Status
 
@@ -74,7 +74,7 @@ module eth_mac_1g_w #(parameter iface_type = "RGMII", parameter family_name = "7
 		(
 			.gtx_clk(gtx_clk),
 			.gtx_clk90(gtx_clk90),
-			.gtx_rst(gtx_rst),
+			.gtx_rst(~gtx_rst_n),
 			.rx_clk(rx_clk),
 
 			.tx_axis_tdata(tx_axis_tdata),
@@ -119,7 +119,7 @@ module eth_mac_1g_w #(parameter iface_type = "RGMII", parameter family_name = "7
 		eth_mac_1g_gmii_inst
 		(
 			.gtx_clk(gtx_clk),
-			.gtx_rst(gtx_rst),
+			.gtx_rst(~gtx_rst_n),
 			.rx_clk(rx_clk),
 
 			.tx_axis_tdata(tx_axis_tdata),

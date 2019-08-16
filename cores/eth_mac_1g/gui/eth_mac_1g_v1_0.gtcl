@@ -1,3 +1,2 @@
 # This file is automatically written.  Do not modify.
 proc gen_USERPARAMETER_use_clk90_ENABLEMENT {iface_type } {expr {$iface_type} eq {"RGMII"}}
-proc gen_USERPARAMETER_use_clk90_VALUE {iface_type } {expr {$iface_type} eq {"RGMII"}}
