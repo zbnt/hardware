@@ -461,10 +461,6 @@ proc create_root_design { parentCell } {
   set ethfmc_p3_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 ethfmc_p3_rgmii ]
 
   # Create ports
-  set BTNU [ create_bd_port -dir I -type rst BTNU ]
-  set_property -dict [ list \
-   CONFIG.POLARITY {ACTIVE_HIGH} \
- ] $BTNU
   set ethfmc_clk_fsel [ create_bd_port -dir O -from 0 -to 0 ethfmc_clk_fsel ]
   set ethfmc_clk_oe [ create_bd_port -dir O -from 0 -to 0 ethfmc_clk_oe ]
   set ethfmc_p0_rst [ create_bd_port -dir O -from 0 -to 0 ethfmc_p0_rst ]
@@ -498,9 +494,17 @@ proc create_root_design { parentCell } {
   set ps_interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ps_interconnect ]
   set_property -dict [ list \
    CONFIG.ENABLE_ADVANCED_OPTIONS {0} \
+   CONFIG.M00_HAS_REGSLICE {3} \
+   CONFIG.M01_HAS_REGSLICE {3} \
+   CONFIG.M02_HAS_REGSLICE {3} \
+   CONFIG.M03_HAS_REGSLICE {3} \
+   CONFIG.M04_HAS_REGSLICE {3} \
+   CONFIG.M05_HAS_REGSLICE {3} \
+   CONFIG.M06_HAS_REGSLICE {3} \
+   CONFIG.M07_HAS_REGSLICE {3} \
    CONFIG.NUM_MI {8} \
    CONFIG.S00_HAS_DATA_FIFO {2} \
-   CONFIG.S00_HAS_REGSLICE {3} \
+   CONFIG.S00_HAS_REGSLICE {0} \
    CONFIG.STRATEGY {2} \
  ] $ps_interconnect
 
@@ -566,7 +570,7 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_EN_ENET0 {1} \
    CONFIG.PCW_EN_GPIO {1} \
    CONFIG.PCW_EN_QSPI {1} \
-   CONFIG.PCW_EN_RST0_PORT {0} \
+   CONFIG.PCW_EN_RST0_PORT {1} \
    CONFIG.PCW_EN_SDIO0 {1} \
    CONFIG.PCW_EN_TTC0 {1} \
    CONFIG.PCW_EN_UART1 {1} \
@@ -908,9 +912,6 @@ proc create_root_design { parentCell } {
 
   # Create instance: ps_reset, and set properties
   set ps_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ps_reset ]
-  set_property -dict [ list \
-   CONFIG.C_AUX_RESET_HIGH {1} \
- ] $ps_reset
 
   # Create instance: simple_timer, and set properties
   set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:simple_timer:1.0 simple_timer ]
@@ -934,14 +935,14 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net ps_main_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins ps_main/FIXED_IO]
 
   # Create port connections
-  connect_bd_net -net ARESETN_1 [get_bd_pins ps_interconnect/ARESETN] [get_bd_pins ps_reset/interconnect_aresetn]
-  connect_bd_net -net BTNU_1 [get_bd_ports BTNU] [get_bd_pins ps_reset/ext_reset_in]
+  connect_bd_net -net constant_1_dout [get_bd_ports ethfmc_clk_fsel] [get_bd_ports ethfmc_clk_oe] [get_bd_ports ethfmc_p0_rst] [get_bd_ports ethfmc_p1_rst] [get_bd_ports ethfmc_p2_rst] [get_bd_ports ethfmc_p3_rst] [get_bd_pins constant_1/dout]
   connect_bd_net -net constant_leds_dout [get_bd_ports led] [get_bd_pins constant_leds/dout]
   connect_bd_net -net ethfmc_clk_buf_IBUF_OUT [get_bd_pins eth0/gtx_clk] [get_bd_pins eth1/gtx_clk] [get_bd_pins ethfmc_ibufds/IBUF_OUT] [get_bd_pins latency/gtx_clk] [get_bd_pins ps_interconnect/ACLK] [get_bd_pins ps_interconnect/M00_ACLK] [get_bd_pins ps_interconnect/M01_ACLK] [get_bd_pins ps_interconnect/M02_ACLK] [get_bd_pins ps_interconnect/M03_ACLK] [get_bd_pins ps_interconnect/M04_ACLK] [get_bd_pins ps_interconnect/M05_ACLK] [get_bd_pins ps_interconnect/M06_ACLK] [get_bd_pins ps_interconnect/M07_ACLK] [get_bd_pins ps_interconnect/S00_ACLK] [get_bd_pins ps_main/M_AXI_GP0_ACLK] [get_bd_pins ps_reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
-  connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_ports ethfmc_p0_rst] [get_bd_ports ethfmc_p1_rst] [get_bd_ports ethfmc_p2_rst] [get_bd_ports ethfmc_p3_rst] [get_bd_pins eth0/rst_n] [get_bd_pins eth1/rst_n] [get_bd_pins latency/rst_n] [get_bd_pins ps_interconnect/M00_ARESETN] [get_bd_pins ps_interconnect/M01_ARESETN] [get_bd_pins ps_interconnect/M02_ARESETN] [get_bd_pins ps_interconnect/M03_ARESETN] [get_bd_pins ps_interconnect/M04_ARESETN] [get_bd_pins ps_interconnect/M05_ARESETN] [get_bd_pins ps_interconnect/M06_ARESETN] [get_bd_pins ps_interconnect/M07_ARESETN] [get_bd_pins ps_interconnect/S00_ARESETN] [get_bd_pins ps_reset/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
+  connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins ps_interconnect/ARESETN] [get_bd_pins ps_reset/interconnect_aresetn]
+  connect_bd_net -net ps_main_FCLK_RESET0_N [get_bd_pins ps_main/FCLK_RESET0_N] [get_bd_pins ps_reset/ext_reset_in]
   connect_bd_net -net simple_timer_current_time [get_bd_pins eth0/current_time] [get_bd_pins eth1/current_time] [get_bd_pins latency/current_time] [get_bd_pins simple_timer/current_time]
   connect_bd_net -net simple_timer_time_running [get_bd_pins eth0/time_running] [get_bd_pins eth1/time_running] [get_bd_pins latency/time_running] [get_bd_pins simple_timer/time_running]
-  connect_bd_net -net xlconstant_0_dout [get_bd_ports ethfmc_clk_fsel] [get_bd_ports ethfmc_clk_oe] [get_bd_pins constant_1/dout]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins eth0/rst_n] [get_bd_pins eth1/rst_n] [get_bd_pins latency/rst_n] [get_bd_pins ps_interconnect/M00_ARESETN] [get_bd_pins ps_interconnect/M01_ARESETN] [get_bd_pins ps_interconnect/M02_ARESETN] [get_bd_pins ps_interconnect/M03_ARESETN] [get_bd_pins ps_interconnect/M04_ARESETN] [get_bd_pins ps_interconnect/M05_ARESETN] [get_bd_pins ps_interconnect/M06_ARESETN] [get_bd_pins ps_interconnect/M07_ARESETN] [get_bd_pins ps_interconnect/S00_ARESETN] [get_bd_pins ps_reset/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
 
   # Create address segments
   create_bd_addr_seg -range 0x00010000 -offset 0x43C30000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs latency/eth2_stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR

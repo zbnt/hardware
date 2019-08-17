@@ -8,10 +8,6 @@ set_property -dict {PACKAGE_PIN K19 IOSTANDARD LVCMOS25} [get_ports ethfmc_clk_f
 
 create_clock -period 8.000 -name ethfmc_clk_p [get_ports ethfmc_clk_p]
 
-# Button
-
-set_property -dict {PACKAGE_PIN T18 IOSTANDARD LVCMOS25} [get_ports {BTNU}];
-
 # LEDs
 
 set_property -dict {PACKAGE_PIN T22 IOSTANDARD LVCMOS33} [get_ports {led[0]}]
