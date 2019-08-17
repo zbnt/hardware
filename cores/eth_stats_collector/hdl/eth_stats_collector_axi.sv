@@ -144,11 +144,12 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 			fifo_rx_good <= 64'd0;
 			fifo_rx_bad <= 64'd0;
 
+			stats_changed <= 1'b0;
 			last_stats_id <= 6'd0;
 			sample_timer_max <= 32'd0;
 		end else begin
 			// Update the stored values if they changed and either hold is set to 0 or FIFO is enabled
-			if(stats_changed & ((enable_fifo & use_fifo) | ~hold)) begin
+			if(stats_id != last_stats_id && sample_timer_current >= sample_timer_max && ((enable_fifo & use_fifo) | ~hold)) begin
 				time_reg <= current_time;
 				tx_bytes_reg <= tx_bytes;
 				tx_good_reg <= tx_good;
@@ -156,6 +157,11 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 				rx_bytes_reg <= rx_bytes;
 				rx_good_reg <= rx_good;
 				rx_bad_reg <= rx_bad;
+
+				stats_changed <= 1'b1;
+				last_stats_id <= stats_id;
+			end else begin
+				stats_changed <= 1'b0;
 			end
 
 			if(fifo_read) begin
@@ -167,8 +173,6 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 				fifo_rx_good <= fifo_out[127:64];
 				fifo_rx_bad <= fifo_out[63:0];
 			end
-
-			last_stats_id <= stats_id;
 
 			if(write_req) begin
 				if(write_addr[11:4] == 8'd0) begin
@@ -255,8 +259,6 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 
 		write_ready = 1'b0;
 		write_response = 1'b0;
-
-		stats_changed = stats_id != last_stats_id && sample_timer_current >= sample_timer_max;
 
 		for(int i = 0; i < axi_width; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -366,7 +368,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 			.valid(fifo_read),
 
 			.full(fifo_full),
-			.din({current_time, tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad}),
+			.din({time_reg, tx_bytes_reg, tx_good_reg, tx_bad_reg, rx_bytes_reg, rx_good_reg, rx_bad_reg}),
 			.wr_en(stats_changed & ~fifo_full),
 
 			.empty(fifo_empty),
