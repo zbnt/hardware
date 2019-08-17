@@ -1,0 +1,10 @@
+{
+	"name": "Zedboard",
+	"type": "zynq",
+
+	"memory":
+	{
+		"base": "0x43C00000",
+		"size": "0xB0000"
+	}
+}

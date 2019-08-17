@@ -1,9 +1,5 @@
-/cores/*/ip/*/*
-!/cores/*/ip/*/*.xci
-
-/hw
+.directory
 
 /projects/*/*/vivado
-/projects/*/hw
-
-.directory
+/projects/*/hw/*
+!/projects/*/hw/device.json
