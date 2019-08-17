@@ -51,7 +51,7 @@ module eth_measurer_coord
 			loop_tx_trigger <= 1'b0;
 
 			done <= 1'b0;
-			count <= 32'd0;
+			count <= 32'd1;
 			psize <= 16'd46;
 			ping_time <= 32'd0;
 			pong_time <= 32'd0;
@@ -101,14 +101,14 @@ module eth_measurer_coord
 			case(state)
 				ST_DELAY: begin
 					if(enable) begin
-						if(delay_time == 32'd0 || count >= delay_time - 32'd1) begin
+						if(count >= delay_time) begin
 							state_next = ST_WAIT_PING_TX;
 							count_next = 32'd0;
 							psize_next = psize_req;
 							main_tx_trigger_next = 1'b1;
 						end
 					end else begin
-						count_next = 32'd0;
+						count_next = 32'd1;
 					end
 				end
 
@@ -123,10 +123,10 @@ module eth_measurer_coord
 					if(loop_rx_ping_id == ping_id) begin
 						// Ping received in loopback interface
 						state_next = ST_WAIT_PONG_TX;
-						count_next = 32'd0;
-						ping_time_next = count + 32'd1;
+						count_next = 32'd1;
+						ping_time_next = count;
 						loop_tx_trigger_next = 1'b1;
-					end else if(timeout == 32'd0 || count >= timeout - 32'd1) begin
+					end else if(count >= timeout) begin
 						// Ping not received
 						state_next = ST_DELAY;
 						count_next = 32'd0;
@@ -154,10 +154,10 @@ module eth_measurer_coord
 
 						done_next = 1'b1;
 						ping_id_next = ping_id + 64'd1;
-						pong_time_next = count + 32'd1;
+						pong_time_next = count;
 
 						ping_pongs_good_next = ping_pongs_good + 64'd1;
-					end else if(timeout == 32'd0 || count >= timeout - 32'd1) begin
+					end else if(count >= timeout) begin
 						// Pong not received
 						state_next = ST_DELAY;
 						count_next = 32'd0;
