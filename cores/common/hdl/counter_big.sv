@@ -33,7 +33,7 @@ module counter_big_impl #(parameter width)
 	output logic [width-1:0] count
 );
 	if(width <= 8) begin
-		always_ff @(posedge clk or posedge rst) begin
+		always_ff @(posedge clk) begin
 			if(rst) begin
 				count <= '0;
 			end else if(enable) begin
