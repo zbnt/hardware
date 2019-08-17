@@ -10,9 +10,6 @@ module loop_fifo
 	input logic s_aclk,
 	input logic s_aresetn,
 
-	output logic axis_prog_full,
-	output logic axis_prog_empty,
-
 	input logic [7:0] s_axis_tdata,
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
@@ -48,8 +45,8 @@ module loop_fifo
 		.s_aclk(s_aclk),
 		.s_aresetn(s_aresetn),
 
-		.prog_full_axis(axis_prog_full),
-		.prog_empty_axis(axis_prog_empty),
+		.prog_full_axis(),
+		.prog_empty_axis(),
 
 		.s_axis_tdata(s_axis_tdata),
 		.s_axis_tlast(s_axis_tlast),

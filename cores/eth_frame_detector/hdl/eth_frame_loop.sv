@@ -19,9 +19,6 @@ module eth_frame_loop
 	output logic m_axis_tvalid,
 	input logic m_axis_tready,
 
-	output logic [15:0] pause_val,
-	output logic pause_req,
-
 	// S_AXIS : AXI4-Stream slave interface
 
 	input logic s_axis_clk,
@@ -33,8 +30,6 @@ module eth_frame_loop
 );
 	// m_axis_clk clock domain: Read and write to FIFO
 
-	logic fifo_prog_full, fifo_prog_empty;
-
 	always_comb begin
 		m_axis_tuser = 1'b0;
 	end
@@ -45,9 +40,6 @@ module eth_frame_loop
 		.s_aclk(s_axis_clk),
 		.s_aresetn(1'b1),
 
-		.axis_prog_full(fifo_prog_full),
-		.axis_prog_empty(fifo_prog_empty),
-
 		.s_axis_tdata(s_axis_tdata),
 		.s_axis_tlast(s_axis_tlast),
 		.s_axis_tvalid(s_axis_tvalid),
@@ -57,39 +49,5 @@ module eth_frame_loop
 		.m_axis_tlast(m_axis_tlast),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
-	);
-
-	// clk clock domain: Generate pause requests
-
-	logic fifo_prog_full_cdc, fifo_prog_empty_cdc;
-
-	always_ff @(posedge clk) begin
-		if(~rst_n) begin
-			pause_val[0] <= 16'd0;
-			pause_req <= 1'b0;
-		end else begin
-			pause_val[0] <= (pause_val[0] | fifo_prog_full_cdc) & (~pause_val[0] | ~fifo_prog_empty_cdc);
-			pause_req <= pause_val[0] ^ ((pause_val[0] | fifo_prog_full_cdc) & (~pause_val[0] | ~fifo_prog_empty_cdc));
-		end
-	end
-
-	always_comb begin
-		pause_val[15:1] = {15{pause_val[0]}};
-	end
-
-	sync_ffs #(1, 2) U1
-	(
-		.clk_src(m_axis_clk),
-		.clk_dst(clk),
-		.data_in({fifo_prog_empty}),
-		.data_out({fifo_prog_empty_cdc})
-	);
-
-	sync_ffs #(1, 2) U2
-	(
-		.clk_src(s_axis_clk),
-		.clk_dst(clk),
-		.data_in({fifo_prog_full}),
-		.data_out({fifo_prog_full_cdc})
 	);
 endmodule

@@ -137,9 +137,6 @@ module eth_frame_detector #(parameter axi_width = 32)
 	output logic m_axis_a_tvalid,
 	input logic m_axis_a_tready,
 
-	output logic [15:0] pause_a_val,
-	output logic pause_a_req,
-
 	// S_AXIS_A : AXI4-Stream slave interface (from TEMAC of iface A)
 
 	input logic s_axis_a_clk,
@@ -158,9 +155,6 @@ module eth_frame_detector #(parameter axi_width = 32)
 	output logic m_axis_b_tlast,
 	output logic m_axis_b_tvalid,
 	input logic m_axis_b_tready,
-
-	output logic [15:0] pause_b_val,
-	output logic pause_b_req,
 
 	// S_AXIS_B : AXI4-Stream slave interface (from TEMAC of iface B)
 
@@ -278,9 +272,6 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.m_axis_tvalid(m_axis_a_tvalid),
 		.m_axis_tready(m_axis_a_tready),
 
-		.pause_val(pause_a_val),
-		.pause_req(pause_a_req),
-
 		// S_AXIS_B
 
 		.s_axis_clk(s_axis_b_clk),
@@ -305,9 +296,6 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.m_axis_tlast(m_axis_b_tlast),
 		.m_axis_tvalid(m_axis_b_tvalid),
 		.m_axis_tready(m_axis_b_tready),
-
-		.pause_val(pause_b_val),
-		.pause_req(pause_b_req),
 
 		// S_AXIS_A
 
