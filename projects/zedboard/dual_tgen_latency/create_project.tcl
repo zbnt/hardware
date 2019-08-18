@@ -42,6 +42,8 @@ set_property -name "steps.phys_opt_design.is_enabled" -value "1" -objects [get_r
 set_property -name "steps.phys_opt_design.args.directive" -value "Explore" -objects [get_runs impl_1]
 set_property -name "steps.route_design.args.directive" -value "NoTimingRelaxation" -objects [get_runs impl_1]
 set_property -name "steps.route_design.args.more options" -value "-tns_cleanup" -objects [get_runs impl_1]
+set_property -name "steps.post_route_phys_opt_design.is_enabled" -value "1" -objects [get_runs impl_1]
+set_property -name "steps.post_route_phys_opt_design.args.directive" -value "Explore" -objects [get_runs impl_1]
 set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects [get_runs impl_1]
 set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects [get_runs impl_1]
 set_property -name "steps.write_bitstream.args.bin_file" -value "1" -objects [get_runs impl_1]
