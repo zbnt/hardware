@@ -356,7 +356,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>674233c3</spirit:value>
+            <spirit:value>9c5cbcf2</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1117,13 +1117,13 @@
       </xilinx:taxonomies>
       <xilinx:displayName>1G Ethernet MAC</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>7</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-08-11T00:57:42Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>8</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-08-18T01:48:25Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="9d795f76"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="aab2763e"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="984b312a"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="626a95aa"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="dad313b4"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="58cc9338"/>
