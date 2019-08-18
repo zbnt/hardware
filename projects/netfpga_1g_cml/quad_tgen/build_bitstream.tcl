@@ -25,8 +25,4 @@ if { [get_property needs_refresh [get_runs impl_1]] || [get_property status [get
 # Copy bitstream to output directory
 
 file mkdir ../hw
-file copy -force vivado/zbnt_hw_quad_tgen.runs/impl_1/bd_quad_tgen_wrapper.bin ../hw/quad_tgen.bin
-
-# Generate json file
-
-exec python3 ../../../hwdef_to_json.py vivado/zbnt_hw_quad_tgen.runs/impl_1/bd_quad_tgen_wrapper.hwdef ../hw/quad_tgen.json
+file copy -force vivado/zbnt_hw_quad_tgen.runs/impl_1/bd_quad_tgen_wrapper.bit ../hw/quad_tgen.bit

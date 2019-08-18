@@ -126,13 +126,12 @@ if { $bCheckIPs == 1 } {
 xilinx.com:ip:axi_pcie:2.9\
 xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:clk_wiz:6.0\
-xilinx.com:ip:util_idelay_ctrl:1.0\
 xilinx.com:ip:util_ds_buf:2.1\
 xilinx.com:ip:proc_sys_reset:5.0\
 oscar-rc.dev:zbnt_hw:simple_timer:1.0\
-xilinx.com:ip:tri_mode_ethernet_mac:9.0\
-oscar-rc.dev:zbnt_hw:eth_stats_collector:1.0\
-oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.0\
+alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
+oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1\
+oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1\
 oscar-rc.dev:zbnt_hw:eth_measurer:1.0\
 "
 
@@ -200,8 +199,6 @@ proc create_hier_cell_latency { parentCell nameHier } {
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii_loop
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii_main
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_mac_loop
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_mac_main
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_measurer
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats_loop
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats_main
@@ -214,39 +211,27 @@ proc create_hier_cell_latency { parentCell nameHier } {
   create_bd_pin -dir I time_running
 
   # Create instance: eth2_mac, and set properties
-  set eth2_mac [ create_bd_cell -type ip -vlnv xilinx.com:ip:tri_mode_ethernet_mac:9.0 eth2_mac ]
+  set eth2_mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 eth2_mac ]
   set_property -dict [ list \
-   CONFIG.Enable_MDIO {false} \
-   CONFIG.Frame_Filter {false} \
-   CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
-   CONFIG.Number_of_Table_Entries {0} \
-   CONFIG.Physical_Interface {RGMII} \
-   CONFIG.Statistics_Counters {false} \
-   CONFIG.SupportLevel {0} \
+   CONFIG.iface_type {RGMII} \
+   CONFIG.use_clk90 {true} \
  ] $eth2_mac
 
   # Create instance: eth2_stats, and set properties
-  set eth2_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.0 eth2_stats ]
+  set eth2_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 eth2_stats ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $eth2_stats
 
   # Create instance: eth3_mac, and set properties
-  set eth3_mac [ create_bd_cell -type ip -vlnv xilinx.com:ip:tri_mode_ethernet_mac:9.0 eth3_mac ]
+  set eth3_mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 eth3_mac ]
   set_property -dict [ list \
-   CONFIG.Enable_MDIO {false} \
-   CONFIG.Frame_Filter {false} \
-   CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
-   CONFIG.Number_of_Table_Entries {0} \
-   CONFIG.Physical_Interface {RGMII} \
-   CONFIG.Statistics_Counters {false} \
-   CONFIG.SupportLevel {0} \
+   CONFIG.iface_type {RGMII} \
+   CONFIG.use_clk90 {true} \
  ] $eth3_mac
 
   # Create instance: eth3_stats, and set properties
-  set eth3_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.0 eth3_stats ]
+  set eth3_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 eth3_stats ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $eth3_stats
@@ -258,33 +243,27 @@ proc create_hier_cell_latency { parentCell nameHier } {
  ] $measurer
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins rgmii_loop] [get_bd_intf_pins eth3_mac/rgmii]
   connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins s_axi_measurer] [get_bd_intf_pins measurer/S_AXI]
-  connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins s_axi_mac_loop] [get_bd_intf_pins eth3_mac/s_axi]
-  connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins rgmii_main] [get_bd_intf_pins eth2_mac/rgmii]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_stats_loop] [get_bd_intf_pins eth3_stats/S_AXI]
   connect_bd_intf_net -intf_net Conn6 [get_bd_intf_pins s_axi_stats_main] [get_bd_intf_pins eth2_stats/S_AXI]
-  connect_bd_intf_net -intf_net Conn7 [get_bd_intf_pins s_axi_mac_main] [get_bd_intf_pins eth2_mac/s_axi]
-  connect_bd_intf_net -intf_net eth2_mac_m_axis_rx [get_bd_intf_pins eth2_mac/m_axis_rx] [get_bd_intf_pins measurer/S_AXIS_MAIN]
-  connect_bd_intf_net -intf_net eth3_mac_m_axis_rx [get_bd_intf_pins eth3_mac/m_axis_rx] [get_bd_intf_pins measurer/S_AXIS_LOOP]
-  connect_bd_intf_net -intf_net eth_measurer_0_M_AXIS_LOOP [get_bd_intf_pins eth3_mac/s_axis_tx] [get_bd_intf_pins measurer/M_AXIS_LOOP]
-  connect_bd_intf_net -intf_net measurer_M_AXIS_MAIN [get_bd_intf_pins eth2_mac/s_axis_tx] [get_bd_intf_pins measurer/M_AXIS_MAIN]
+  connect_bd_intf_net -intf_net eth2_mac_RGMII [get_bd_intf_pins rgmii_main] [get_bd_intf_pins eth2_mac/RGMII]
+  connect_bd_intf_net -intf_net eth2_mac_RX_AXIS [get_bd_intf_pins eth2_mac/RX_AXIS] [get_bd_intf_pins measurer/S_AXIS_MAIN]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets eth2_mac_RX_AXIS] [get_bd_intf_pins eth2_mac/RX_AXIS] [get_bd_intf_pins eth2_stats/AXIS_RX]
+  connect_bd_intf_net -intf_net eth3_mac_RGMII [get_bd_intf_pins rgmii_loop] [get_bd_intf_pins eth3_mac/RGMII]
+  connect_bd_intf_net -intf_net eth3_mac_RX_AXIS [get_bd_intf_pins eth3_mac/RX_AXIS] [get_bd_intf_pins measurer/S_AXIS_LOOP]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets eth3_mac_RX_AXIS] [get_bd_intf_pins eth3_mac/RX_AXIS] [get_bd_intf_pins eth3_stats/AXIS_RX]
+  connect_bd_intf_net -intf_net measurer_M_AXIS_LOOP [get_bd_intf_pins eth3_mac/TX_AXIS] [get_bd_intf_pins measurer/M_AXIS_LOOP]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_LOOP] [get_bd_intf_pins eth3_stats/AXIS_TX] [get_bd_intf_pins measurer/M_AXIS_LOOP]
+  connect_bd_intf_net -intf_net measurer_M_AXIS_MAIN [get_bd_intf_pins eth2_mac/TX_AXIS] [get_bd_intf_pins measurer/M_AXIS_MAIN]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_MAIN] [get_bd_intf_pins eth2_stats/AXIS_TX] [get_bd_intf_pins measurer/M_AXIS_MAIN]
 
   # Create port connections
+  connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins eth2_mac/gtx_clk90] [get_bd_pins eth3_mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins eth2_stats/current_time] [get_bd_pins eth3_stats/current_time] [get_bd_pins measurer/current_time]
-  connect_bd_net -net eth2_mac_rx_mac_aclk [get_bd_pins eth2_mac/rx_mac_aclk] [get_bd_pins eth2_stats/clk_rx] [get_bd_pins measurer/s_axis_main_clk]
-  connect_bd_net -net eth2_mac_rx_statistics_valid [get_bd_pins eth2_mac/rx_statistics_valid] [get_bd_pins eth2_stats/rx_stats_valid]
-  connect_bd_net -net eth2_mac_rx_statistics_vector [get_bd_pins eth2_mac/rx_statistics_vector] [get_bd_pins eth2_stats/rx_stats_vector]
-  connect_bd_net -net eth2_mac_tx_statistics_valid [get_bd_pins eth2_mac/tx_statistics_valid] [get_bd_pins eth2_stats/tx_stats_valid]
-  connect_bd_net -net eth2_mac_tx_statistics_vector [get_bd_pins eth2_mac/tx_statistics_vector] [get_bd_pins eth2_stats/tx_stats_vector]
-  connect_bd_net -net gtx_clk90_0_1 [get_bd_pins clk_125M_90] [get_bd_pins eth2_mac/gtx_clk90] [get_bd_pins eth3_mac/gtx_clk90]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_mac/s_axi_aclk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_mac/s_axi_aclk] [get_bd_pins eth3_stats/clk] [get_bd_pins measurer/s_axi_clk]
-  connect_bd_net -net mac_rx_mac_aclk [get_bd_pins eth3_mac/rx_mac_aclk] [get_bd_pins eth3_stats/clk_rx] [get_bd_pins measurer/s_axis_loop_clk]
-  connect_bd_net -net mac_rx_statistics_valid [get_bd_pins eth3_mac/rx_statistics_valid] [get_bd_pins eth3_stats/rx_stats_valid]
-  connect_bd_net -net mac_rx_statistics_vector [get_bd_pins eth3_mac/rx_statistics_vector] [get_bd_pins eth3_stats/rx_stats_vector]
-  connect_bd_net -net mac_tx_statistics_valid [get_bd_pins eth3_mac/tx_statistics_valid] [get_bd_pins eth3_stats/tx_stats_valid]
-  connect_bd_net -net mac_tx_statistics_vector [get_bd_pins eth3_mac/tx_statistics_vector] [get_bd_pins eth3_stats/tx_stats_vector]
-  connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins eth2_mac/glbl_rstn] [get_bd_pins eth2_mac/rx_axi_rstn] [get_bd_pins eth2_mac/s_axi_resetn] [get_bd_pins eth2_mac/tx_axi_rstn] [get_bd_pins eth2_stats/rst_n] [get_bd_pins eth3_mac/glbl_rstn] [get_bd_pins eth3_mac/rx_axi_rstn] [get_bd_pins eth3_mac/s_axi_resetn] [get_bd_pins eth3_mac/tx_axi_rstn] [get_bd_pins eth3_stats/rst_n] [get_bd_pins measurer/s_axi_resetn]
+  connect_bd_net -net eth2_mac_rx_mac_aclk [get_bd_pins eth2_mac/rx_clk] [get_bd_pins eth2_stats/clk_rx] [get_bd_pins measurer/s_axis_main_clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_stats/clk] [get_bd_pins measurer/s_axi_clk]
+  connect_bd_net -net mac_rx_mac_aclk [get_bd_pins eth3_mac/rx_clk] [get_bd_pins eth3_stats/clk_rx] [get_bd_pins measurer/s_axis_loop_clk]
+  connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins eth2_mac/gtx_rst_n] [get_bd_pins eth2_stats/rst_n] [get_bd_pins eth3_mac/gtx_rst_n] [get_bd_pins eth3_stats/rst_n] [get_bd_pins measurer/s_axi_resetn]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins eth2_stats/time_running] [get_bd_pins eth3_stats/time_running] [get_bd_pins measurer/time_running]
 
   # Restore current instance
@@ -327,7 +306,6 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_mac
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
 
@@ -339,47 +317,38 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   create_bd_pin -dir I time_running
 
   # Create instance: mac, and set properties
-  set mac [ create_bd_cell -type ip -vlnv xilinx.com:ip:tri_mode_ethernet_mac:9.0 mac ]
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
-   CONFIG.Enable_MDIO {false} \
-   CONFIG.Frame_Filter {false} \
-   CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Make_MDIO_External {false} \
-   CONFIG.Number_of_Table_Entries {0} \
-   CONFIG.Physical_Interface {RGMII} \
-   CONFIG.Statistics_Counters {false} \
-   CONFIG.SupportLevel {0} \
+   CONFIG.iface_type {RGMII} \
+   CONFIG.use_clk90 {true} \
  ] $mac
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.0 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $stats
 
   # Create instance: tgen, and set properties
-  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.0 tgen ]
+  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $tgen
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/rgmii]
-  connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins s_axi_mac] [get_bd_intf_pins mac/s_axi]
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
-  connect_bd_intf_net -intf_net eth_traffic_gen_0_M_AXIS [get_bd_intf_pins mac/s_axis_tx] [get_bd_intf_pins tgen/M_AXIS]
+  connect_bd_intf_net -intf_net mac_RGMII [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net mac_RX_AXIS [get_bd_intf_pins mac/RX_AXIS] [get_bd_intf_pins stats/AXIS_RX]
+  connect_bd_intf_net -intf_net tgen_M_AXIS [get_bd_intf_pins mac/TX_AXIS] [get_bd_intf_pins tgen/M_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets tgen_M_AXIS] [get_bd_intf_pins stats/AXIS_TX] [get_bd_intf_pins tgen/M_AXIS]
 
   # Create port connections
+  connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk90_0_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins mac/s_axi_aclk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
-  connect_bd_net -net mac_rx_mac_aclk [get_bd_pins mac/rx_mac_aclk] [get_bd_pins stats/clk_rx]
-  connect_bd_net -net mac_rx_statistics_valid [get_bd_pins mac/rx_statistics_valid] [get_bd_pins stats/rx_stats_valid]
-  connect_bd_net -net mac_rx_statistics_vector [get_bd_pins mac/rx_statistics_vector] [get_bd_pins stats/rx_stats_vector]
-  connect_bd_net -net mac_tx_statistics_valid [get_bd_pins mac/tx_statistics_valid] [get_bd_pins stats/tx_stats_valid]
-  connect_bd_net -net mac_tx_statistics_vector [get_bd_pins mac/tx_statistics_vector] [get_bd_pins stats/tx_stats_vector]
-  connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/glbl_rstn] [get_bd_pins mac/rx_axi_rstn] [get_bd_pins mac/s_axi_resetn] [get_bd_pins mac/tx_axi_rstn] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
+  connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
 
   # Restore current instance
@@ -421,9 +390,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:mdio_io:1.0 mdio
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_mac
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
 
@@ -435,46 +402,38 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   create_bd_pin -dir I time_running
 
   # Create instance: mac, and set properties
-  set mac [ create_bd_cell -type ip -vlnv xilinx.com:ip:tri_mode_ethernet_mac:9.0 mac ]
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
-   CONFIG.Frame_Filter {false} \
-   CONFIG.MAC_Speed {1000_Mbps} \
-   CONFIG.Number_of_Table_Entries {0} \
-   CONFIG.Physical_Interface {RGMII} \
-   CONFIG.Statistics_Counters {false} \
-   CONFIG.SupportLevel {0} \
+   CONFIG.iface_type {RGMII} \
+   CONFIG.use_clk90 {true} \
  ] $mac
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.0 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $stats
 
   # Create instance: tgen, and set properties
-  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.0 tgen ]
+  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $tgen
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/rgmii]
-  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins mdio] [get_bd_intf_pins mac/mdio_external]
-  connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins s_axi_mac] [get_bd_intf_pins mac/s_axi]
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
-  connect_bd_intf_net -intf_net eth_traffic_gen_0_M_AXIS [get_bd_intf_pins mac/s_axis_tx] [get_bd_intf_pins tgen/M_AXIS]
+  connect_bd_intf_net -intf_net mac_RGMII [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net mac_RX_AXIS [get_bd_intf_pins mac/RX_AXIS] [get_bd_intf_pins stats/AXIS_RX]
+  connect_bd_intf_net -intf_net tgen_M_AXIS [get_bd_intf_pins mac/TX_AXIS] [get_bd_intf_pins tgen/M_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets tgen_M_AXIS] [get_bd_intf_pins stats/AXIS_TX] [get_bd_intf_pins tgen/M_AXIS]
 
   # Create port connections
+  connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk90_0_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins mac/s_axi_aclk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
-  connect_bd_net -net mac_rx_mac_aclk [get_bd_pins mac/rx_mac_aclk] [get_bd_pins stats/clk_rx]
-  connect_bd_net -net mac_rx_statistics_valid [get_bd_pins mac/rx_statistics_valid] [get_bd_pins stats/rx_stats_valid]
-  connect_bd_net -net mac_rx_statistics_vector [get_bd_pins mac/rx_statistics_vector] [get_bd_pins stats/rx_stats_vector]
-  connect_bd_net -net mac_tx_statistics_valid [get_bd_pins mac/tx_statistics_valid] [get_bd_pins stats/tx_stats_valid]
-  connect_bd_net -net mac_tx_statistics_vector [get_bd_pins mac/tx_statistics_vector] [get_bd_pins stats/tx_stats_vector]
-  connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/glbl_rstn] [get_bd_pins mac/rx_axi_rstn] [get_bd_pins mac/s_axi_resetn] [get_bd_pins mac/tx_axi_rstn] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
+  connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
 
   # Restore current instance
@@ -515,7 +474,6 @@ proc create_root_design { parentCell } {
 
 
   # Create interface ports
-  set mdio [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:mdio_io:1.0 mdio ]
   set pcie [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pcie ]
   set phy0_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy0_rgmii ]
   set phy1_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy1_rgmii ]
@@ -542,10 +500,15 @@ proc create_root_design { parentCell } {
    CONFIG.BAR0_SCALE {Megabytes} \
    CONFIG.BAR0_SIZE {4} \
    CONFIG.BAR_64BIT {false} \
-   CONFIG.DEVICE_ID {0x7014} \
+   CONFIG.BASE_CLASS_MENU {Device_was_built_before_Class_Code_definitions_were_finalized} \
+   CONFIG.CLASS_CODE {0x118000} \
+   CONFIG.DEVICE_ID {0x7A62} \
+   CONFIG.ENABLE_CLASS_CODE {true} \
    CONFIG.MAX_LINK_SPEED {2.5_GT/s} \
    CONFIG.M_AXI_DATA_WIDTH {64} \
    CONFIG.NO_OF_LANES {X4} \
+   CONFIG.SUBSYSTEM_ID {0x6E74} \
+   CONFIG.SUB_CLASS_INTERFACE_MENU {All_currently_implemented_devices_except_VGA-compatible_devices} \
    CONFIG.S_AXI_DATA_WIDTH {64} \
    CONFIG.enable_jtag_dbg {false} \
    CONFIG.shared_logic_in_core {false} \
@@ -554,9 +517,9 @@ proc create_root_design { parentCell } {
   # Create instance: axi_smartconnect, and set properties
   set axi_smartconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_smartconnect ]
   set_property -dict [ list \
-   CONFIG.ADVANCED_PROPERTIES {   __view__ { clocking { M11_Exit { ASSOCIATED_CLK aclk1 } } }  } \
+   CONFIG.ADVANCED_PROPERTIES {    __view__ { clocking { M04_Exit { ASSOCIATED_CLK aclk1 } } }   } \
    CONFIG.NUM_CLKS {2} \
-   CONFIG.NUM_MI {12} \
+   CONFIG.NUM_MI {8} \
    CONFIG.NUM_SI {1} \
  ] $axi_smartconnect
 
@@ -572,10 +535,10 @@ proc create_root_design { parentCell } {
    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {125.000} \
    CONFIG.CLKOUT2_REQUESTED_PHASE {90.000} \
    CONFIG.CLKOUT2_USED {true} \
-   CONFIG.CLKOUT3_JITTER {98.146} \
+   CONFIG.CLKOUT3_JITTER {112.316} \
    CONFIG.CLKOUT3_PHASE_ERROR {89.971} \
    CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {200.000} \
-   CONFIG.CLKOUT3_USED {true} \
+   CONFIG.CLKOUT3_USED {false} \
    CONFIG.CLK_OUT1_PORT {clk_125M} \
    CONFIG.CLK_OUT2_PORT {clk_125M_90} \
    CONFIG.CLK_OUT3_PORT {clk_200M} \
@@ -585,9 +548,9 @@ proc create_root_design { parentCell } {
    CONFIG.MMCM_CLKOUT0_DIVIDE_F {8.000} \
    CONFIG.MMCM_CLKOUT1_DIVIDE {8} \
    CONFIG.MMCM_CLKOUT1_PHASE {90.000} \
-   CONFIG.MMCM_CLKOUT2_DIVIDE {5} \
+   CONFIG.MMCM_CLKOUT2_DIVIDE {1} \
    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
-   CONFIG.NUM_OUT_CLKS {3} \
+   CONFIG.NUM_OUT_CLKS {2} \
    CONFIG.PRIM_IN_FREQ {200.000} \
    CONFIG.PRIM_SOURCE {Differential_clock_capable_pin} \
    CONFIG.USE_RESET {false} \
@@ -598,9 +561,6 @@ proc create_root_design { parentCell } {
 
   # Create instance: eth1
   create_hier_cell_eth1 [current_bd_instance .] eth1
-
-  # Create instance: idelay_ctrl, and set properties
-  set idelay_ctrl [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_idelay_ctrl:1.0 idelay_ctrl ]
 
   # Create instance: latency
   create_hier_cell_latency [current_bd_instance .] latency
@@ -627,23 +587,18 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net CLK_IN1_D_0_1 [get_bd_intf_ports system] [get_bd_intf_pins dcm_eth/CLK_IN1_D]
   connect_bd_intf_net -intf_net axi_pcie_0_pcie_7x_mgt [get_bd_intf_ports pcie] [get_bd_intf_pins axi_pcie/pcie_7x_mgt]
   connect_bd_intf_net -intf_net axi_pcie_M_AXI [get_bd_intf_pins axi_pcie/M_AXI] [get_bd_intf_pins axi_smartconnect/S00_AXI]
-  connect_bd_intf_net -intf_net eth0_mdio [get_bd_intf_ports mdio] [get_bd_intf_pins eth0/mdio]
+  connect_bd_intf_net -intf_net axi_smartconnect_M07_AXI [get_bd_intf_pins axi_smartconnect/M07_AXI] [get_bd_intf_pins simple_timer/S_AXI]
   connect_bd_intf_net -intf_net eth0_rgmii [get_bd_intf_ports phy0_rgmii] [get_bd_intf_pins eth0/rgmii]
   connect_bd_intf_net -intf_net eth1_rgmii [get_bd_intf_ports phy1_rgmii] [get_bd_intf_pins eth1/rgmii]
   connect_bd_intf_net -intf_net eth3_rgmii [get_bd_intf_ports phy3_rgmii] [get_bd_intf_pins latency/rgmii_loop]
   connect_bd_intf_net -intf_net eth3_rgmii_main [get_bd_intf_ports phy2_rgmii] [get_bd_intf_pins latency/rgmii_main]
-  connect_bd_intf_net -intf_net s_axi_mac_1 [get_bd_intf_pins axi_smartconnect/M01_AXI] [get_bd_intf_pins eth0/s_axi_mac]
-  connect_bd_intf_net -intf_net s_axi_mac_2 [get_bd_intf_pins axi_smartconnect/M04_AXI] [get_bd_intf_pins eth1/s_axi_mac]
-  connect_bd_intf_net -intf_net s_axi_mac_loop_1 [get_bd_intf_pins axi_smartconnect/M08_AXI] [get_bd_intf_pins latency/s_axi_mac_loop]
-  connect_bd_intf_net -intf_net s_axi_mac_main_1 [get_bd_intf_pins axi_smartconnect/M07_AXI] [get_bd_intf_pins latency/s_axi_mac_main]
-  connect_bd_intf_net -intf_net s_axi_measurer_1 [get_bd_intf_pins axi_smartconnect/M11_AXI] [get_bd_intf_pins latency/s_axi_measurer]
-  connect_bd_intf_net -intf_net s_axi_stats_1 [get_bd_intf_pins axi_smartconnect/M03_AXI] [get_bd_intf_pins eth0/s_axi_stats]
-  connect_bd_intf_net -intf_net s_axi_stats_2 [get_bd_intf_pins axi_smartconnect/M06_AXI] [get_bd_intf_pins eth1/s_axi_stats]
-  connect_bd_intf_net -intf_net s_axi_stats_loop_1 [get_bd_intf_pins axi_smartconnect/M10_AXI] [get_bd_intf_pins latency/s_axi_stats_loop]
-  connect_bd_intf_net -intf_net s_axi_stats_main_1 [get_bd_intf_pins axi_smartconnect/M09_AXI] [get_bd_intf_pins latency/s_axi_stats_main]
-  connect_bd_intf_net -intf_net s_axi_tgen_1 [get_bd_intf_pins axi_smartconnect/M02_AXI] [get_bd_intf_pins eth0/s_axi_tgen]
-  connect_bd_intf_net -intf_net s_axi_tgen_2 [get_bd_intf_pins axi_smartconnect/M05_AXI] [get_bd_intf_pins eth1/s_axi_tgen]
-  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins axi_smartconnect/M00_AXI] [get_bd_intf_pins simple_timer/S_AXI]
+  connect_bd_intf_net -intf_net s_axi_measurer_1 [get_bd_intf_pins axi_smartconnect/M04_AXI] [get_bd_intf_pins latency/s_axi_measurer]
+  connect_bd_intf_net -intf_net s_axi_stats_1 [get_bd_intf_pins axi_smartconnect/M00_AXI] [get_bd_intf_pins eth0/s_axi_stats]
+  connect_bd_intf_net -intf_net s_axi_stats_2 [get_bd_intf_pins axi_smartconnect/M02_AXI] [get_bd_intf_pins eth1/s_axi_stats]
+  connect_bd_intf_net -intf_net s_axi_stats_loop_1 [get_bd_intf_pins axi_smartconnect/M05_AXI] [get_bd_intf_pins latency/s_axi_stats_loop]
+  connect_bd_intf_net -intf_net s_axi_stats_main_1 [get_bd_intf_pins axi_smartconnect/M06_AXI] [get_bd_intf_pins latency/s_axi_stats_main]
+  connect_bd_intf_net -intf_net s_axi_tgen_1 [get_bd_intf_pins axi_smartconnect/M01_AXI] [get_bd_intf_pins eth0/s_axi_tgen]
+  connect_bd_intf_net -intf_net s_axi_tgen_2 [get_bd_intf_pins axi_smartconnect/M03_AXI] [get_bd_intf_pins eth1/s_axi_tgen]
 
   # Create port connections
   connect_bd_net -net IBUF_DS_N_0_1 [get_bd_ports pcie_clk_n] [get_bd_pins pcie_refclk_ibufds/IBUF_DS_N]
@@ -654,29 +609,23 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_125M_90_1 [get_bd_pins dcm_eth/clk_125M_90] [get_bd_pins eth0/clk_125M_90] [get_bd_pins eth1/clk_125M_90] [get_bd_pins latency/clk_125M_90]
   connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins axi_smartconnect/aclk1] [get_bd_pins dcm_eth/clk_125M] [get_bd_pins eth0/clk_125M] [get_bd_pins eth1/clk_125M] [get_bd_pins latency/clk_125M] [get_bd_pins reset_sys_clk/slowest_sync_clk] [get_bd_pins simple_timer/clk]
   connect_bd_net -net clk_wiz_0_locked [get_bd_pins dcm_eth/locked] [get_bd_pins reset_sys_clk/dcm_locked]
-  connect_bd_net -net dcm_eth_clk_200M [get_bd_pins dcm_eth/clk_200M] [get_bd_pins idelay_ctrl/ref_clk]
   connect_bd_net -net reset_pcie_interconnect_aresetn [get_bd_pins axi_pcie/axi_aresetn] [get_bd_pins reset_pcie_clk/interconnect_aresetn]
   connect_bd_net -net reset_sys_clk_interconnect_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins axi_smartconnect/aresetn] [get_bd_pins reset_sys_clk/interconnect_aresetn]
   connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins eth0/rst_n] [get_bd_pins eth1/rst_n] [get_bd_pins latency/rst_n] [get_bd_pins reset_sys_clk/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
-  connect_bd_net -net reset_sys_clk_peripheral_reset [get_bd_pins idelay_ctrl/rst] [get_bd_pins reset_sys_clk/peripheral_reset]
   connect_bd_net -net rst_n_1 [get_bd_ports rst_n] [get_bd_pins reset_pcie_clk/ext_reset_in] [get_bd_pins reset_sys_clk/ext_reset_in]
   connect_bd_net -net simple_timer_current_time [get_bd_pins eth0/current_time] [get_bd_pins eth1/current_time] [get_bd_pins latency/current_time] [get_bd_pins simple_timer/current_time]
   connect_bd_net -net simple_timer_time_running [get_bd_pins eth0/time_running] [get_bd_pins eth1/time_running] [get_bd_pins latency/time_running] [get_bd_pins simple_timer/time_running]
   connect_bd_net -net util_ds_buf_0_IBUF_OUT [get_bd_pins axi_pcie/REFCLK] [get_bd_pins pcie_refclk_ibufds/IBUF_OUT]
 
   # Create address segments
-  create_bd_addr_seg -range 0x00010000 -offset 0x00120000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/eth2_mac/s_axi/Reg] SEG_eth2_mac_Reg
-  create_bd_addr_seg -range 0x00010000 -offset 0x00170000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/eth2_stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00100000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth0/mac/s_axi/Reg] SEG_mac_Reg
-  create_bd_addr_seg -range 0x00010000 -offset 0x00110000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth1/mac/s_axi/Reg] SEG_mac_Reg1
-  create_bd_addr_seg -range 0x00010000 -offset 0x00130000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/eth3_mac/s_axi/Reg] SEG_mac_Reg3
-  create_bd_addr_seg -range 0x00010000 -offset 0x001D0000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/measurer/S_AXI/S_AXI_ADDR] SEG_measurer_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00140000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_0_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00150000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00160000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
-  create_bd_addr_seg -range 0x00010000 -offset 0x00180000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/eth3_stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR3
-  create_bd_addr_seg -range 0x00010000 -offset 0x00190000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x001A0000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00010000 -offset 0x00030000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/eth2_stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00090000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/measurer/S_AXI/S_AXI_ADDR] SEG_measurer_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00000000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_0_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00010000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00020000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00010000 -offset 0x00040000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs latency/eth3_stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR3
+  create_bd_addr_seg -range 0x00010000 -offset 0x00050000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00060000 [get_bd_addr_spaces axi_pcie/M_AXI] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
 
 
   # Restore current instance

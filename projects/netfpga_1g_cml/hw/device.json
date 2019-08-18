@@ -1,0 +1,10 @@
+{
+	"name": "NetFPGA-1G-CML",
+	"type": "kintex7",
+
+	"memory":
+	{
+		"base": "0x00000000",
+		"size": "0xB0000"
+	}
+}

@@ -25,8 +25,4 @@ if { [get_property needs_refresh [get_runs impl_1]] || [get_property status [get
 # Copy bitstream to output directory
 
 file mkdir ../hw
-file copy -force vivado/zbnt_hw_dual_tgen_latency.runs/impl_1/bd_dual_tgen_latency_wrapper.bin ../hw/dual_tgen_latency.bin
-
-# Generate json file
-
-exec python3 ../../../hwdef_to_json.py vivado/zbnt_hw_dual_tgen_latency.runs/impl_1/bd_dual_tgen_latency_wrapper.hwdef ../hw/dual_tgen_latency.json
+file copy -force vivado/zbnt_hw_dual_tgen_latency.runs/impl_1/bd_dual_tgen_latency_wrapper.bit ../hw/dual_tgen_latency.bit

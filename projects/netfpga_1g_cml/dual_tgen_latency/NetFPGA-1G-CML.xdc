@@ -22,11 +22,6 @@ set_property LOC GTXE2_CHANNEL_X0Y2 [get_cells -hier -filter { NAME =~ */pipe_la
 set_property LOC GTXE2_CHANNEL_X0Y1 [get_cells -hier -filter { NAME =~ */pipe_lane[2].gt_wrapper_i/gtx_channel.gtxe2_channel_i }]
 set_property LOC GTXE2_CHANNEL_X0Y0 [get_cells -hier -filter { NAME =~ */pipe_lane[3].gt_wrapper_i/gtx_channel.gtxe2_channel_i }]
 
-# MDIO
-
-set_property -dict { PACKAGE_PIN W13   IOSTANDARD LVCMOS18 } [get_ports mdio_io]
-set_property -dict { PACKAGE_PIN V13   IOSTANDARD LVCMOS18 } [get_ports mdio_mdc]
-
 # ETH0
 
 set_property -dict { PACKAGE_PIN D18   IOSTANDARD LVCMOS33 } [get_ports phy0_rstn]
