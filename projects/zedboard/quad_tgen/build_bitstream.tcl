@@ -22,7 +22,15 @@ if { [get_property needs_refresh [get_runs impl_1]] || [get_property status [get
 	wait_on_run impl_1
 }
 
-# Copy bitstream to output directory
+# Swap bytes and copy to output folder
 
-file mkdir ../hw
-file copy -force vivado/zbnt_hw_quad_tgen.runs/impl_1/bd_quad_tgen_wrapper.bin ../hw/quad_tgen.bin
+cd vivado/zbnt_hw_quad_tgen.runs/impl_1
+
+set bif_file [open bd_quad_tgen.bif w]
+puts $bif_file "all: { bd_quad_tgen_wrapper.bit }"
+close $bif_file
+
+exec bootgen -image bd_quad_tgen.bif -arch zynq -process_bitstream bin -w on
+
+file mkdir ../../../../hw
+file copy -force bd_quad_tgen_wrapper.bit.bin ../../../../hw/quad_tgen.bin

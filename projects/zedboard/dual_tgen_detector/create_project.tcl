@@ -46,5 +46,4 @@ set_property -name "steps.post_route_phys_opt_design.is_enabled" -value "1" -obj
 set_property -name "steps.post_route_phys_opt_design.args.directive" -value "Explore" -objects [get_runs impl_1]
 set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects [get_runs impl_1]
 set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects [get_runs impl_1]
-set_property -name "steps.write_bitstream.args.bin_file" -value "1" -objects [get_runs impl_1]
 current_run -implementation [get_runs impl_1]
