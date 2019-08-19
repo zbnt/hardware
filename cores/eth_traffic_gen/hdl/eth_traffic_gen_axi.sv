@@ -116,6 +116,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 	logic [axi_width-1:0] write_mask;
 	logic mem_wdone, mem_rdone;
+	logic mem_wbusy, mem_rbusy;
 	logic srst;
 
 	always_ff @(posedge clk) begin
@@ -131,24 +132,28 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			burst_on_time <= 16'd0;
 			burst_off_time <= 16'd0;
 
-			mem_wdone <= 1'b0;
 			mem_rdone <= 1'b0;
+			mem_wdone <= 1'b0;
+			mem_rbusy <= 1'b0;
+			mem_wbusy <= 1'b0;
 			mem_addr <= 11'd0;
 			mem_wdata <= '0;
 			mem_we <= '0;
 		end else begin
-			mem_rdone <= 1'b0;
-			mem_wdone <= 1'b0;
+			mem_rdone <= mem_rbusy;
+			mem_wdone <= mem_wbusy;
+			mem_rbusy <= 1'b0;
+			mem_wbusy <= 1'b0;
 			mem_we <= '0;
 
 			if(read_req && s_axi_araddr >= 12'h800) begin
 				mem_addr <= s_axi_araddr[10:0];
-				mem_rdone <= 1'b1;
+				mem_rbusy <= 1'b1;
 			end else if(write_req && write_addr >= 12'h800) begin
 				mem_addr <= write_addr[10:0];
 				mem_wdata <= s_axi_wdata;
 				mem_we <= s_axi_wstrb;
-				mem_wdone <= 1'b1;
+				mem_wbusy <= 1'b1;
 			end
 
 			if(write_req && write_addr[11:5] == 7'd0) begin
