@@ -22,15 +22,8 @@ if { [get_property needs_refresh [get_runs impl_1]] || [get_property status [get
 	wait_on_run impl_1
 }
 
-# Swap bytes and copy to output folder
+# Copy to output folder
 
 cd vivado/zbnt_hw_dual_tgen_detector.runs/impl_1
-
-set bif_file [open bd_dual_tgen_detector.bif w]
-puts $bif_file "all: { bd_dual_tgen_detector_wrapper.bit }"
-close $bif_file
-
-exec bootgen -image bd_dual_tgen_detector.bif -arch fpga -process_bitstream bin -w on
-
 file mkdir ../../../../hw
-file copy -force bd_dual_tgen_detector_wrapper.bit.bin ../../../../hw/dual_tgen_detector.bin
+file copy -force bd_dual_tgen_detector_wrapper.bit ../../../../hw/dual_tgen_detector.bit

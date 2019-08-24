@@ -16,4 +16,4 @@ clean:
 	-rm -r dual_tgen_latency/vivado
 	-rm -r dual_tgen_detector/vivado
 	-rm -r quad_tgen/vivado
-	-rm hw/dual_tgen_detector.bin hw/dual_tgen_latency.bin hw/quad_tgen.bin
+	-rm hw/dual_tgen_detector.bit hw/dual_tgen_latency.bit hw/quad_tgen.bit
