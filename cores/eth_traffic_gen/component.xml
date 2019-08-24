@@ -303,7 +303,7 @@
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>TG_HSIZE</spirit:name>
+          <spirit:name>TG_FSIZE</spirit:name>
           <spirit:addressOffset>8</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
@@ -313,8 +313,23 @@
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>TG_PSIZE</spirit:name>
+          <spirit:name>TG_BURST_PARAMS</spirit:name>
           <spirit:addressOffset>16</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>TG_LFSR_SEED_REQ</spirit:name>
+          <spirit:addressOffset>20</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>TG_LFSR_SEED_VAL_L</spirit:name>
+          <spirit:addressOffset>24</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>TG_LFSR_SEED_VAL_H</spirit:name>
+          <spirit:addressOffset>28</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
       </spirit:addressBlock>
@@ -343,7 +358,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>9dc5d860</spirit:value>
+            <spirit:value>30c001c8</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -368,7 +383,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>9dc5d860</spirit:value>
+            <spirit:value>30c001c8</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -442,7 +457,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">11</spirit:left>
+            <spirit:left spirit:format="long">12</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -605,7 +620,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">11</spirit:left>
+            <spirit:left spirit:format="long">12</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -852,9 +867,13 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
+        <spirit:name>hdl/pattern_dram.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>hdl/eth_traffic_gen_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_e3b5414e</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_2bca0eac</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -907,6 +926,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/frame_dram.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/pattern_dram.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -982,18 +1005,18 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Traffic Generator</xilinx:displayName>
-      <xilinx:coreRevision>2</xilinx:coreRevision>
+      <xilinx:coreRevision>4</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2019-08-18T23:17:25Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-08-24T18:08:25Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="c8aa84d0"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="293b5fa8"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="500713dc"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="96151df4"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="4e44b380"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="8e4672a9"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="119f0670"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="f868bceb"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="89895078"/>
     </xilinx:packagingInfo>

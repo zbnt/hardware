@@ -41,31 +41,33 @@
 		\reg TG_STATUS: TGen status register.
 			\access RO
 
-			\field BUSY   0	   Busy flag, set to 1 if there is a frame transmission in progress.
-			\field TXST   1-2    Frame transmission FSM state.
-			\field DRPTR  3-13   Pointer to the internal DRAM address currently being transmitted.
+			\field TXST   0-1    Frame transmission FSM state.
+			\field DRPTR  2-12   Pointer to the internal DRAM address currently being transmitted.
 
-		\reg TG_HSIZE: Frame headers size.
+		\reg TG_FSIZE: Frame size.
 			\access RW
 
-			\field HSIZE  0-11   Number of bytes from DRAM to read and send, must be between 14 and 2048, inclusive.
+			\field HSIZE  0-11   Number of bytes to transmit.
 
 		\reg TG_FDELAY: Sleep time after frame transmission.
 			\access RW
 
 			\field FDELAY 0-31   Number of clock cycles to wait before starting to send the next frame.
 
-		\reg TG_PSIZE: Frame payload size.
-			\access RW
-
-			\field PSIZE  0-15   Number of pseudo-random bytes to send. Values written to this register will be
-			                     effective starting from the next frame.
-
 		\reg TG_BURST_PARAMS: Burst mode parameters.
 			\access RW
 
 			\field TMON   0-15   Number of milliseconds to keep transmitter on.
 			\field TMOFF  16-31  Number of milliseconds to wait before enabling the transmitter again.
+
+		\reg TG_LFSR_SEED_REQ: LFSR seed request.
+			\access RW
+
+		\reg TG_LFSR_SEED_VAL_L: LFSR seed, lower half.
+			\access RW
+
+		\reg TG_LFSR_SEED_VAL_H: LFSR seed, higher half.
+			\access RW
 
 		\mem FRAME_HEADERS: Headers for the generated frames.
 			\access RW
@@ -82,7 +84,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
-	input logic [11:0] s_axi_awaddr,
+	input logic [12:0] s_axi_awaddr,
 	input logic [2:0] s_axi_awprot,
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
@@ -96,7 +98,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	output logic s_axi_bvalid,
 	input logic s_axi_bready,
 
-	input logic [11:0] s_axi_araddr,
+	input logic [12:0] s_axi_araddr,
 	input logic [2:0] s_axi_arprot,
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
@@ -118,17 +120,24 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	logic tx_enable;
 	logic tx_busy;
 	logic [1:0] tx_state;
-	logic [11:0] headers_size;
-	logic [15:0] payload_size;
+	logic [11:0] frame_size;
 	logic [31:0] frame_delay;
 
 	logic use_burst, burst_enable;
 	logic [15:0] burst_on_time, burst_off_time;
 
-	logic [axi_width-1:0] mem_a_wdata, mem_a_rdata;
-	logic [axi_width-1:0] mem_b_rdata;
-	logic [10:0] mem_a_addr, mem_b_addr;
-	logic [(axi_width/8)-1:0] mem_a_we;
+	logic lfsr_seed_req;
+	logic [63:0] lfsr_seed_val;
+
+	logic [10-$clog2(axi_width/8):0] mem_frame_a_addr, mem_frame_b_addr;
+	logic [axi_width-1:0] mem_frame_a_wdata, mem_frame_a_rdata;
+	logic [axi_width-1:0] mem_frame_b_rdata;
+	logic [(axi_width/8)-1:0] mem_frame_a_we;
+
+	logic [7-$clog2(axi_width/8):0] mem_pattern_a_addr, mem_pattern_b_addr;
+	logic [axi_width-1:0] mem_pattern_a_wdata, mem_pattern_a_rdata;
+	logic [axi_width-1:0] mem_pattern_b_rdata;
+	logic [(axi_width/8)-1:0] mem_pattern_a_we;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -167,24 +176,30 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.s_axi_rvalid(s_axi_rvalid),
 		.s_axi_rready(s_axi_rready),
 
-		.mem_addr(mem_a_addr),
-		.mem_wdata(mem_a_wdata),
-		.mem_we(mem_a_we),
-		.mem_rdata(mem_a_rdata),
+		.mem_frame_addr(mem_frame_a_addr),
+		.mem_frame_wdata(mem_frame_a_wdata),
+		.mem_frame_we(mem_frame_a_we),
+		.mem_frame_rdata(mem_frame_a_rdata),
+
+		.mem_pattern_addr(mem_pattern_a_addr),
+		.mem_pattern_wdata(mem_pattern_a_wdata),
+		.mem_pattern_we(mem_pattern_a_we),
+		.mem_pattern_rdata(mem_pattern_a_rdata),
 
 		.tx_enable(tx_enable),
 
-		.tx_busy(tx_busy),
 		.tx_state(tx_state),
-		.tx_ptr(mem_b_addr),
+		.tx_ptr({mem_frame_b_addr, {($clog2(axi_width/8)){1'b0}}}),
 
-		.headers_size(headers_size),
-		.payload_size(payload_size),
+		.frame_size(frame_size),
 		.frame_delay(frame_delay),
 
 		.use_burst(use_burst),
 		.burst_on_time(burst_on_time),
-		.burst_off_time(burst_off_time)
+		.burst_off_time(burst_off_time),
+
+		.lfsr_seed_req(lfsr_seed_req),
+		.lfsr_seed_val(lfsr_seed_val)
 	);
 
 	eth_traffic_gen_axis #(axi_width) U1
@@ -192,16 +207,20 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.clk(clk),
 		.rst(~rst_n),
 
-		.tx_busy(tx_busy),
 		.tx_state(tx_state),
 
 		.enable(glob_enable),
-		.headers_size(headers_size),
-		.payload_size(payload_size),
+		.frame_size(frame_size),
 		.frame_delay(frame_delay),
 
-		.mem_addr(mem_b_addr),
-		.mem_rdata(mem_b_rdata),
+		.lfsr_seed_req(lfsr_seed_req),
+		.lfsr_seed_val(lfsr_seed_val),
+
+		.mem_frame_addr(mem_frame_b_addr),
+		.mem_frame_rdata(mem_frame_b_rdata),
+
+		.mem_pattern_addr(mem_pattern_b_addr),
+		.mem_pattern_rdata(mem_pattern_b_rdata),
 
 		.m_axis_tdata(m_axis_tdata),
 		.m_axis_tkeep(m_axis_tkeep),
@@ -214,16 +233,29 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	(
 		.clk(clk),
 
-		.a(mem_a_addr),
-		.d(mem_a_wdata),
-		.spo(mem_a_rdata),
-		.we(mem_a_we),
+		.a(mem_frame_a_addr),
+		.d(mem_frame_a_wdata),
+		.spo(mem_frame_a_rdata),
+		.we(mem_frame_a_we),
 
-		.dpra(mem_b_addr),
-		.dpo(mem_b_rdata)
+		.dpra(mem_frame_b_addr),
+		.dpo(mem_frame_b_rdata)
 	);
 
-	eth_traffic_gen_burst U3
+	pattern_dram #(axi_width) U3
+	(
+		.clk(clk),
+
+		.a(mem_pattern_a_addr),
+		.d(mem_pattern_a_wdata),
+		.spo(mem_pattern_a_rdata),
+		.we(mem_pattern_a_we),
+
+		.dpra(mem_pattern_b_addr),
+		.dpo(mem_pattern_b_rdata)
+	);
+
+	eth_traffic_gen_burst U4
 	(
 		.clk(clk),
 		.rst_n(rst_n),

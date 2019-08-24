@@ -13,7 +13,7 @@ module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
-	input wire [11:0] s_axi_awaddr,
+	input wire [12:0] s_axi_awaddr,
 	input wire [2:0] s_axi_awprot,
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
@@ -27,7 +27,7 @@ module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 
 	output wire s_axi_bvalid,
 	input wire s_axi_bready,
 
-	input wire [11:0] s_axi_araddr,
+	input wire [12:0] s_axi_araddr,
 	input wire [2:0] s_axi_arprot,
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
