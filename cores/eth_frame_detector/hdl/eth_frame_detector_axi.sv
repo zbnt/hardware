@@ -260,13 +260,13 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 						1'd1: read_value = {58'd0, fifo_matches, fifo_time};
 					endcase
 				end
-			end else if(s_axi_araddr[15:13] == 3'd1 && s_axi_araddr[12:2] < 11'd1536) begin
+			end else if(s_axi_araddr[15:13] == 3'd1 && s_axi_araddr[12:11] <= 2'd3) begin
 				// MEM_A address
 				read_ready = mem_a_done;
 				read_response = 1'b1;
 				mem_a_rreq = 1'b1;
 				read_value = {2'd0, mem_a_rdata};
-			end else if(s_axi_araddr[15:13] == 3'd2 && s_axi_araddr[12:2] < 11'd1536) begin
+			end else if(s_axi_araddr[15:13] == 3'd2 && s_axi_araddr[12:11] <= 2'd3) begin
 				// MEM_B address
 				read_ready = mem_b_done;
 				read_response = 1'b1;
@@ -300,12 +300,12 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 						write_ready = fifo_read;
 					end
 				end
-			end else if(write_addr[15:13] == 3'd1 && write_addr[12:2] < 11'd1536) begin
+			end else if(write_addr[15:13] == 3'd1 && write_addr[12:11] <= 2'd3) begin
 				// MEM_A address
 				write_ready = mem_a_done;
 				write_response = 1'b1;
 				mem_a_wreq = 1'b1;
-			end else if(write_addr[15:13] == 3'd2 && write_addr[12:2] < 11'd1536) begin
+			end else if(write_addr[15:13] == 3'd2 && write_addr[12:11] <= 2'd3) begin
 				// MEM_B address
 				write_ready = mem_b_done;
 				write_response = 1'b1;
