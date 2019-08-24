@@ -128,11 +128,11 @@ xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_ds_buf:2.1\
 xilinx.com:ip:proc_sys_reset:5.0\
-oscar-rc.dev:zbnt_hw:simple_timer:1.0\
+oscar-rc.dev:zbnt_hw:simple_timer:1.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1\
 oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1\
-oscar-rc.dev:zbnt_hw:eth_measurer:1.0\
+oscar-rc.dev:zbnt_hw:eth_latency_measurer:1.1\
 "
 
    set list_ips_missing ""
@@ -237,7 +237,7 @@ proc create_hier_cell_latency { parentCell nameHier } {
  ] $eth3_stats
 
   # Create instance: measurer, and set properties
-  set measurer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_measurer:1.0 measurer ]
+  set measurer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_latency_measurer:1.1 measurer ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $measurer
@@ -578,7 +578,7 @@ proc create_root_design { parentCell } {
   set reset_sys_clk [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset_sys_clk ]
 
   # Create instance: simple_timer, and set properties
-  set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:simple_timer:1.0 simple_timer ]
+  set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:simple_timer:1.1 simple_timer ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $simple_timer
