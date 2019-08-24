@@ -148,7 +148,7 @@ module simple_timer #(parameter axi_width = 32)
 		.count(current_time)
 	);
 
-	always_comb begin
-		time_running = (enable & ~srst & rst_n) && (current_time < max_count);
+	always_ff @(posedge clk) begin
+		time_running <= (enable & ~srst & rst_n) && (current_time < max_count);
 	end
 endmodule
