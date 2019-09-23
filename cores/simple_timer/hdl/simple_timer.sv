@@ -5,53 +5,9 @@
 */
 
 /*!
-	\core simple_timer: Simple AXI timer
+	simple_timer: Simple AXI timer
 
 	This module implements a simple 64 bits timer that can be read and configured using an AXI4-Lite interface.
-
-	\supports
-		\device zynq Production
-
-	\ports
-		\iface s_axi: Configuration interface from PS.
-			\type AXI4-Lite
-
-			\clk   clk
-			\rst_n rst_n
-
-	\memorymap S_AXI_ADDR
-		\regsize 32
-
-		\reg ST_CFG: Timer configuration register.
-			\access RW
-
-			\field EN     0      Enable.
-			\field SRST   1      Software reset, active high, must be set back to 0 again manually.
-
-		\reg ST_STATUS: Timer status register.
-			\access RO
-
-			\field BUSY   0      Set to 1 while the timer is counting, set to 0 otherwise.
-
-		\reg ST_LIMIT_L: Counting limit, lower half.
-			\access RO
-
-			\field LIML   0-31   Maximum value, lower 32 bits. The timer will not count past this value.
-
-		\reg ST_LIMIT_H: Counting limit, upper half.
-			\access RO
-
-			\field LIMH   0-31   Maximum value, upper 32 bits. The timer will not count past this value/
-
-		\reg ST_COUNT_L: Current count value, lower half.
-			\access RO
-
-			\field CNTL   0-31   Current count stored in the timer, lower 32 bits.
-
-		\reg ST_COUNT_H: Current count value, upper half.
-			\access RO
-
-			\field CNTH   0-31   Current count stored in the timer, upper 32 bits.
 */
 
 module simple_timer #(parameter axi_width = 32)
