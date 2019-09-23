@@ -12,6 +12,13 @@ set_property -dict { PACKAGE_PIN AA3   IOSTANDARD LVDS } [get_ports system_clk_p
 set_property -dict { PACKAGE_PIN AA2   IOSTANDARD LVDS } [get_ports system_clk_n]
 set_property -dict { PACKAGE_PIN AA8   IOSTANDARD LVCMOS18 } [get_ports rst_n]
 
+# LEDs
+
+set_property -dict { PACKAGE_PIN E17   IOSTANDARD LVCMOS33 } [get_ports { led[0] }]
+set_property -dict { PACKAGE_PIN AF14  IOSTANDARD LVCMOS18 } [get_ports { led[1] }]
+set_property -dict { PACKAGE_PIN F17   IOSTANDARD LVCMOS33 } [get_ports { led[2] }]
+set_property -dict { PACKAGE_PIN W19   IOSTANDARD LVCMOS18 } [get_ports { led[3] }]
+
 # PCIe
 
 set_property -dict { PACKAGE_PIN L17   IOSTANDARD LVCMOS33  PULLUP TRUE } [get_ports pcie_perstn]

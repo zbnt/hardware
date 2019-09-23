@@ -7,7 +7,7 @@ set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
 
 # Load source files
 
-read_xdc NetFPGA-1G-CML.xdc
+read_xdc ../NetFPGA-1G-CML.xdc
 
 # Set path to IP repository
 
