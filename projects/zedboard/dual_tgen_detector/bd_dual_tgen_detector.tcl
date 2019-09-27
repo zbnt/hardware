@@ -470,6 +470,7 @@ proc create_root_design { parentCell } {
   # Create instance: constant_leds, and set properties
   set constant_leds [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 constant_leds ]
   set_property -dict [ list \
+   CONFIG.CONST_VAL {4} \
    CONFIG.CONST_WIDTH {8} \
  ] $constant_leds
 
