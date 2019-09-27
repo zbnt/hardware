@@ -46,7 +46,7 @@ module eth_stats_counter_rx
 				if(axis_rx_tvalid) begin
 					in_frame <= 1'b1;
 
-					frame_bytes <= 16'd0;
+					frame_bytes <= 16'd1;
 					frame_good <= 1'b1;
 				end
 
