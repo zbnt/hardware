@@ -20,7 +20,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	input logic [31:0] frame_delay,
 
 	input logic lfsr_seed_req,
-	input logic [63:0] lfsr_seed_val,
+	input logic [7:0] lfsr_seed_val,
 
 	// MEM_FRAME
 
@@ -48,17 +48,16 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	logic m_axis_tlast_next;
 	logic m_axis_tvalid_next;
 
-	logic [63:0] lfsr_val;
+	logic [7:0] lfsr_val;
 
-	logic [63:0] lqueue, lqueue_next;
 	logic [axi_width-1:0] pqueue, pqueue_next;
 	logic [axi_width-1:0] fqueue, fqueue_next;
 
-	lfsr #(64, 4, 63, 62, 60, 59) U0
+	lfsr #(8, 4, 7, 5, 4, 3) U0
 	(
 		.clk(clk),
 		.rst(rst | lfsr_seed_req),
-		.enable(m_axis_tready && count[2:0] == 3'd7),
+		.enable(m_axis_tready),
 		.value_in(lfsr_seed_val),
 		.value_out(lfsr_val)
 	);
@@ -73,7 +72,6 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 			m_axis_tlast <= 1'b0;
 			m_axis_tvalid <= 1'b0;
 
-			lqueue <= '0;
 			pqueue <= '0;
 			fqueue <= '0;
 		end else begin
@@ -85,7 +83,6 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 			m_axis_tlast <= m_axis_tlast_next;
 			m_axis_tvalid <= m_axis_tvalid_next;
 
-			lqueue <= lqueue_next;
 			pqueue <= pqueue_next;
 			fqueue <= fqueue_next;
 		end
@@ -101,7 +98,6 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		m_axis_tvalid_next = 1'b0;
 		m_axis_tkeep = 1'b1;
 
-		lqueue_next = lqueue;
 		pqueue_next = pqueue;
 		fqueue_next = fqueue;
 
@@ -117,7 +113,6 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 					m_axis_tlast_next = 1'b0;
 					m_axis_tvalid_next = 1'b0;
 
-					lqueue_next = {8'd0, lfsr_val[63:8]};
 					pqueue_next = {1'd0, mem_pattern_rdata[axi_width-1:1]};
 					fqueue_next = {8'd0, mem_frame_rdata[axi_width-1:8]};
 
@@ -137,19 +132,13 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 					m_axis_tvalid_next = 1'b1;
 
 					if(m_axis_tready) begin
-						m_axis_tdata_next = pqueue[0] ? lqueue[7:0] : fqueue[7:0];
+						m_axis_tdata_next = pqueue[0] ? lfsr_val : fqueue[7:0];
 
 						if(count == fsize) begin
 							state_next = ST_FRAME_DELAY;
 							count_next = 32'd2;
 						end else begin
 							count_next = count + 32'd1;
-						end
-
-						if(count[2:0] == 3'd0) begin
-							lqueue_next = lfsr_val;
-						end else begin
-							lqueue_next = {8'd0, lqueue[63:8]};
 						end
 
 						if(count[$clog2(axi_width)-1:0] == '0) begin

@@ -64,7 +64,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 	output logic [15:0] burst_off_time,
 
 	output logic lfsr_seed_req,
-	output logic [63:0] lfsr_seed_val
+	output logic [7:0] lfsr_seed_val
 );
 	// Handle AXI4-Lite requests
 
@@ -140,7 +140,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			burst_off_time <= 16'd0;
 
 			lfsr_seed_req <= 1'b0;
-			lfsr_seed_val <= 64'd0;
+			lfsr_seed_val <= 8'd0;
 
 			mem_frame_rdone <= 1'b0;
 			mem_frame_wdone <= 1'b0;
@@ -199,6 +199,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 							tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
 							srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
+							lfsr_seed_req <= (s_axi_wdata[3] & write_mask[3]) | (lfsr_seed_req & ~write_mask[3]);
 						end
 
 						3'd2: begin
@@ -215,15 +216,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						end
 
 						3'd5: begin
-							lfsr_seed_req <= 1'b1;
-						end
-
-						3'd6: begin
-							lfsr_seed_val[31:0] <= (s_axi_wdata & write_mask) | (lfsr_seed_val[31:0] & ~write_mask);
-						end
-
-						3'd7: begin
-							lfsr_seed_val[63:32] <= (s_axi_wdata & write_mask) | (lfsr_seed_val[63:32] & ~write_mask);
+							lfsr_seed_val[7:0] <= (s_axi_wdata & write_mask) | (lfsr_seed_val[7:0] & ~write_mask);
 						end
 					endcase
 				end else if(axi_width == 64) begin
@@ -232,6 +225,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 							tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
 							srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
+							lfsr_seed_req <= (s_axi_wdata[3] & write_mask[3]) | (lfsr_seed_req & ~write_mask[3]);
 						end
 
 						2'd1: begin
@@ -242,11 +236,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						2'd2: begin
 							burst_on_time <= (s_axi_wdata[15:0] & write_mask[15:0]) | (burst_on_time & ~write_mask[15:0]);
 							burst_off_time <= (s_axi_wdata[31:16] & write_mask[31:16]) | (burst_off_time & ~write_mask[31:16]);
-							lfsr_seed_req <= |s_axi_wstrb[7:4];
-						end
-
-						2'd3: begin
-							lfsr_seed_val <= (s_axi_wdata & write_mask) | (lfsr_seed_val & ~write_mask);
+							lfsr_seed_val <= (s_axi_wdata[39:32] & write_mask[39:32]) | (lfsr_seed_val & ~write_mask[39:32]);
 						end
 					endcase
 				end else if(axi_width == 128) begin
@@ -255,6 +245,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 							tx_enable <= (s_axi_wdata[0] & write_mask[0]) | (tx_enable & ~write_mask[0]);
 							srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
+							lfsr_seed_req <= (s_axi_wdata[3] & write_mask[3]) | (lfsr_seed_req & ~write_mask[3]);
 
 							frame_size <= (s_axi_wdata[75:64] & write_mask[75:64]) | (frame_size & ~write_mask[75:64]);
 							frame_delay <= (s_axi_wdata[127:96] & write_mask[127:96]) | (frame_delay & ~write_mask[127:96]);
@@ -263,8 +254,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						1'd1: begin
 							burst_on_time <= (s_axi_wdata[15:0] & write_mask[15:0]) | (burst_on_time & ~write_mask[15:0]);
 							burst_off_time <= (s_axi_wdata[31:16] & write_mask[31:16]) | (burst_off_time & ~write_mask[31:16]);
-							lfsr_seed_req <= |s_axi_wstrb[7:4];
-							lfsr_seed_val <= (s_axi_wdata[127:63] & write_mask[127:63]) | (lfsr_seed_val & ~write_mask[127:63]);
+							lfsr_seed_val <= (s_axi_wdata[39:32] & write_mask[39:32]) | (lfsr_seed_val & ~write_mask[39:32]);
 						end
 					endcase
 				end
@@ -304,16 +294,13 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						3'd2: read_value = {20'd0, frame_size};
 						3'd3: read_value = frame_delay;
 						3'd4: read_value = {burst_off_time, burst_on_time};
-						3'd5: read_value = 32'd0;
-						3'd6: read_value = lfsr_seed_val[31:0];
-						3'd7: read_value = lfsr_seed_val[63:32];
+						3'd5: read_value = {24'd0, lfsr_seed_val};
 					endcase
 				end else if(axi_width == 64) begin
 					case(s_axi_araddr[4:3])
 						2'd0: read_value = {19'd0, tx_ptr, tx_state, 29'd0, use_burst, srst, tx_enable};
 						2'd1: read_value = {frame_delay, 20'd0, frame_size};
-						2'd2: read_value = {32'd0, burst_off_time, burst_on_time};
-						2'd3: read_value = lfsr_seed_val;
+						2'd2: read_value = {24'd0, lfsr_seed_val, burst_off_time, burst_on_time};
 					endcase
 				end else if(axi_width == 128) begin
 					case(s_axi_araddr[4])
@@ -323,7 +310,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						end
 
 						2'd1: begin
-							read_value = {lfsr_seed_val, 32'd0, burst_off_time, burst_on_time};
+							read_value = {56'd0, lfsr_seed_val, burst_off_time, burst_on_time};
 						end
 					endcase
 				end

@@ -5,74 +5,12 @@
 */
 
 /*!
-	\core eth_traffic_gen: Ethernet Traffic Generator
+	eth_traffic_gen: Ethernet Traffic Generator
 
 	This core generates a stream of ethernet frames by combining headers stored in DRAM and pseudo-random data
-	obtained from a _linear-feedback shift register_. The core provides an AXI4-Lite interface that allows the
+	obtained from a linear-feedback shift register. The core provides an AXI4-Lite interface that allows the
 	user to adjust the contents of the frame headers, the size of the pseudo-random payload and the idle time
 	between generated frames.
-
-	\supports
-		\device zynq Production
-
-	\ports
-		\iface s_axi: Configuration interface from PS.
-			\type AXI4-Lite
-
-			\clk   s_axi_clk
-			\rst_n s_axi_resetn
-
-		\iface m_axis: Data stream to MAC.
-			\type AXI4-Stream
-
-			\clk axis_clk
-			\rst axis_reset
-
-	\memorymap S_AXI_ADDR
-		\regsize 32
-
-		\reg TG_CFG: TGen configuration register.
-			\access RW
-
-			\field EN     0      Enable traffic generation.
-			\field SRST   1      Software reset.
-			\field BURST  2      Enable burst mode.
-
-		\reg TG_STATUS: TGen status register.
-			\access RO
-
-			\field TXST   0-1    Frame transmission FSM state.
-			\field DRPTR  2-12   Pointer to the internal DRAM address currently being transmitted.
-
-		\reg TG_FSIZE: Frame size.
-			\access RW
-
-			\field HSIZE  0-11   Number of bytes to transmit.
-
-		\reg TG_FDELAY: Sleep time after frame transmission.
-			\access RW
-
-			\field FDELAY 0-31   Number of clock cycles to wait before starting to send the next frame.
-
-		\reg TG_BURST_PARAMS: Burst mode parameters.
-			\access RW
-
-			\field TMON   0-15   Number of milliseconds to keep transmitter on.
-			\field TMOFF  16-31  Number of milliseconds to wait before enabling the transmitter again.
-
-		\reg TG_LFSR_SEED_REQ: LFSR seed request.
-			\access RW
-
-		\reg TG_LFSR_SEED_VAL_L: LFSR seed, lower half.
-			\access RW
-
-		\reg TG_LFSR_SEED_VAL_H: LFSR seed, higher half.
-			\access RW
-
-		\mem FRAME_HEADERS: Headers for the generated frames.
-			\access RW
-			\at    0x800
-			\size  2048
 */
 
 module eth_traffic_gen #(parameter axi_width = 32)
@@ -127,7 +65,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	logic [15:0] burst_on_time, burst_off_time;
 
 	logic lfsr_seed_req;
-	logic [63:0] lfsr_seed_val;
+	logic [7:0] lfsr_seed_val;
 
 	logic [10-$clog2(axi_width/8):0] mem_frame_a_addr, mem_frame_b_addr;
 	logic [axi_width-1:0] mem_frame_a_wdata, mem_frame_a_rdata;
