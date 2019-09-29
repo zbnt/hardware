@@ -257,7 +257,7 @@ proc create_hier_cell_latency { parentCell nameHier } {
   connect_bd_net -net mac_loop_rx_mac_aclk [get_bd_pins eth3_mac/rx_clk] [get_bd_pins eth3_stats/clk_rx] [get_bd_pins measurer/s_axis_loop_clk]
   connect_bd_net -net mac_main_rx_mac_aclk [get_bd_pins eth2_mac/rx_clk] [get_bd_pins eth2_stats/clk_rx] [get_bd_pins measurer/s_axis_main_clk]
   connect_bd_net -net reset_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins eth2_mac/gtx_rst_n] [get_bd_pins eth2_stats/rst_n] [get_bd_pins eth3_mac/gtx_rst_n] [get_bd_pins eth3_stats/rst_n] [get_bd_pins measurer/s_axi_resetn]
-  connect_bd_net -net slowest_sync_clk_0_1 [get_bd_pins gtx_clk] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_stats/clk] [get_bd_pins measurer/s_axi_clk]
+  connect_bd_net -net slowest_sync_clk_0_1 [get_bd_pins gtx_clk] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth2_stats/clk_tx] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_stats/clk] [get_bd_pins eth3_stats/clk_tx] [get_bd_pins measurer/s_axi_clk]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins eth2_stats/time_running] [get_bd_pins eth3_stats/time_running] [get_bd_pins measurer/time_running]
 
   # Restore current instance
@@ -332,7 +332,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net eth_mac_1g_0_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -409,7 +409,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_1 [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net gtx_clk_1 [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
