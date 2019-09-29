@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo = 1)
+module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO = 1)
 (
 	input logic clk,
 	input logic rst_n,
@@ -16,8 +16,8 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [axi_width-1:0] s_axi_wdata,
-	input logic [(axi_width/8)-1:0] s_axi_wstrb,
+	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -30,7 +30,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [axi_width-1:0] s_axi_rdata,
+	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -55,14 +55,14 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 	logic read_req;
 	logic read_ready;
 	logic read_response;
-	logic [axi_width-1:0] read_value;
+	logic [C_AXI_WIDTH-1:0] read_value;
 
 	logic write_req;
 	logic write_ready;
 	logic write_response;
 	logic [11:0] write_addr;
 
-	axi4_lite_slave_rw #(12, axi_width) U0
+	axi4_lite_slave_rw #(12, C_AXI_WIDTH) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -107,7 +107,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 	// Read/write registers as requested
 
 	logic hold, stats_changed, use_fifo;
-	logic [axi_width-1:0] write_mask;
+	logic [C_AXI_WIDTH-1:0] write_mask;
 	logic [63:0] time_reg, tx_bytes_reg, tx_good_reg, tx_bad_reg, rx_bytes_reg, rx_good_reg, rx_bad_reg;
 
 	logic fifo_read, fifo_written, fifo_full, fifo_empty, fifo_pop, fifo_busy;
@@ -149,7 +149,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 			sample_timer_max <= 32'd0;
 		end else begin
 			// Update the stored values if they changed and either hold is set to 0 or FIFO is enabled
-			if(stats_id != last_stats_id && sample_timer_current >= sample_timer_max && ((enable_fifo & use_fifo) | ~hold)) begin
+			if(stats_id != last_stats_id && sample_timer_current >= sample_timer_max && ((C_ENABLE_FIFO & use_fifo) | ~hold)) begin
 				time_reg <= current_time;
 				tx_bytes_reg <= tx_bytes;
 				tx_good_reg <= tx_good;
@@ -176,13 +176,13 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 
 			if(write_req) begin
 				if(write_addr[11:4] == 8'd0) begin
-					if(axi_width == 32) begin
+					if(C_AXI_WIDTH == 32) begin
 						case(write_addr[3:2])
 							2'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 								hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
 
-								if(enable_fifo) begin
+								if(C_ENABLE_FIFO) begin
 									use_fifo <= (s_axi_wdata[3] & write_mask[3]) | (use_fifo & ~write_mask[3]);
 								end
 							end
@@ -200,13 +200,13 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 								sample_timer_max <= (s_axi_wdata & write_mask) | (sample_timer_max & ~write_mask);
 							end
 						endcase
-					end else if(axi_width == 64) begin
+					end else if(C_AXI_WIDTH == 64) begin
 						case(write_addr[3])
 							1'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 								hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
 
-								if(enable_fifo) begin
+								if(C_ENABLE_FIFO) begin
 									use_fifo <= (s_axi_wdata[3] & write_mask[3]) | (use_fifo & ~write_mask[3]);
 								end
 							end
@@ -222,11 +222,11 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 								sample_timer_max <= (s_axi_wdata[63:32] & write_mask[63:32]) | (sample_timer_max & ~write_mask[63:32]);
 							end
 						endcase
-					end else if(axi_width == 128) begin
+					end else if(C_AXI_WIDTH == 128) begin
 						enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 						hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
 
-						if(enable_fifo) begin
+						if(C_ENABLE_FIFO) begin
 							use_fifo <= (s_axi_wdata[3] & write_mask[3]) | (use_fifo & ~write_mask[3]);
 						end
 
@@ -247,7 +247,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 		end
 
 		// SRST must be writable even after it has been set to 1
-		if(rst_n & write_req && write_addr[11:$clog2(axi_width/8)] == '0) begin
+		if(rst_n & write_req && write_addr[11:$clog2(C_AXI_WIDTH/8)] == '0) begin
 			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
@@ -260,7 +260,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 		write_ready = 1'b0;
 		write_response = 1'b0;
 
-		for(int i = 0; i < axi_width; ++i) begin
+		for(int i = 0; i < C_AXI_WIDTH; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
 		end
 
@@ -272,46 +272,46 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 				read_ready = 1'b1;
 				read_response = 1'b1;
 
-				if(axi_width == 32) begin
+				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[6:2])
 						5'd00: read_value = {28'd0, use_fifo, hold, srst, enable};
 						5'd01: read_value = {16'd0, fifo_occupancy};
 						5'd02: read_value = 32'd0;
 						5'd03: read_value = sample_timer_max;
-						5'd04: read_value = (enable_fifo & use_fifo) ? fifo_time[31:0]      : time_reg[31:0];
-						5'd05: read_value = (enable_fifo & use_fifo) ? fifo_time[63:32]     : time_reg[63:32];
-						5'd06: read_value = (enable_fifo & use_fifo) ? fifo_tx_bytes[31:0]  : tx_bytes_reg[31:0];
-						5'd07: read_value = (enable_fifo & use_fifo) ? fifo_tx_bytes[63:32] : tx_bytes_reg[63:32];
-						5'd08: read_value = (enable_fifo & use_fifo) ? fifo_tx_good[31:0]   : tx_good_reg[31:0];
-						5'd09: read_value = (enable_fifo & use_fifo) ? fifo_tx_good[63:32]  : tx_good_reg[63:32];
-						5'd10: read_value = (enable_fifo & use_fifo) ? fifo_tx_bad[31:0]    : tx_bad_reg[31:0];
-						5'd11: read_value = (enable_fifo & use_fifo) ? fifo_tx_bad[63:32]   : tx_bad_reg[63:32];
-						5'd12: read_value = (enable_fifo & use_fifo) ? fifo_rx_bytes[31:0]  : rx_bytes_reg[31:0];
-						5'd13: read_value = (enable_fifo & use_fifo) ? fifo_rx_bytes[63:32] : rx_bytes_reg[63:32];
-						5'd14: read_value = (enable_fifo & use_fifo) ? fifo_rx_good[31:0]   : rx_good_reg[31:0];
-						5'd15: read_value = (enable_fifo & use_fifo) ? fifo_rx_good[63:32]  : rx_good_reg[63:32];
-						5'd16: read_value = (enable_fifo & use_fifo) ? fifo_rx_bad[31:0]    : rx_bad_reg[31:0];
-						5'd17: read_value = (enable_fifo & use_fifo) ? fifo_rx_bad[63:32]   : rx_bad_reg[63:32];
+						5'd04: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_time[31:0]      : time_reg[31:0];
+						5'd05: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_time[63:32]     : time_reg[63:32];
+						5'd06: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_bytes[31:0]  : tx_bytes_reg[31:0];
+						5'd07: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_bytes[63:32] : tx_bytes_reg[63:32];
+						5'd08: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_good[31:0]   : tx_good_reg[31:0];
+						5'd09: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_good[63:32]  : tx_good_reg[63:32];
+						5'd10: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_bad[31:0]    : tx_bad_reg[31:0];
+						5'd11: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_bad[63:32]   : tx_bad_reg[63:32];
+						5'd12: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_bytes[31:0]  : rx_bytes_reg[31:0];
+						5'd13: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_bytes[63:32] : rx_bytes_reg[63:32];
+						5'd14: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_good[31:0]   : rx_good_reg[31:0];
+						5'd15: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_good[63:32]  : rx_good_reg[63:32];
+						5'd16: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_bad[31:0]    : rx_bad_reg[31:0];
+						5'd17: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_bad[63:32]   : rx_bad_reg[63:32];
 					endcase
-				end else if(axi_width == 64) begin
+				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[6:3])
 						4'd0: read_value = {16'd0, fifo_occupancy, 28'd0, use_fifo, hold, srst, enable};
 						4'd1: read_value = {sample_timer_max, 32'd0};
-						4'd2: read_value = (enable_fifo & use_fifo) ? fifo_time     : time_reg;
-						4'd3: read_value = (enable_fifo & use_fifo) ? fifo_tx_bytes : tx_bytes_reg;
-						4'd4: read_value = (enable_fifo & use_fifo) ? fifo_tx_good  : tx_good_reg;
-						4'd5: read_value = (enable_fifo & use_fifo) ? fifo_tx_bad   : tx_bad_reg;
-						4'd6: read_value = (enable_fifo & use_fifo) ? fifo_rx_bytes : rx_bytes_reg;
-						4'd7: read_value = (enable_fifo & use_fifo) ? fifo_rx_good  : rx_good_reg;
-						4'd8: read_value = (enable_fifo & use_fifo) ? fifo_rx_bad   : rx_bad_reg;
+						4'd2: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_time     : time_reg;
+						4'd3: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_bytes : tx_bytes_reg;
+						4'd4: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_good  : tx_good_reg;
+						4'd5: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_tx_bad   : tx_bad_reg;
+						4'd6: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_bytes : rx_bytes_reg;
+						4'd7: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_good  : rx_good_reg;
+						4'd8: read_value = (C_ENABLE_FIFO & use_fifo) ? fifo_rx_bad   : rx_bad_reg;
 					endcase
-				end else if(axi_width == 128) begin
+				end else if(C_AXI_WIDTH == 128) begin
 					case(s_axi_araddr[6:4])
 						3'd0: read_value = {sample_timer_max, 48'd0, fifo_occupancy, 28'd0, use_fifo, hold, srst, enable};
-						3'd1: read_value = (enable_fifo & use_fifo) ? {fifo_tx_bytes, fifo_time}    : {tx_bytes_reg, time_reg};
-						3'd2: read_value = (enable_fifo & use_fifo) ? {fifo_tx_bad, fifo_tx_good}   : {tx_bad_reg, tx_good_reg};
-						3'd3: read_value = (enable_fifo & use_fifo) ? {fifo_rx_good, fifo_rx_bytes} : {rx_good_reg, rx_bytes_reg};
-						3'd4: read_value = (enable_fifo & use_fifo) ? {64'd0, fifo_rx_bad}          : {64'd0, rx_bad_reg};
+						3'd1: read_value = (C_ENABLE_FIFO & use_fifo) ? {fifo_tx_bytes, fifo_time}    : {tx_bytes_reg, time_reg};
+						3'd2: read_value = (C_ENABLE_FIFO & use_fifo) ? {fifo_tx_bad, fifo_tx_good}   : {tx_bad_reg, tx_good_reg};
+						3'd3: read_value = (C_ENABLE_FIFO & use_fifo) ? {fifo_rx_good, fifo_rx_bytes} : {rx_good_reg, rx_bytes_reg};
+						3'd4: read_value = (C_ENABLE_FIFO & use_fifo) ? {64'd0, fifo_rx_bad}          : {64'd0, rx_bad_reg};
 					endcase
 				end
 			end else begin
@@ -328,15 +328,15 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 				write_ready = 1'b1;
 				write_response = 1'b1;
 
-				if(axi_width == 32) begin
+				if(C_AXI_WIDTH == 32) begin
 					if(use_fifo && ~fifo_busy && write_addr[11:2] == 10'd2) begin
 						write_ready = fifo_read;
 					end
-				end else if(axi_width == 64) begin
+				end else if(C_AXI_WIDTH == 64) begin
 					if(use_fifo && ~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
 						write_ready = fifo_read;
 					end
-				end else if(axi_width == 128) begin
+				end else if(C_AXI_WIDTH == 128) begin
 					if(use_fifo && ~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
 						write_ready = fifo_read;
 					end
@@ -358,7 +358,7 @@ module eth_stats_collector_axi #(parameter axi_width = 32, parameter enable_fifo
 		.count(sample_timer_current)
 	);
 
-	if(enable_fifo) begin
+	if(C_ENABLE_FIFO) begin
 		stats_fifo U2
 		(
 			.clk(clk),
