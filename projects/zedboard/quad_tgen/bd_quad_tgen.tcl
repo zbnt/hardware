@@ -89,7 +89,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES:
+   # USE CASES: 
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -123,7 +123,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\
+   set list_check_ips "\ 
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:util_ds_buf:2.1\
 xilinx.com:ip:processing_system7:5.5\
@@ -229,7 +229,7 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net eth_mac_1g_0_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -306,7 +306,7 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net eth_mac_1g_0_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -383,7 +383,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net eth_mac_1g_0_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -460,7 +460,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_1 [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net gtx_clk_1 [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
