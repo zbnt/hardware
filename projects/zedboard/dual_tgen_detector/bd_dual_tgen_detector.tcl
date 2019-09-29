@@ -162,6 +162,176 @@ if { $bCheckIPsPassed != 1 } {
 ##################################################################
 
 
+# Hierarchical cell: eth3
+proc create_hier_cell_eth3 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth3() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 RX_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 TX_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii
+
+  # Create pins
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir O -type clk clk_rx
+  create_bd_pin -dir I -type clk clk_tx
+  create_bd_pin -dir I -from 63 -to 0 current_time
+  create_bd_pin -dir I -type rst rst_n
+  create_bd_pin -dir I time_running
+
+  # Create instance: mac, and set properties
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
+  set_property -dict [ list \
+   CONFIG.iface_type {RGMII} \
+   CONFIG.use_clk90 {false} \
+ ] $mac
+
+  # Create instance: reset, and set properties
+  set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
+
+  # Create instance: stats, and set properties
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set_property -dict [ list \
+   CONFIG.C_SHARED_TX_CLK {false} \
+ ] $stats
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net Conn7 [get_bd_intf_pins S_AXI] [get_bd_intf_pins stats/S_AXI]
+  connect_bd_intf_net -intf_net eth3_mac_RGMII [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net eth3_mac_RX_AXIS [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins mac/RX_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets eth3_mac_RX_AXIS] [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins stats/AXIS_RX]
+  connect_bd_intf_net -intf_net measurer_M_AXIS_LOOP [get_bd_intf_pins TX_AXIS] [get_bd_intf_pins mac/TX_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_LOOP] [get_bd_intf_pins TX_AXIS] [get_bd_intf_pins stats/AXIS_TX]
+
+  # Create port connections
+  connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
+  connect_bd_net -net mac_loop_rx_mac_aclk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
+  connect_bd_net -net mac_main_rx_mac_aclk [get_bd_pins clk_tx] [get_bd_pins mac/gtx_clk] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins stats/clk_tx]
+  connect_bd_net -net reset_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins reset/ext_reset_in] [get_bd_pins stats/rst_n]
+  connect_bd_net -net reset_peripheral_aresetn1 [get_bd_pins mac/gtx_rst_n] [get_bd_pins reset/peripheral_aresetn]
+  connect_bd_net -net slowest_sync_clk_0_1 [get_bd_pins clk] [get_bd_pins stats/clk]
+  connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: eth2
+proc create_hier_cell_eth2 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth2() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 RX_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 TX_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 rgmii
+
+  # Create pins
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir O -type clk clk_rx
+  create_bd_pin -dir I -type clk clk_tx
+  create_bd_pin -dir I -from 63 -to 0 current_time
+  create_bd_pin -dir I -type rst rst_n
+  create_bd_pin -dir I time_running
+
+  # Create instance: mac, and set properties
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
+  set_property -dict [ list \
+   CONFIG.iface_type {RGMII} \
+   CONFIG.use_clk90 {false} \
+ ] $mac
+
+  # Create instance: reset, and set properties
+  set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
+
+  # Create instance: stats, and set properties
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set_property -dict [ list \
+   CONFIG.C_SHARED_TX_CLK {false} \
+ ] $stats
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net Conn6 [get_bd_intf_pins S_AXI] [get_bd_intf_pins stats/S_AXI]
+  connect_bd_intf_net -intf_net eth2_mac_RGMII [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net eth2_mac_RX_AXIS [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins mac/RX_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets eth2_mac_RX_AXIS] [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins stats/AXIS_RX]
+  connect_bd_intf_net -intf_net measurer_M_AXIS_MAIN [get_bd_intf_pins TX_AXIS] [get_bd_intf_pins mac/TX_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_MAIN] [get_bd_intf_pins TX_AXIS] [get_bd_intf_pins stats/AXIS_TX]
+
+  # Create port connections
+  connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
+  connect_bd_net -net mac_loop_rx_mac_aclk [get_bd_pins clk_tx] [get_bd_pins mac/gtx_clk] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins stats/clk_tx]
+  connect_bd_net -net mac_main_rx_mac_aclk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins mac/gtx_rst_n] [get_bd_pins reset/peripheral_aresetn]
+  connect_bd_net -net reset_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins reset/ext_reset_in] [get_bd_pins stats/rst_n]
+  connect_bd_net -net slowest_sync_clk_0_1 [get_bd_pins clk] [get_bd_pins stats/clk]
+  connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
 # Hierarchical cell: mitm
 proc create_hier_cell_mitm { parentCell nameHier } {
 
@@ -212,48 +382,30 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   # Create instance: detector, and set properties
   set detector [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1 detector ]
 
-  # Create instance: eth2_mac, and set properties
-  set eth2_mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 eth2_mac ]
-  set_property -dict [ list \
-   CONFIG.iface_type {RGMII} \
-   CONFIG.use_clk90 {false} \
- ] $eth2_mac
+  # Create instance: eth2
+  create_hier_cell_eth2 $hier_obj eth2
 
-  # Create instance: eth2_stats, and set properties
-  set eth2_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 eth2_stats ]
-
-  # Create instance: eth3_mac, and set properties
-  set eth3_mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 eth3_mac ]
-  set_property -dict [ list \
-   CONFIG.iface_type {RGMII} \
-   CONFIG.use_clk90 {false} \
- ] $eth3_mac
-
-  # Create instance: eth3_stats, and set properties
-  set eth3_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 eth3_stats ]
+  # Create instance: eth3
+  create_hier_cell_eth3 $hier_obj eth3
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_detector] [get_bd_intf_pins detector/S_AXI]
-  connect_bd_intf_net -intf_net Conn6 [get_bd_intf_pins s_axi_stats_a] [get_bd_intf_pins eth2_stats/S_AXI]
-  connect_bd_intf_net -intf_net Conn7 [get_bd_intf_pins s_axi_stats_b] [get_bd_intf_pins eth3_stats/S_AXI]
-  connect_bd_intf_net -intf_net eth2_mac_RGMII [get_bd_intf_pins rgmii_a] [get_bd_intf_pins eth2_mac/RGMII]
-  connect_bd_intf_net -intf_net eth2_mac_RX_AXIS [get_bd_intf_pins detector/S_AXIS_A] [get_bd_intf_pins eth2_mac/RX_AXIS]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets eth2_mac_RX_AXIS] [get_bd_intf_pins eth2_mac/RX_AXIS] [get_bd_intf_pins eth2_stats/AXIS_RX]
-  connect_bd_intf_net -intf_net eth3_mac_RGMII [get_bd_intf_pins rgmii_b] [get_bd_intf_pins eth3_mac/RGMII]
-  connect_bd_intf_net -intf_net eth3_mac_RX_AXIS [get_bd_intf_pins detector/S_AXIS_B] [get_bd_intf_pins eth3_mac/RX_AXIS]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets eth3_mac_RX_AXIS] [get_bd_intf_pins eth3_mac/RX_AXIS] [get_bd_intf_pins eth3_stats/AXIS_RX]
-  connect_bd_intf_net -intf_net measurer_M_AXIS_LOOP [get_bd_intf_pins detector/M_AXIS_B] [get_bd_intf_pins eth3_mac/TX_AXIS]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_LOOP] [get_bd_intf_pins detector/M_AXIS_B] [get_bd_intf_pins eth3_stats/AXIS_TX]
-  connect_bd_intf_net -intf_net measurer_M_AXIS_MAIN [get_bd_intf_pins detector/M_AXIS_A] [get_bd_intf_pins eth2_mac/TX_AXIS]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_MAIN] [get_bd_intf_pins detector/M_AXIS_A] [get_bd_intf_pins eth2_stats/AXIS_TX]
+  connect_bd_intf_net -intf_net Conn6 [get_bd_intf_pins s_axi_stats_a] [get_bd_intf_pins eth2/S_AXI]
+  connect_bd_intf_net -intf_net Conn7 [get_bd_intf_pins s_axi_stats_b] [get_bd_intf_pins eth3/S_AXI]
+  connect_bd_intf_net -intf_net eth2_mac_RGMII [get_bd_intf_pins rgmii_a] [get_bd_intf_pins eth2/rgmii]
+  connect_bd_intf_net -intf_net eth2_mac_RX_AXIS [get_bd_intf_pins detector/S_AXIS_A] [get_bd_intf_pins eth2/RX_AXIS]
+  connect_bd_intf_net -intf_net eth3_mac_RGMII [get_bd_intf_pins rgmii_b] [get_bd_intf_pins eth3/rgmii]
+  connect_bd_intf_net -intf_net eth3_mac_RX_AXIS [get_bd_intf_pins detector/S_AXIS_B] [get_bd_intf_pins eth3/RX_AXIS]
+  connect_bd_intf_net -intf_net measurer_M_AXIS_LOOP [get_bd_intf_pins detector/M_AXIS_B] [get_bd_intf_pins eth3/TX_AXIS]
+  connect_bd_intf_net -intf_net measurer_M_AXIS_MAIN [get_bd_intf_pins detector/M_AXIS_A] [get_bd_intf_pins eth2/TX_AXIS]
 
   # Create port connections
-  connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins detector/current_time] [get_bd_pins eth2_stats/current_time] [get_bd_pins eth3_stats/current_time]
-  connect_bd_net -net mac_loop_rx_mac_aclk [get_bd_pins detector/s_axis_b_clk] [get_bd_pins eth3_mac/rx_clk] [get_bd_pins eth3_stats/clk_rx]
-  connect_bd_net -net mac_main_rx_mac_aclk [get_bd_pins detector/s_axis_a_clk] [get_bd_pins eth2_mac/rx_clk] [get_bd_pins eth2_stats/clk_rx]
-  connect_bd_net -net reset_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins detector/s_axi_resetn] [get_bd_pins eth2_mac/gtx_rst_n] [get_bd_pins eth2_stats/rst_n] [get_bd_pins eth3_mac/gtx_rst_n] [get_bd_pins eth3_stats/rst_n]
-  connect_bd_net -net slowest_sync_clk_0_1 [get_bd_pins gtx_clk] [get_bd_pins detector/m_axis_a_clk] [get_bd_pins detector/m_axis_b_clk] [get_bd_pins detector/s_axi_clk] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_stats/clk]
-  connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins detector/time_running] [get_bd_pins eth2_stats/time_running] [get_bd_pins eth3_stats/time_running]
+  connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins detector/current_time] [get_bd_pins eth2/current_time] [get_bd_pins eth3/current_time]
+  connect_bd_net -net mac_loop_rx_mac_aclk [get_bd_pins detector/m_axis_a_clk] [get_bd_pins detector/s_axis_b_clk] [get_bd_pins eth2/clk_tx] [get_bd_pins eth3/clk_rx]
+  connect_bd_net -net mac_main_rx_mac_aclk [get_bd_pins detector/m_axis_b_clk] [get_bd_pins detector/s_axis_a_clk] [get_bd_pins eth2/clk_rx] [get_bd_pins eth3/clk_tx]
+  connect_bd_net -net reset_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins detector/s_axi_resetn] [get_bd_pins eth2/rst_n] [get_bd_pins eth3/rst_n]
+  connect_bd_net -net slowest_sync_clk_0_1 [get_bd_pins gtx_clk] [get_bd_pins detector/s_axi_clk] [get_bd_pins eth2/clk] [get_bd_pins eth3/clk]
+  connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins detector/time_running] [get_bd_pins eth2/time_running] [get_bd_pins eth3/time_running]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -327,7 +479,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net eth1_mac_tx_mac_aclk [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net eth_mac_1g_0_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_ps_main_100M_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -404,7 +556,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_1 [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net gtx_clk_1 [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -497,7 +649,7 @@ proc create_root_design { parentCell } {
    CONFIG.M04_HAS_REGSLICE {3} \
    CONFIG.M05_HAS_REGSLICE {3} \
    CONFIG.M06_HAS_DATA_FIFO {0} \
-   CONFIG.M06_HAS_REGSLICE {4} \
+   CONFIG.M06_HAS_REGSLICE {3} \
    CONFIG.M07_HAS_REGSLICE {3} \
    CONFIG.NUM_MI {8} \
    CONFIG.S00_HAS_DATA_FIFO {2} \
@@ -943,8 +1095,8 @@ proc create_root_design { parentCell } {
 
   # Create address segments
   create_bd_addr_seg -range 0x00010000 -offset 0x43CA0000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/detector/S_AXI/S_AXI_ADDR] SEG_detector_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C30000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth2_stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C40000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth3_stats/S_AXI/S_AXI_ADDR] SEG_eth3_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x43C30000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth2/stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x43C40000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth3/stats/S_AXI/S_AXI_ADDR] SEG_eth3_stats_S_AXI_ADDR
   create_bd_addr_seg -range 0x00010000 -offset 0x43C00000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_S_AXI_ADDR
   create_bd_addr_seg -range 0x00010000 -offset 0x43C10000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
   create_bd_addr_seg -range 0x00010000 -offset 0x43C20000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
