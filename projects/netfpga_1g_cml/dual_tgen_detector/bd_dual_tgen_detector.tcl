@@ -317,7 +317,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   # Create instance: eth2_stats, and set properties
   set eth2_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 eth2_stats ]
   set_property -dict [ list \
-   CONFIG.axi_width {64} \
+   CONFIG.C_AXI_WIDTH {64} \
  ] $eth2_stats
 
   # Create instance: eth3_mac, and set properties
@@ -330,7 +330,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   # Create instance: eth3_stats, and set properties
   set eth3_stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 eth3_stats ]
   set_property -dict [ list \
-   CONFIG.axi_width {64} \
+   CONFIG.C_AXI_WIDTH {64} \
  ] $eth3_stats
 
   # Create interface connections
@@ -352,7 +352,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins eth2_mac/gtx_clk90] [get_bd_pins eth3_mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins detector/current_time] [get_bd_pins eth2_stats/current_time] [get_bd_pins eth3_stats/current_time]
   connect_bd_net -net eth2_mac_rx_mac_aclk [get_bd_pins detector/s_axis_a_clk] [get_bd_pins eth2_mac/rx_clk] [get_bd_pins eth2_stats/clk_rx]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins detector/m_axis_a_clk] [get_bd_pins detector/m_axis_b_clk] [get_bd_pins detector/s_axi_clk] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_stats/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins detector/m_axis_a_clk] [get_bd_pins detector/m_axis_b_clk] [get_bd_pins detector/s_axi_clk] [get_bd_pins eth2_mac/gtx_clk] [get_bd_pins eth2_stats/clk] [get_bd_pins eth2_stats/clk_tx] [get_bd_pins eth3_mac/gtx_clk] [get_bd_pins eth3_stats/clk] [get_bd_pins eth3_stats/clk_tx]
   connect_bd_net -net mac_rx_mac_aclk [get_bd_pins detector/s_axis_b_clk] [get_bd_pins eth3_mac/rx_clk] [get_bd_pins eth3_stats/clk_rx]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins detector/s_axi_resetn] [get_bd_pins eth2_mac/gtx_rst_n] [get_bd_pins eth2_stats/rst_n] [get_bd_pins eth3_mac/gtx_rst_n] [get_bd_pins eth3_stats/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins detector/time_running] [get_bd_pins eth2_stats/time_running] [get_bd_pins eth3_stats/time_running]
@@ -417,7 +417,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   # Create instance: stats, and set properties
   set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
-   CONFIG.axi_width {64} \
+   CONFIG.C_AXI_WIDTH {64} \
  ] $stats
 
   # Create instance: tgen, and set properties
@@ -437,7 +437,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
@@ -502,7 +502,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   # Create instance: stats, and set properties
   set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
-   CONFIG.axi_width {64} \
+   CONFIG.C_AXI_WIDTH {64} \
  ] $stats
 
   # Create instance: tgen, and set properties
@@ -522,7 +522,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins tgen/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk]
   connect_bd_net -net mac_rx_clk [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running] [get_bd_pins tgen/ext_enable]
