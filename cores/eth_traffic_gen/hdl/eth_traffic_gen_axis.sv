@@ -104,7 +104,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		tx_state = state;
 
 		mem_frame_addr = count[10:$clog2(axi_width/8)];
-		mem_pattern_addr = count[7:$clog2(axi_width/8)];
+		mem_pattern_addr = count[10:$clog2(axi_width)];
 
 		if(~rst) begin
 			case(state)
