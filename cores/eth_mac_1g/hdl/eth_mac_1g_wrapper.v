@@ -61,6 +61,9 @@ module eth_mac_1g_w #(parameter iface_type = "GMII", parameter family_name = "7-
 	output wire gmii_tx_er
 );
 	if(iface_type == "RGMII") begin
+		wire [3:0] rgmii_rd_delayed;
+		wire rgmii_rx_ctl_delayed;
+
 		eth_mac_1g_rgmii
 		#(
 			.TARGET("XILINX"),
@@ -89,8 +92,8 @@ module eth_mac_1g_w #(parameter iface_type = "GMII", parameter family_name = "7-
 			.rx_axis_tuser(rx_axis_tuser),
 
 			.rgmii_rx_clk(rgmii_rxc),
-			.rgmii_rxd(rgmii_rd),
-			.rgmii_rx_ctl(rgmii_rx_ctl),
+			.rgmii_rxd(rgmii_rd_delayed),
+			.rgmii_rx_ctl(rgmii_rx_ctl_delayed),
 			.rgmii_tx_clk(rgmii_txc),
 			.rgmii_txd(rgmii_td),
 			.rgmii_tx_ctl(rgmii_tx_ctl),
@@ -101,6 +104,30 @@ module eth_mac_1g_w #(parameter iface_type = "GMII", parameter family_name = "7-
 			.speed(speed),
 
 			.ifg_delay(8'd12)
+		);
+
+		for(genvar i = 0; i < 4; i = i + 1) begin
+			IDELAYE2
+			#(
+				.IDELAY_TYPE("FIXED"),
+				.IDELAY_VALUE(12)
+			)
+			rd_idelay_inst
+			(
+				.IDATAIN(rgmii_rd[i]),
+				.DATAOUT(rgmii_rd_delayed[i])
+			);
+		end
+
+		IDELAYE2
+		#(
+			.IDELAY_TYPE("FIXED"),
+			.IDELAY_VALUE(12)
+		)
+		rx_ctl_idelay_inst
+		(
+			.IDATAIN(rgmii_rx_ctl),
+			.DATAOUT(rgmii_rx_ctl_delayed)
 		);
 
 		assign gmii_txd = 8'd0;
