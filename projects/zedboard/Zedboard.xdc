@@ -6,8 +6,6 @@ set_property -dict {PACKAGE_PIN L19 IOSTANDARD LVDS_25 DIFF_TERM 1} [get_ports e
 set_property -dict {PACKAGE_PIN L17 IOSTANDARD LVCMOS25} [get_ports ethfmc_clk_oe]
 set_property -dict {PACKAGE_PIN K19 IOSTANDARD LVCMOS25} [get_ports ethfmc_clk_fsel]
 
-create_clock -period 8.000 -name ethfmc_clk_p [get_ports ethfmc_clk_p]
-
 # LEDs
 
 set_property -dict {PACKAGE_PIN T22 IOSTANDARD LVCMOS33} [get_ports {led[0]}]
@@ -35,9 +33,6 @@ set_property -dict {PACKAGE_PIN J21 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p0_r
 set_property -dict {PACKAGE_PIN J22 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p0_rgmii_td[2]}]
 set_property -dict {PACKAGE_PIN T16 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p0_rgmii_td[3]}]
 
-create_clock -period 8.000 -name ethfmc_p0_rgmii_rxc [get_ports ethfmc_p0_rgmii_rxc]
-create_clock -period 8.000 -name ethfmc_p0_rgmii_txc [get_ports ethfmc_p0_rgmii_txc]
-
 # ETH1
 
 set_property -dict {PACKAGE_PIN J17 IOSTANDARD LVCMOS25} [get_ports ethfmc_p1_rst]
@@ -53,9 +48,6 @@ set_property -dict {PACKAGE_PIN P21 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p1_r
 set_property -dict {PACKAGE_PIN N17 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p1_rgmii_td[1]}]
 set_property -dict {PACKAGE_PIN J20 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p1_rgmii_td[2]}]
 set_property -dict {PACKAGE_PIN K21 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p1_rgmii_td[3]}]
-
-create_clock -period 8.000 -name ethfmc_p1_rgmii_rxc [get_ports ethfmc_p1_rgmii_rxc]
-create_clock -period 8.000 -name ethfmc_p1_rgmii_txc [get_ports ethfmc_p1_rgmii_txc]
 
 # ETH2
 
@@ -73,9 +65,6 @@ set_property -dict {PACKAGE_PIN G19 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p2_r
 set_property -dict {PACKAGE_PIN F19 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p2_rgmii_td[2]}]
 set_property -dict {PACKAGE_PIN E20 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p2_rgmii_td[3]}]
 
-create_clock -period 8.000 -name ethfmc_p2_rgmii_rxc [get_ports ethfmc_p2_rgmii_rxc]
-create_clock -period 8.000 -name ethfmc_p2_rgmii_txc [get_ports ethfmc_p2_rgmii_txc]
-
 # ETH3
 
 set_property -dict {PACKAGE_PIN A22 IOSTANDARD LVCMOS25} [get_ports ethfmc_p3_rst]
@@ -91,6 +80,3 @@ set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p3_r
 set_property -dict {PACKAGE_PIN A16 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p3_rgmii_td[1]}]
 set_property -dict {PACKAGE_PIN B16 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p3_rgmii_td[2]}]
 set_property -dict {PACKAGE_PIN B17 IOSTANDARD LVCMOS25} [get_ports {ethfmc_p3_rgmii_td[3]}]
-
-create_clock -period 8.000 -name ethfmc_p3_rgmii_rxc [get_ports ethfmc_p3_rgmii_rxc]
-create_clock -period 8.000 -name ethfmc_p3_rgmii_txc [get_ports ethfmc_p3_rgmii_txc]

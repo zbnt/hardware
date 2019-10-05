@@ -8,7 +8,9 @@ set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
 
 # Load source files
 
-read_xdc Zedboard.xdc
+read_xdc ../Zedboard.xdc
+read_xdc ../RGMII_TX.xdc
+read_xdc ../RGMII_RX.xdc
 
 # Set path to IP repository
 
