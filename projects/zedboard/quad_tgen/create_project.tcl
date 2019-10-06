@@ -9,8 +9,8 @@ set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
 # Load source files
 
 read_xdc ../Zedboard.xdc
-read_xdc ../RGMII_TX.xdc
-read_xdc ../RGMII_RX.xdc
+read_xdc ../RGMII.xdc
+set_property USED_IN_SYNTHESIS FALSE [get_files RGMII.xdc]
 
 # Set path to IP repository
 
