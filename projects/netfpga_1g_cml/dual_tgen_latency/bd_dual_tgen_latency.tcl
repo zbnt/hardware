@@ -701,15 +701,15 @@ proc create_root_design { parentCell } {
   connect_bd_net -net simple_timer_time_running [get_bd_pins eth0/time_running] [get_bd_pins eth1/time_running] [get_bd_pins latency/time_running] [get_bd_pins simple_timer/time_running]
 
   # Create address segments
-  create_bd_addr_seg -range 0x00010000 -offset 0x00040000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/eth2_stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00000000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs hwicap/S_AXI_LITE/Reg] SEG_hwicap_Reg
-  create_bd_addr_seg -range 0x00010000 -offset 0x000A0000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/measurer/S_AXI/S_AXI_ADDR] SEG_measurer_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00010000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_0_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00020000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00030000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
-  create_bd_addr_seg -range 0x00010000 -offset 0x00050000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/eth3_stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR3
-  create_bd_addr_seg -range 0x00010000 -offset 0x00060000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x00070000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00010000 -offset 0x00030000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/eth2_stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00100000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs hwicap/S_AXI_LITE/Reg] SEG_hwicap_Reg
+  create_bd_addr_seg -range 0x00010000 -offset 0x00090000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/measurer/S_AXI/S_AXI_ADDR] SEG_measurer_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00000000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_0_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00010000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00020000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00010000 -offset 0x00040000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/eth3_stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR3
+  create_bd_addr_seg -range 0x00010000 -offset 0x00050000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00010000 -offset 0x00060000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
 
 
   # Restore current instance
