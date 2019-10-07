@@ -127,6 +127,7 @@ xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:axi_hwicap:3.0\
+xilinx.com:ip:util_idelay_ctrl:1.0\
 xilinx.com:ip:proc_sys_reset:5.0\
 oscar-rc.dev:zbnt_hw:simple_timer:1.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
@@ -306,6 +307,9 @@ proc create_hier_cell_mitm { parentCell nameHier } {
 
   # Create instance: detector, and set properties
   set detector [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1 detector ]
+  set_property -dict [ list \
+   CONFIG.axi_width {64} \
+ ] $detector
 
   # Create instance: eth2_mac, and set properties
   set eth2_mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 eth2_mac ]
@@ -618,9 +622,14 @@ proc create_root_design { parentCell } {
    CONFIG.CLKOUT3_PHASE_ERROR {89.971} \
    CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {100.000} \
    CONFIG.CLKOUT3_USED {true} \
+   CONFIG.CLKOUT4_JITTER {98.146} \
+   CONFIG.CLKOUT4_PHASE_ERROR {89.971} \
+   CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {200.000} \
+   CONFIG.CLKOUT4_USED {true} \
    CONFIG.CLK_OUT1_PORT {clk_125M} \
    CONFIG.CLK_OUT2_PORT {clk_125M_90} \
    CONFIG.CLK_OUT3_PORT {clk_100M} \
+   CONFIG.CLK_OUT4_PORT {clk_200M} \
    CONFIG.MMCM_CLKFBOUT_MULT_F {5.000} \
    CONFIG.MMCM_CLKIN1_PERIOD {5.000} \
    CONFIG.MMCM_CLKIN2_PERIOD {10.0} \
@@ -628,8 +637,9 @@ proc create_root_design { parentCell } {
    CONFIG.MMCM_CLKOUT1_DIVIDE {8} \
    CONFIG.MMCM_CLKOUT1_PHASE {90.000} \
    CONFIG.MMCM_CLKOUT2_DIVIDE {10} \
+   CONFIG.MMCM_CLKOUT3_DIVIDE {5} \
    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
-   CONFIG.NUM_OUT_CLKS {3} \
+   CONFIG.NUM_OUT_CLKS {4} \
    CONFIG.PRIM_IN_FREQ {200.000} \
    CONFIG.PRIM_SOURCE {Differential_clock_capable_pin} \
    CONFIG.USE_RESET {false} \
@@ -646,6 +656,9 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.C_INCLUDE_STARTUP {1} \
  ] $hwicap
+
+  # Create instance: idelay_ctrl, and set properties
+  set idelay_ctrl [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_idelay_ctrl:1.0 idelay_ctrl ]
 
   # Create instance: mitm
   create_hier_cell_mitm [current_bd_instance .] mitm
@@ -693,7 +706,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_wiz_0_locked [get_bd_pins dcm_eth/locked] [get_bd_pins reset_sys_clk/dcm_locked]
   connect_bd_net -net constant_leds_dout [get_bd_ports led] [get_bd_pins constant_leds/dout]
   connect_bd_net -net dcm_eth_clk_100M [get_bd_pins axi_smartconnect/aclk2] [get_bd_pins dcm_eth/clk_100M] [get_bd_pins hwicap/icap_clk] [get_bd_pins hwicap/s_axi_aclk] [get_bd_pins reset_cfg_clk/slowest_sync_clk]
+  connect_bd_net -net dcm_eth_clk_200M [get_bd_pins dcm_eth/clk_200M] [get_bd_pins idelay_ctrl/ref_clk]
   connect_bd_net -net reset_cfg_clk_peripheral_aresetn [get_bd_pins hwicap/s_axi_aresetn] [get_bd_pins reset_cfg_clk/peripheral_aresetn]
+  connect_bd_net -net reset_cfg_clk_peripheral_reset [get_bd_pins idelay_ctrl/rst] [get_bd_pins reset_cfg_clk/peripheral_reset]
   connect_bd_net -net reset_sys_clk_interconnect_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins axi_smartconnect/aresetn] [get_bd_pins reset_sys_clk/interconnect_aresetn]
   connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins eth0/rst_n] [get_bd_pins eth1/rst_n] [get_bd_pins mitm/rst_n] [get_bd_pins reset_sys_clk/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
   connect_bd_net -net rst_n_1 [get_bd_ports rst_n] [get_bd_pins pcie/rst_n] [get_bd_pins reset_cfg_clk/ext_reset_in] [get_bd_pins reset_sys_clk/ext_reset_in]
