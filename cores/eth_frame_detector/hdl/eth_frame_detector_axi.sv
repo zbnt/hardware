@@ -42,8 +42,8 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic mem_a_ack,
 
 	output logic [10:0] mem_a_addr,
-	output logic [30*(axi_width/32)-1:0] mem_a_wdata,
-	input logic [30*(axi_width/32)-1:0] mem_a_rdata,
+	output logic [axi_width-1:0] mem_a_wdata,
+	input logic [axi_width-1:0] mem_a_rdata,
 
 	// MEM_B
 
@@ -52,8 +52,28 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic mem_b_ack,
 
 	output logic [10:0] mem_b_addr,
-	output logic [30*(axi_width/32)-1:0] mem_b_wdata,
-	input logic [30*(axi_width/32)-1:0] mem_b_rdata,
+	output logic [axi_width-1:0] mem_b_wdata,
+	input logic [axi_width-1:0] mem_b_rdata,
+
+	// MEM_C
+
+	output logic mem_c_req,
+	output logic mem_c_we,
+	input logic mem_c_ack,
+
+	output logic [10:0] mem_c_addr,
+	output logic [axi_width-1:0] mem_c_wdata,
+	input logic [axi_width-1:0] mem_c_rdata,
+
+	// MEM_D
+
+	output logic mem_d_req,
+	output logic mem_d_we,
+	input logic mem_d_ack,
+
+	output logic [10:0] mem_d_addr,
+	output logic [axi_width-1:0] mem_d_wdata,
+	input logic [axi_width-1:0] mem_d_rdata,
 
 	// Registers
 
@@ -132,8 +152,11 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 
 	logic [axi_width-1:0] write_mask;
 
-	logic mem_a_done, mem_b_done;
-	logic mem_a_rreq, mem_a_wreq, mem_b_rreq, mem_b_wreq;
+	logic mem_a_done, mem_b_done, mem_c_done, mem_d_done;
+	logic mem_a_rreq, mem_a_wreq;
+	logic mem_b_rreq, mem_b_wreq;
+	logic mem_c_rreq, mem_c_wreq;
+	logic mem_d_rreq, mem_d_wreq;
 
 	logic fifo_read, fifo_written, fifo_we, fifo_full, fifo_empty, fifo_pop, fifo_busy;
 	logic [69:0] fifo_out, fifo_in;
@@ -220,10 +243,10 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		write_ready = 1'b0;
 		write_response = 1'b0;
 
-		mem_a_rreq = 1'b0;
-		mem_a_wreq = 1'b0;
-		mem_b_rreq = 1'b0;
-		mem_b_wreq = 1'b0;
+		mem_a_rreq = 1'b0; mem_a_wreq = 1'b0;
+		mem_b_rreq = 1'b0; mem_b_wreq = 1'b0;
+		mem_c_rreq = 1'b0; mem_c_wreq = 1'b0;
+		mem_d_rreq = 1'b0; mem_d_wreq = 1'b0;
 
 		for(int i = 0; i < axi_width; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -260,18 +283,30 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 						1'd1: read_value = {58'd0, fifo_matches, fifo_time};
 					endcase
 				end
-			end else if(s_axi_araddr[15:13] == 3'd1 && s_axi_araddr[12:11] <= 2'd3) begin
+			end else if(s_axi_araddr[15:13] == 3'd1) begin
 				// MEM_A address
 				read_ready = mem_a_done;
 				read_response = 1'b1;
+				read_value = mem_a_rdata;
 				mem_a_rreq = 1'b1;
-				read_value = {2'd0, mem_a_rdata};
-			end else if(s_axi_araddr[15:13] == 3'd2 && s_axi_araddr[12:11] <= 2'd3) begin
+			end else if(s_axi_araddr[15:13] == 3'd2) begin
 				// MEM_B address
 				read_ready = mem_b_done;
 				read_response = 1'b1;
+				read_value = mem_b_rdata;
 				mem_b_rreq = 1'b1;
-				read_value = {2'd0, mem_b_rdata};
+			end else if(s_axi_araddr[15:13] == 3'd3) begin
+				// MEM_C address
+				read_ready = mem_b_done;
+				read_response = 1'b1;
+				read_value = mem_c_rdata;
+				mem_c_rreq = 1'b1;
+			end else if(s_axi_araddr[15:13] == 3'd4) begin
+				// MEM_D address
+				read_ready = mem_d_done;
+				read_response = 1'b1;
+				read_value = mem_d_rdata;
+				mem_d_rreq = 1'b1;
 			end else begin
 				// Invalid address, mark as error
 				read_ready = 1'b1;
@@ -300,16 +335,26 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 						write_ready = fifo_read;
 					end
 				end
-			end else if(write_addr[15:13] == 3'd1 && write_addr[12:11] <= 2'd3) begin
+			end else if(write_addr[15:13] == 3'd1) begin
 				// MEM_A address
 				write_ready = mem_a_done;
 				write_response = 1'b1;
 				mem_a_wreq = 1'b1;
-			end else if(write_addr[15:13] == 3'd2 && write_addr[12:11] <= 2'd3) begin
+			end else if(write_addr[15:13] == 3'd2) begin
 				// MEM_B address
 				write_ready = mem_b_done;
 				write_response = 1'b1;
 				mem_b_wreq = 1'b1;
+			end else if(write_addr[15:13] == 3'd3) begin
+				// MEM_C address
+				write_ready = mem_c_done;
+				write_response = 1'b1;
+				mem_c_wreq = 1'b1;
+			end else if(write_addr[15:13] == 3'd4) begin
+				// MEM_D address
+				write_ready = mem_d_done;
+				write_response = 1'b1;
+				mem_d_wreq = 1'b1;
 			end else begin
 				// Invalid address, mark as error
 				write_ready = 1'b1;
@@ -352,11 +397,11 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.rst_n(rst_n),
 
 		.read_req(mem_a_rreq),
-		.read_addr(s_axi_araddr[12:2]),
+		.read_addr(s_axi_araddr),
 
 		.write_req(mem_a_wreq),
 		.write_mask(write_mask),
-		.write_addr(write_addr[12:2]),
+		.write_addr(write_addr),
 		.write_data(s_axi_wdata),
 
 		.done(mem_a_done),
@@ -378,11 +423,11 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.rst_n(rst_n),
 
 		.read_req(mem_b_rreq),
-		.read_addr(s_axi_araddr[12:2]),
+		.read_addr(s_axi_araddr),
 
 		.write_req(mem_b_wreq),
 		.write_mask(write_mask),
-		.write_addr(write_addr[12:2]),
+		.write_addr(write_addr),
 		.write_data(s_axi_wdata),
 
 		.done(mem_b_done),
@@ -396,5 +441,57 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.mem_addr(mem_b_addr),
 		.mem_wdata(mem_b_wdata),
 		.mem_rdata(mem_b_rdata)
+	);
+
+	eth_frame_detector_axi_dram #(axi_width) U5
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.read_req(mem_c_rreq),
+		.read_addr(s_axi_araddr),
+
+		.write_req(mem_c_wreq),
+		.write_mask(write_mask),
+		.write_addr(write_addr),
+		.write_data(s_axi_wdata),
+
+		.done(mem_c_done),
+
+		// MEM_C
+
+		.mem_req(mem_c_req),
+		.mem_we(mem_c_we),
+		.mem_ack(mem_c_ack),
+
+		.mem_addr(mem_c_addr),
+		.mem_wdata(mem_c_wdata),
+		.mem_rdata(mem_c_rdata)
+	);
+
+	eth_frame_detector_axi_dram #(axi_width) U6
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.read_req(mem_d_rreq),
+		.read_addr(s_axi_araddr),
+
+		.write_req(mem_d_wreq),
+		.write_mask(write_mask),
+		.write_addr(write_addr),
+		.write_data(s_axi_wdata),
+
+		.done(mem_d_done),
+
+		// MEM_D
+
+		.mem_req(mem_d_req),
+		.mem_we(mem_d_we),
+		.mem_ack(mem_d_ack),
+
+		.mem_addr(mem_d_addr),
+		.mem_wdata(mem_d_wdata),
+		.mem_rdata(mem_d_rdata)
 	);
 endmodule

@@ -22,10 +22,11 @@ module eth_frame_matcher
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
-	// MEM : DRAM with the frame patterns
+	// Pattern data and flags
 
-	input logic [29:0] mem_data,
-	output logic [10:0] mem_addr
+	output logic [10:0] pattern_addr,
+	input logic [31:0] pattern_data,
+	input logic [31:0] pattern_flags
 );
 	// s_axis_clk clock domain
 
@@ -44,9 +45,9 @@ module eth_frame_matcher
 
 	always_ff @(posedge s_axis_clk) begin
 		if(~rst_n_cdc | s_axis_tlast) begin
-			mem_addr <= 11'd0;
+			pattern_addr <= 11'd0;
 		end else if(s_axis_tvalid) begin
-			mem_addr <= mem_addr + 11'd1;
+			pattern_addr <= pattern_addr + 11'd1;
 		end
 	end
 
@@ -56,7 +57,7 @@ module eth_frame_matcher
 				frame_match[i] <= 1'b0;
 				pattern_match[i] <= 1'b1;
 			end else if(axis_valid_q) begin
-				if(mem_data[8*i+7:8*i] != axis_data_q && ~mem_data[24+2*i] || mem_data[25+2*i] & ~axis_last_q) begin
+				if(pattern_data[8*i+7:8*i] != axis_data_q && ~pattern_flags[8*i] || pattern_flags[8*i+1] & ~axis_last_q) begin
 					if(axis_last_q) begin
 						frame_match[i] <= 1'b0;
 						pattern_match[i] <= 1'b1;

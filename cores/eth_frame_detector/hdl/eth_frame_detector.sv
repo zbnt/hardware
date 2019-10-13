@@ -180,12 +180,18 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 	logic mem_a_pa_req, mem_a_pa_we, mem_a_pa_ack;
 	logic mem_b_pa_req, mem_b_pa_we, mem_b_pa_ack;
+	logic mem_c_pa_req, mem_c_pa_we, mem_c_pa_ack;
+	logic mem_d_pa_req, mem_d_pa_we, mem_d_pa_ack;
 
 	logic [10:0] mem_a_pa_addr;
 	logic [10:0] mem_b_pa_addr;
+	logic [10:0] mem_c_pa_addr;
+	logic [10:0] mem_d_pa_addr;
 
-	logic [30*(axi_width/32)-1:0] mem_a_pa_wdata, mem_a_pa_rdata;
-	logic [30*(axi_width/32)-1:0] mem_b_pa_wdata, mem_b_pa_rdata;
+	logic [axi_width-1:0] mem_a_pa_wdata, mem_a_pa_rdata;
+	logic [axi_width-1:0] mem_b_pa_wdata, mem_b_pa_rdata;
+	logic [axi_width-1:0] mem_c_pa_wdata, mem_c_pa_rdata;
+	logic [axi_width-1:0] mem_d_pa_wdata, mem_d_pa_rdata;
 
 	eth_frame_detector_axi #(axi_width) U0
 	(
@@ -237,6 +243,26 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.mem_b_addr(mem_b_pa_addr),
 		.mem_b_wdata(mem_b_pa_wdata),
 		.mem_b_rdata(mem_b_pa_rdata),
+
+		// MEM_C_PA
+
+		.mem_c_req(mem_c_pa_req),
+		.mem_c_we(mem_c_pa_we),
+		.mem_c_ack(mem_c_pa_ack),
+
+		.mem_c_addr(mem_c_pa_addr),
+		.mem_c_wdata(mem_c_pa_wdata),
+		.mem_c_rdata(mem_c_pa_rdata),
+
+		// MEM_D_PA
+
+		.mem_d_req(mem_d_pa_req),
+		.mem_d_we(mem_d_pa_we),
+		.mem_d_ack(mem_d_pa_ack),
+
+		.mem_d_addr(mem_d_pa_addr),
+		.mem_d_wdata(mem_d_pa_wdata),
+		.mem_d_rdata(mem_d_pa_rdata),
 
 		// Registers
 
@@ -309,8 +335,8 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 	// Match received frames against the stored patterns
 
-	logic [29:0] mem_a_pb_data, mem_b_pb_data;
-	logic [10:0] mem_a_pb_addr, mem_b_pb_addr;
+	logic [10:0] pattern_a_addr, pattern_b_addr;
+	logic [31:0] mem_a_pb_data, mem_b_pb_data, mem_c_pb_data, mem_d_pb_data;
 
 	eth_frame_matcher U3
 	(
@@ -330,10 +356,11 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.s_axis_tlast(s_axis_a_tlast),
 		.s_axis_tvalid(s_axis_a_tvalid),
 
-		// MEM_A
+		// MEM_A + MEM_B
 
-		.mem_data(mem_a_pb_data),
-		.mem_addr(mem_a_pb_addr)
+		.pattern_addr(pattern_a_addr),
+		.pattern_data(mem_a_pb_data),
+		.pattern_flags(mem_b_pb_data)
 	);
 
 	eth_frame_matcher U4
@@ -354,10 +381,11 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.s_axis_tlast(s_axis_b_tlast),
 		.s_axis_tvalid(s_axis_b_tvalid),
 
-		// MEM_B
+		// MEM_C + MEM_D
 
-		.mem_data(mem_b_pb_data),
-		.mem_addr(mem_b_pb_addr)
+		.pattern_addr(pattern_b_addr),
+		.pattern_data(mem_c_pb_data),
+		.pattern_flags(mem_d_pb_data)
 	);
 
 	// Memory for storing patterns, one for each direction
@@ -379,7 +407,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 		// MEM_A_PB
 
 		.mem_pb_clk(s_axis_a_clk),
-		.mem_pb_addr(mem_a_pb_addr),
+		.mem_pb_addr(pattern_a_addr),
 		.mem_pb_rdata(mem_a_pb_data)
 	);
 
@@ -399,8 +427,50 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 		// MEM_B_PB
 
-		.mem_pb_clk(s_axis_b_clk),
-		.mem_pb_addr(mem_b_pb_addr),
+		.mem_pb_clk(s_axis_a_clk),
+		.mem_pb_addr(pattern_a_addr),
 		.mem_pb_rdata(mem_b_pb_data)
+	);
+
+	eth_frame_pattern_mem #(axi_width) U7
+	(
+		.clk(s_axi_clk),
+
+		// MEM_C_PA
+
+		.mem_pa_req(mem_c_pa_req),
+		.mem_pa_we(mem_c_pa_we),
+		.mem_pa_ack(mem_c_pa_ack),
+
+		.mem_pa_addr(mem_c_pa_addr),
+		.mem_pa_wdata(mem_c_pa_wdata),
+		.mem_pa_rdata(mem_c_pa_rdata),
+
+		// MEM_C_PB
+
+		.mem_pb_clk(s_axis_b_clk),
+		.mem_pb_addr(pattern_b_addr),
+		.mem_pb_rdata(mem_c_pb_data)
+	);
+
+	eth_frame_pattern_mem #(axi_width) U8
+	(
+		.clk(s_axi_clk),
+
+		// MEM_D_PA
+
+		.mem_pa_req(mem_d_pa_req),
+		.mem_pa_we(mem_d_pa_we),
+		.mem_pa_ack(mem_d_pa_ack),
+
+		.mem_pa_addr(mem_d_pa_addr),
+		.mem_pa_wdata(mem_d_pa_wdata),
+		.mem_pa_rdata(mem_d_pa_rdata),
+
+		// MEM_D_PB
+
+		.mem_pb_clk(s_axis_b_clk),
+		.mem_pb_addr(pattern_b_addr),
+		.mem_pb_rdata(mem_d_pb_data)
 	);
 endmodule
