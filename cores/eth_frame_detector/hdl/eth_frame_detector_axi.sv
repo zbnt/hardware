@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axi #(parameter axi_width = 32)
+module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -16,8 +16,8 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [axi_width-1:0] s_axi_wdata,
-	input logic [(axi_width/8)-1:0] s_axi_wstrb,
+	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -30,7 +30,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [axi_width-1:0] s_axi_rdata,
+	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -42,8 +42,8 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic mem_a_ack,
 
 	output logic [10:0] mem_a_addr,
-	output logic [axi_width-1:0] mem_a_wdata,
-	input logic [axi_width-1:0] mem_a_rdata,
+	output logic [C_AXI_WIDTH-1:0] mem_a_wdata,
+	input logic [C_AXI_WIDTH-1:0] mem_a_rdata,
 
 	// MEM_B
 
@@ -52,8 +52,8 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic mem_b_ack,
 
 	output logic [10:0] mem_b_addr,
-	output logic [axi_width-1:0] mem_b_wdata,
-	input logic [axi_width-1:0] mem_b_rdata,
+	output logic [C_AXI_WIDTH-1:0] mem_b_wdata,
+	input logic [C_AXI_WIDTH-1:0] mem_b_rdata,
 
 	// MEM_C
 
@@ -62,8 +62,8 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic mem_c_ack,
 
 	output logic [10:0] mem_c_addr,
-	output logic [axi_width-1:0] mem_c_wdata,
-	input logic [axi_width-1:0] mem_c_rdata,
+	output logic [C_AXI_WIDTH-1:0] mem_c_wdata,
+	input logic [C_AXI_WIDTH-1:0] mem_c_rdata,
 
 	// MEM_D
 
@@ -72,23 +72,23 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	input logic mem_d_ack,
 
 	output logic [10:0] mem_d_addr,
-	output logic [axi_width-1:0] mem_d_wdata,
-	input logic [axi_width-1:0] mem_d_rdata,
+	output logic [C_AXI_WIDTH-1:0] mem_d_wdata,
+	input logic [C_AXI_WIDTH-1:0] mem_d_rdata,
 
 	// Registers
 
 	output logic srst,
-	output logic [5:0] match_en,
+	output logic [7:0] match_en,
 
 	// Status
 
 	input logic [63:0] current_time,
 	input logic time_running,
 
-	input logic [2:0] match_a,
+	input logic [3:0] match_a,
 	input logic [1:0] match_a_id,
 
-	input logic [2:0] match_b,
+	input logic [3:0] match_b,
 	input logic [1:0] match_b_id
 );
 	// Handle AXI4-Lite requests
@@ -96,14 +96,14 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	logic read_req;
 	logic read_ready;
 	logic read_response;
-	logic [axi_width-1:0] read_value;
+	logic [C_AXI_WIDTH-1:0] read_value;
 
 	logic write_req;
 	logic write_ready;
 	logic write_response;
 	logic [15:0] write_addr;
 
-	axi4_lite_slave_rw #(16, axi_width) U0
+	axi4_lite_slave_rw #(16, C_AXI_WIDTH) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -150,7 +150,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	logic enable;
 	logic [1:0] last_match_a_id, last_match_b_id;
 
-	logic [axi_width-1:0] write_mask;
+	logic [C_AXI_WIDTH-1:0] write_mask;
 
 	logic mem_a_done, mem_b_done, mem_c_done, mem_d_done;
 	logic mem_a_rreq, mem_a_wreq;
@@ -159,52 +159,52 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 	logic mem_d_rreq, mem_d_wreq;
 
 	logic fifo_read, fifo_written, fifo_we, fifo_full, fifo_empty, fifo_pop, fifo_busy;
-	logic [69:0] fifo_out, fifo_in;
+	logic [71:0] fifo_out, fifo_in;
 	logic [10:0] fifo_occupancy;
 	logic [63:0] fifo_time;
-	logic [5:0] fifo_matches;
+	logic [7:0] fifo_matches;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n | srst) begin
 			enable <= 1'b0;
 			srst <= srst & rst_n;
-			match_en <= 6'd0;
+			match_en <= 8'd0;
 
 			last_match_a_id <= 2'd0;
 			last_match_b_id <= 2'd0;
 
 			fifo_we <= 1'b0;
-			fifo_in <= 70'd0;
+			fifo_in <= 72'd0;
 
 			fifo_pop <= 1'b0;
 			fifo_busy <= 1'b0;
 
 			fifo_time <= 64'd0;
-			fifo_matches <= 6'd0;
+			fifo_matches <= 8'd0;
 		end else begin
 			if(write_req) begin
 				// Write to config bits if requested via AXI
-				if(write_addr[15:$clog2(axi_width/8)] == '0) begin
+				if(write_addr[15:$clog2(C_AXI_WIDTH/8)] == '0) begin
 					enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-					match_en <= (s_axi_wdata[7:2] & write_mask[7:2]) | (match_en & ~write_mask[7:2]);
+					match_en <= (s_axi_wdata[9:2] & write_mask[9:2]) | (match_en & ~write_mask[9:2]);
 				end
 
 				// Special FIFO_POP register
-				if(axi_width == 32) begin
+				if(C_AXI_WIDTH == 32) begin
 					if(~fifo_busy && write_addr[11:2] == 10'd2) begin
 						fifo_pop <= 1'b1;
 						fifo_busy <= 1'b1;
 					end else begin
 						fifo_pop <= 1'b0;
 					end
-				end else if(axi_width == 64) begin
+				end else if(C_AXI_WIDTH == 64) begin
 					if(~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
 						fifo_pop <= 1'b1;
 						fifo_busy <= 1'b1;
 					end else begin
 						fifo_pop <= 1'b0;
 					end
-				end else if(axi_width == 128) begin
+				end else if(C_AXI_WIDTH == 128) begin
 					if(~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
 						fifo_pop <= 1'b1;
 						fifo_busy <= 1'b1;
@@ -219,7 +219,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 
 			if(fifo_read) begin
 				fifo_time <= fifo_out[63:0];
-				fifo_matches <= fifo_out[69:64];
+				fifo_matches <= fifo_out[71:64];
 			end
 
 			fifo_we <= enable && time_running && (last_match_a_id != match_a_id && |match_a || last_match_b_id != match_b_id && |match_b);
@@ -230,7 +230,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		end
 
 		// SRST must be writable even after it has been set to 1
-		if(rst_n & write_req && write_addr[15:$clog2(axi_width/8)] == '0) begin
+		if(rst_n & write_req && write_addr[15:$clog2(C_AXI_WIDTH/8)] == '0) begin
 			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
@@ -248,7 +248,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		mem_c_rreq = 1'b0; mem_c_wreq = 1'b0;
 		mem_d_rreq = 1'b0; mem_d_wreq = 1'b0;
 
-		for(int i = 0; i < axi_width; ++i) begin
+		for(int i = 0; i < C_AXI_WIDTH; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
 		end
 
@@ -260,27 +260,27 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 				read_ready = 1'b1;
 				read_response = 1'b1;
 
-				if(axi_width == 32) begin
+				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
-						3'd0: read_value = {24'd0, match_en, srst, enable};
+						3'd0: read_value = {22'd0, match_en, srst, enable};
 						3'd1: read_value = {21'd0, fifo_occupancy};
 						3'd2: read_value = 32'd0;
 						3'd3: read_value = 32'd0;
 						3'd4: read_value = fifo_time[31:0];
 						3'd5: read_value = fifo_time[63:32];
-						3'd6: read_value = {26'd0, fifo_matches};
+						3'd6: read_value = {24'd0, fifo_matches};
 					endcase
-				end else if(axi_width == 64) begin
+				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[4:3])
-						2'd0: read_value = {21'd0, fifo_occupancy, 24'd0, match_en, srst, enable};
+						2'd0: read_value = {21'd0, fifo_occupancy, 22'd0, match_en, srst, enable};
 						2'd1: read_value = 64'd0;
 						2'd2: read_value = fifo_time;
-						2'd3: read_value = {58'd0, fifo_matches};
+						2'd3: read_value = {56'd0, fifo_matches};
 					endcase
-				end else if(axi_width == 128) begin
+				end else if(C_AXI_WIDTH == 128) begin
 					case(s_axi_araddr[4])
-						1'd0: read_value = {85'd0, fifo_occupancy, 24'd0, match_en, srst, enable};
-						1'd1: read_value = {58'd0, fifo_matches, fifo_time};
+						1'd0: read_value = {85'd0, fifo_occupancy, 22'd0, match_en, srst, enable};
+						1'd1: read_value = {56'd0, fifo_matches, fifo_time};
 					endcase
 				end
 			end else if(s_axi_araddr[15:13] == 3'd1) begin
@@ -322,15 +322,15 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 				write_ready = 1'b1;
 				write_response = 1'b1;
 
-				if(axi_width == 32) begin
+				if(C_AXI_WIDTH == 32) begin
 					if(~fifo_busy && write_addr[11:2] == 10'd2) begin
 						write_ready = fifo_read;
 					end
-				end else if(axi_width == 64) begin
+				end else if(C_AXI_WIDTH == 64) begin
 					if(~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
 						write_ready = fifo_read;
 					end
-				end else if(axi_width == 128) begin
+				end else if(C_AXI_WIDTH == 128) begin
 					if(~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
 						write_ready = fifo_read;
 					end
@@ -391,7 +391,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.count(fifo_occupancy)
 	);
 
-	eth_frame_detector_axi_dram #(axi_width) U3
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U3
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -417,7 +417,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.mem_rdata(mem_a_rdata)
 	);
 
-	eth_frame_detector_axi_dram #(axi_width) U4
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U4
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -443,7 +443,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.mem_rdata(mem_b_rdata)
 	);
 
-	eth_frame_detector_axi_dram #(axi_width) U5
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U5
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -469,7 +469,7 @@ module eth_frame_detector_axi #(parameter axi_width = 32)
 		.mem_rdata(mem_c_rdata)
 	);
 
-	eth_frame_detector_axi_dram #(axi_width) U6
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U6
 	(
 		.clk(clk),
 		.rst_n(rst_n),

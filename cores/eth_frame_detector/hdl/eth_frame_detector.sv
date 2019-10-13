@@ -5,98 +5,15 @@
 */
 
 /*!
-	\core eth_frame_detector: Ethernet Frame Detector
+	eth_frame_detector: Ethernet Frame Detector
 
-	This module connects two network interfaces, behaving like a MitM. Frames received are stored in a FIFO
-	and transmitted on the other interface without any modification. At the same time, incoming data is compared
-	against a set of user-configurable patterns and if a match is found, the current timestamp is stored in a FIFO
-	together with information regarding the matched patterns.
-
-	\supports
-		\device zynq Production
-
-	\ports
-		\iface s_axi: Configuration interface from PS.
-			\type AXI4-Lite
-			\clk  s_axi_clk
-
-		\iface m_axis_a: Transmission stream for the TEMAC A.
-			\type AXI4-Stream
-			\clk  s_axi_clk
-
-		\iface m_axis_b: Transmission stream for the TEMAC B.
-			\type AXI4-Stream
-			\clk  s_axi_clk
-
-		\iface s_axis_a: Reception stream for the TEMAC A.
-			\type AXI4-Stream
-			\clk  s_axis_a_clk
-
-		\iface s_axis_b: Reception stream for the TEMAC B.
-			\type AXI4-Stream
-			\clk  s_axis_b_clk
-
-	\memorymap S_AXI_ADDR
-		\regsize 32
-
-		\reg FD_CFG: Frame detector configuration register.
-			\access RW
-
-			\field EN     0      Global enable, set to 1 in order to enable frame detection.
-			\field SRST   1      Software reset, active high, must be set back to 0 again manually.
-			\field ENA1   2      Enable pattern A1.
-			\field ENA2   3      Enable pattern A2.
-			\field ENA3   4      Enable pattern A3.
-			\field ENB1   5      Enable pattern B1.
-			\field ENB2   6      Enable pattern B2.
-			\field ENB3   7      Enable pattern B3.
-
-		\reg FD_FIFO_OCCUP: FIFO occupancy.
-			\access RO
-
-			\field FOCCUP 0-10   Number of entries currently stored in the FIFO.
-
-		\reg FD_FIFO_POP: Read values from FIFO.
-			\access RW
-
-			\field FPOP   0-31   If set to a value different from 0, read the next set of values from the FIFO and store them in
-			                     the registers. If read, always returns 0.
-
-		\reg FD_RSVD: Reserved.
-			\access RO
-
-		\reg FD_TIME_L: Detection time, lower half.
-			\access RO
-
-			\field TIMEL  0-31   Time of the last detection, lower 32 bits.
-
-		\reg FD_TIME_H: Detection time, upper half.
-			\access RO
-
-			\field TIMEH  0-31   Time of the last detection, upper 32 bits.
-
-		\reg FD_MATCHED: Matched patterns.
-			\access RO
-
-			\field MA1    0      Set to 1 if a match for pattern A1 was detected.
-			\field MA2    1      Set to 1 if a match for pattern A2 was detected.
-			\field MA3    2      Set to 1 if a match for pattern A3 was detected.
-			\field MB1    3      Set to 1 if a match for pattern B1 was detected.
-			\field MB2    4      Set to 1 if a match for pattern B2 was detected.
-			\field MB3    5      Set to 1 if a match for pattern B3 was detected.
-
-		\mem PATTERN_MEM_A: Patterns for frames going from A to B.
-			\access RW
-			\at    0x2000
-			\size  3072
-
-		\mem PATTERN_MEM_B: Patterns for frames going from B to A.
-			\access RW
-			\at    0x4000
-			\size  3072
+	This module connects two network interfaces, behaving like a MitM. Received frames are stored in a FIFO
+	and transmitted on the other interface. Incoming data is compared	against a set of user-configurable
+	patterns and if a match is found, the current timestamp is stored in a FIFO together with information
+	regarding the matched patterns.
 */
 
-module eth_frame_detector #(parameter axi_width = 32)
+module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -108,8 +25,8 @@ module eth_frame_detector #(parameter axi_width = 32)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [axi_width-1:0] s_axi_wdata,
-	input logic [(axi_width/8)-1:0] s_axi_wstrb,
+	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -122,7 +39,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [axi_width-1:0] s_axi_rdata,
+	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -173,9 +90,8 @@ module eth_frame_detector #(parameter axi_width = 32)
 	// axi4_lite registers
 
 	logic srst;
-	logic [5:0] match_en;
-	logic [5:0] match_mode;
-	logic [2:0] match_a, match_b;
+	logic [7:0] match_en;
+	logic [3:0] match_a, match_b;
 	logic [1:0] match_a_id, match_b_id;
 
 	logic mem_a_pa_req, mem_a_pa_we, mem_a_pa_ack;
@@ -188,12 +104,12 @@ module eth_frame_detector #(parameter axi_width = 32)
 	logic [10:0] mem_c_pa_addr;
 	logic [10:0] mem_d_pa_addr;
 
-	logic [axi_width-1:0] mem_a_pa_wdata, mem_a_pa_rdata;
-	logic [axi_width-1:0] mem_b_pa_wdata, mem_b_pa_rdata;
-	logic [axi_width-1:0] mem_c_pa_wdata, mem_c_pa_rdata;
-	logic [axi_width-1:0] mem_d_pa_wdata, mem_d_pa_rdata;
+	logic [C_AXI_WIDTH-1:0] mem_a_pa_wdata, mem_a_pa_rdata;
+	logic [C_AXI_WIDTH-1:0] mem_b_pa_wdata, mem_b_pa_rdata;
+	logic [C_AXI_WIDTH-1:0] mem_c_pa_wdata, mem_c_pa_rdata;
+	logic [C_AXI_WIDTH-1:0] mem_d_pa_wdata, mem_d_pa_rdata;
 
-	eth_frame_detector_axi #(axi_width) U0
+	eth_frame_detector_axi #(C_AXI_WIDTH) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -283,6 +199,10 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 	// Interface loop, transmit frames received from one interface through the other
 
+	logic [7:0] s_axis_a_mod_tdata, s_axis_b_mod_tdata;
+	logic s_axis_a_mod_tuser, s_axis_a_mod_tlast, s_axis_a_mod_tvalid;
+	logic s_axis_b_mod_tuser, s_axis_b_mod_tlast, s_axis_b_mod_tvalid;
+
 	eth_frame_loop U1
 	(
 		.clk(s_axi_clk),
@@ -302,10 +222,10 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 		.s_axis_clk(s_axis_b_clk),
 
-		.s_axis_tdata(s_axis_b_tdata),
-		.s_axis_tuser(s_axis_b_tuser),
-		.s_axis_tlast(s_axis_b_tlast),
-		.s_axis_tvalid(s_axis_b_tvalid)
+		.s_axis_tdata(s_axis_b_mod_tdata),
+		.s_axis_tuser(s_axis_b_mod_tuser),
+		.s_axis_tlast(s_axis_b_mod_tlast),
+		.s_axis_tvalid(s_axis_b_mod_tvalid)
 	);
 
 	eth_frame_loop U2
@@ -327,10 +247,10 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 		.s_axis_clk(s_axis_a_clk),
 
-		.s_axis_tdata(s_axis_a_tdata),
-		.s_axis_tuser(s_axis_a_tuser),
-		.s_axis_tlast(s_axis_a_tlast),
-		.s_axis_tvalid(s_axis_a_tvalid)
+		.s_axis_tdata(s_axis_a_mod_tdata),
+		.s_axis_tuser(s_axis_a_mod_tuser),
+		.s_axis_tlast(s_axis_a_mod_tlast),
+		.s_axis_tvalid(s_axis_a_mod_tvalid)
 	);
 
 	// Match received frames against the stored patterns
@@ -345,7 +265,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 		.match(match_a),
 		.match_id(match_a_id),
-		.match_en(match_en[2:0]),
+		.match_en(match_en[3:0]),
 
 		// S_AXIS_A
 
@@ -355,6 +275,13 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.s_axis_tuser(s_axis_a_tuser),
 		.s_axis_tlast(s_axis_a_tlast),
 		.s_axis_tvalid(s_axis_a_tvalid),
+
+		// S_AXIS_A_MOD
+
+		.m_axis_tdata(s_axis_a_mod_tdata),
+		.m_axis_tuser(s_axis_a_mod_tuser),
+		.m_axis_tlast(s_axis_a_mod_tlast),
+		.m_axis_tvalid(s_axis_a_mod_tvalid),
 
 		// MEM_A + MEM_B
 
@@ -370,7 +297,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 		.match(match_b),
 		.match_id(match_b_id),
-		.match_en(match_en[5:3]),
+		.match_en(match_en[7:4]),
 
 		// S_AXIS_B
 
@@ -381,6 +308,13 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.s_axis_tlast(s_axis_b_tlast),
 		.s_axis_tvalid(s_axis_b_tvalid),
 
+		// S_AXIS_B_MOD
+
+		.m_axis_tdata(s_axis_b_mod_tdata),
+		.m_axis_tuser(s_axis_b_mod_tuser),
+		.m_axis_tlast(s_axis_b_mod_tlast),
+		.m_axis_tvalid(s_axis_b_mod_tvalid),
+
 		// MEM_C + MEM_D
 
 		.pattern_addr(pattern_b_addr),
@@ -390,7 +324,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 
 	// Memory for storing patterns, one for each direction
 
-	eth_frame_pattern_mem #(axi_width) U5
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U5
 	(
 		.clk(s_axi_clk),
 
@@ -411,7 +345,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.mem_pb_rdata(mem_a_pb_data)
 	);
 
-	eth_frame_pattern_mem #(axi_width) U6
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U6
 	(
 		.clk(s_axi_clk),
 
@@ -432,7 +366,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.mem_pb_rdata(mem_b_pb_data)
 	);
 
-	eth_frame_pattern_mem #(axi_width) U7
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U7
 	(
 		.clk(s_axi_clk),
 
@@ -453,7 +387,7 @@ module eth_frame_detector #(parameter axi_width = 32)
 		.mem_pb_rdata(mem_c_pb_data)
 	);
 
-	eth_frame_pattern_mem #(axi_width) U8
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U8
 	(
 		.clk(s_axi_clk),
 

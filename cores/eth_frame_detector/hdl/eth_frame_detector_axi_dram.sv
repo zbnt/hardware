@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axi_dram #(parameter axi_width = 32)
+module eth_frame_detector_axi_dram #(parameter C_AXI_WIDTH = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -13,9 +13,9 @@ module eth_frame_detector_axi_dram #(parameter axi_width = 32)
 	input logic [15:0] read_addr,
 
 	input logic write_req,
-	input logic [axi_width-1:0] write_mask,
+	input logic [C_AXI_WIDTH-1:0] write_mask,
 	input logic [15:0] write_addr,
-	input logic [axi_width-1:0] write_data,
+	input logic [C_AXI_WIDTH-1:0] write_data,
 
 	output logic done,
 
@@ -26,14 +26,14 @@ module eth_frame_detector_axi_dram #(parameter axi_width = 32)
 	input logic mem_ack,
 
 	output logic [10:0] mem_addr,
-	output logic [axi_width-1:0] mem_wdata,
-	input logic [axi_width-1:0] mem_rdata
+	output logic [C_AXI_WIDTH-1:0] mem_wdata,
+	input logic [C_AXI_WIDTH-1:0] mem_rdata
 );
 	enum logic [1:0] {ST_IDLE, ST_READ_MEM, ST_WRITE_MEM} state, state_next;
 
 	logic mem_ack_prev;
 	logic mem_write_pending;
-	logic [axi_width-1:0] write_mask_q;
+	logic [C_AXI_WIDTH-1:0] write_mask_q;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin

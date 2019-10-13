@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_w #(parameter axi_width = 32)
+module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -16,8 +16,8 @@ module eth_frame_detector_w #(parameter axi_width = 32)
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
 
-	input wire [axi_width-1:0] s_axi_wdata,
-	input wire [(axi_width/8)-1:0] s_axi_wstrb,
+	input wire [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input wire [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input wire s_axi_wvalid,
 	output wire s_axi_wready,
 
@@ -30,7 +30,7 @@ module eth_frame_detector_w #(parameter axi_width = 32)
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
 
-	output wire [axi_width-1:0] s_axi_rdata,
+	output wire [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output wire [1:0] s_axi_rresp,
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
@@ -78,7 +78,7 @@ module eth_frame_detector_w #(parameter axi_width = 32)
 	input wire [63:0] current_time,
 	input wire time_running
 );
-	eth_frame_detector #(axi_width) U0
+	eth_frame_detector #(C_AXI_WIDTH) U0
 	(
 		// S_AXI
 
