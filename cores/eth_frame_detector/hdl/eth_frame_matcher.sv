@@ -47,6 +47,8 @@ module eth_frame_matcher
 
 	logic pattern_end;
 	logic [3:0] pattern_match;
+	logic [4:0] pattern_match_ext_num;
+	logic [127:0] pattern_match_ext_data;
 
 	logic frame_end;
 	logic [3:0] frame_match;
@@ -78,9 +80,13 @@ module eth_frame_matcher
 		if(~rst_n_cdc) begin
 			frame_match <= 4'd0;
 			frame_match_id <= 2'd0;
+			frame_match_ext_num <= 5'd0;
+			frame_match_ext_data <= 128'd0;
 		end else if(frame_end && (pattern_match & match_en_cdc) != 3'd0) begin
 			frame_match <= (pattern_match & match_en_cdc);
 			frame_match_id <= frame_match_id + 2'd1;
+			frame_match_ext_num <= pattern_match_ext_num;
+			frame_match_ext_data <= pattern_match_ext_data;
 		end
 
 		frame_end <= axis_valid_q & axis_last_q;
@@ -124,31 +130,31 @@ module eth_frame_matcher
 
 	always_ff @(posedge s_axis_clk) begin
 		if(~rst_n_cdc | frame_end) begin
-			frame_match_ext_num <= 5'd0;
-			frame_match_ext_data <= 128'd0;
+			pattern_match_ext_num <= 5'd0;
+			pattern_match_ext_data <= 128'd0;
 		end else if(axis_valid_q & ~pattern_end) begin
 			if(pattern_flags[4] | pattern_flags[12] | pattern_flags[20] | pattern_flags[28]) begin
-				case(frame_match_ext_num)
-					5'd0: frame_match_ext_data[7:0] <= axis_data_q;
-					5'd1: frame_match_ext_data[15:8] <= axis_data_q;
-					5'd2: frame_match_ext_data[23:16] <= axis_data_q;
-					5'd3: frame_match_ext_data[31:24] <= axis_data_q;
-					5'd4: frame_match_ext_data[39:32] <= axis_data_q;
-					5'd5: frame_match_ext_data[47:40] <= axis_data_q;
-					5'd6: frame_match_ext_data[55:48] <= axis_data_q;
-					5'd7: frame_match_ext_data[63:56] <= axis_data_q;
-					5'd8: frame_match_ext_data[71:64] <= axis_data_q;
-					5'd9: frame_match_ext_data[79:72] <= axis_data_q;
-					5'd10: frame_match_ext_data[87:80] <= axis_data_q;
-					5'd11: frame_match_ext_data[95:88] <= axis_data_q;
-					5'd12: frame_match_ext_data[103:96] <= axis_data_q;
-					5'd13: frame_match_ext_data[111:104] <= axis_data_q;
-					5'd14: frame_match_ext_data[119:112] <= axis_data_q;
-					5'd15: frame_match_ext_data[127:120] <= axis_data_q;
+				case(pattern_match_ext_num)
+					5'd0: pattern_match_ext_data[7:0] <= axis_data_q;
+					5'd1: pattern_match_ext_data[15:8] <= axis_data_q;
+					5'd2: pattern_match_ext_data[23:16] <= axis_data_q;
+					5'd3: pattern_match_ext_data[31:24] <= axis_data_q;
+					5'd4: pattern_match_ext_data[39:32] <= axis_data_q;
+					5'd5: pattern_match_ext_data[47:40] <= axis_data_q;
+					5'd6: pattern_match_ext_data[55:48] <= axis_data_q;
+					5'd7: pattern_match_ext_data[63:56] <= axis_data_q;
+					5'd8: pattern_match_ext_data[71:64] <= axis_data_q;
+					5'd9: pattern_match_ext_data[79:72] <= axis_data_q;
+					5'd10: pattern_match_ext_data[87:80] <= axis_data_q;
+					5'd11: pattern_match_ext_data[95:88] <= axis_data_q;
+					5'd12: pattern_match_ext_data[103:96] <= axis_data_q;
+					5'd13: pattern_match_ext_data[111:104] <= axis_data_q;
+					5'd14: pattern_match_ext_data[119:112] <= axis_data_q;
+					5'd15: pattern_match_ext_data[127:120] <= axis_data_q;
 				endcase
 
-				if(frame_match_ext_num != 5'd16) begin
-					frame_match_ext_num <= frame_match_ext_num + 5'd1;
+				if(pattern_match_ext_num != 5'd16) begin
+					pattern_match_ext_num <= pattern_match_ext_num + 5'd1;
 				end
 			end
 		end

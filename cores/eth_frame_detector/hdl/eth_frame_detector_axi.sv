@@ -163,7 +163,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 	logic mem_d_rreq, mem_d_wreq;
 
 	logic fifo_read, fifo_written, fifo_we, fifo_full, fifo_empty, fifo_pop, fifo_busy;
-	logic [$clog2(C_LOG_FIFO_SIZE)-1:0] fifo_occupancy;
+	logic [$clog2(C_LOG_FIFO_SIZE+1)-1:0] fifo_occupancy;
 	logic [201:0] fifo_out, fifo_in;
 	logic [63:0] fifo_time;
 	logic [3:0] fifo_matches;
@@ -243,6 +243,8 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 				fifo_we <= enable && time_running;
 				fifo_in <= {1'b1, match_b_ext_data, match_b_ext_num, match_b, current_time};
 				last_match_b_id <= match_b_id;
+			end else begin
+				fifo_we <= 1'b0;
 			end
 		end
 
@@ -280,7 +282,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[5:2])
 						4'h0: read_value = {22'd0, match_en, srst, enable};
-						4'h1: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE)){1'd0}}, fifo_occupancy};
+						4'h1: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy};
 						4'h2: read_value = 32'd0;
 						4'h3: read_value = 32'd0;
 						4'h4: read_value = fifo_time[31:0];
@@ -293,7 +295,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[5:3])
-						3'd0: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
+						3'd0: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
 						3'd1: read_value = 64'd0;
 						3'd2: read_value = fifo_time;
 						3'd3: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir};
@@ -302,7 +304,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 					endcase
 				end else if(C_AXI_WIDTH == 128) begin
 					case(s_axi_araddr[5:4])
-						2'd0: read_value = {{(96-$clog2(C_LOG_FIFO_SIZE)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
+						2'd0: read_value = {{(96-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
 						2'd1: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir, fifo_time};
 						2'd2: read_value = {32'd0, fifo_ext_data[127:32]};
 					endcase
@@ -404,7 +406,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		.rd_en((fifo_pop | fifo_full) & ~fifo_empty)
 	);
 
-	counter #($clog2(C_LOG_FIFO_SIZE)) U2
+	counter #($clog2(C_LOG_FIFO_SIZE+1)) U2
 	(
 		.clk(clk),
 		.rst(~rst_n | srst),
