@@ -523,9 +523,24 @@
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>FD_MATCHED</spirit:name>
+          <spirit:name>FD_MATCH_DIR</spirit:name>
           <spirit:addressOffset>24</spirit:addressOffset>
-          <spirit:size spirit:format="long">32</spirit:size>
+          <spirit:size spirit:format="long">8</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>FD_MATCH_MASK</spirit:name>
+          <spirit:addressOffset>25</spirit:addressOffset>
+          <spirit:size spirit:format="long">8</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>FD_MATCH_EXT_NUM</spirit:name>
+          <spirit:addressOffset>26</spirit:addressOffset>
+          <spirit:size spirit:format="long">8</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>FD_MATCH_EXT_DATA</spirit:name>
+          <spirit:addressOffset>27</spirit:addressOffset>
+          <spirit:size spirit:format="long">128</spirit:size>
         </spirit:register>
       </spirit:addressBlock>
     </spirit:memoryMap>
@@ -553,7 +568,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>1c35ad59</spirit:value>
+            <spirit:value>7c7bd076</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -578,7 +593,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>1c35ad59</spirit:value>
+            <spirit:value>7c7bd076</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -592,7 +607,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2c2ade76</spirit:value>
+            <spirit:value>edbb9d72</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1290,9 +1305,30 @@
         <spirit:displayName>C Axi Width</spirit:displayName>
         <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_AXI_WIDTH">32</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_LOG_FIFO_SIZE</spirit:name>
+        <spirit:displayName>C Log Fifo Size</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LOG_FIFO_SIZE">4096</spirit:value>
+      </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_LOOP_FIFO_SIZE</spirit:name>
+        <spirit:displayName>C Loop Fifo Size</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LOOP_FIFO_SIZE">512</spirit:value>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
+    <spirit:choice>
+      <spirit:name>choice_list_724f9d06</spirit:name>
+      <spirit:enumeration>128</spirit:enumeration>
+      <spirit:enumeration>256</spirit:enumeration>
+      <spirit:enumeration>512</spirit:enumeration>
+      <spirit:enumeration>1024</spirit:enumeration>
+      <spirit:enumeration>2048</spirit:enumeration>
+      <spirit:enumeration>4096</spirit:enumeration>
+      <spirit:enumeration>8192</spirit:enumeration>
+      <spirit:enumeration>16384</spirit:enumeration>
+    </spirit:choice>
     <spirit:choice>
       <spirit:name>choice_list_99ba8646</spirit:name>
       <spirit:enumeration>32</spirit:enumeration>
@@ -1302,6 +1338,16 @@
       <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
+    </spirit:choice>
+    <spirit:choice>
+      <spirit:name>choice_list_c5f217ec</spirit:name>
+      <spirit:enumeration>32</spirit:enumeration>
+      <spirit:enumeration>64</spirit:enumeration>
+      <spirit:enumeration>128</spirit:enumeration>
+      <spirit:enumeration>256</spirit:enumeration>
+      <spirit:enumeration>512</spirit:enumeration>
+      <spirit:enumeration>1024</spirit:enumeration>
+      <spirit:enumeration>2048</spirit:enumeration>
     </spirit:choice>
   </spirit:choices>
   <spirit:fileSets>
@@ -1346,7 +1392,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_frame_detector_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_b09354fb</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_7e9a1f0c</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1457,7 +1503,7 @@
       <spirit:file>
         <spirit:name>xgui/eth_frame_detector_v1_1.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_2c2ade76</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_edbb9d72</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1500,6 +1546,16 @@
       <spirit:displayName>AXI Data Width</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXI_WIDTH" spirit:choiceRef="choice_list_99ba8646">32</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_LOG_FIFO_SIZE</spirit:name>
+      <spirit:displayName>Log FIFO</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_LOG_FIFO_SIZE" spirit:choiceRef="choice_list_724f9d06">4096</spirit:value>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_LOOP_FIFO_SIZE</spirit:name>
+      <spirit:displayName>Loop FIFO</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_LOOP_FIFO_SIZE" spirit:choiceRef="choice_list_c5f217ec">512</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -1512,20 +1568,20 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Frame Detector</xilinx:displayName>
-      <xilinx:coreRevision>5</xilinx:coreRevision>
+      <xilinx:coreRevision>6</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>oscar-rc.dev:zbnt_hw:eth_frame_detector:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2019-10-13T09:16:02Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-10-14T00:46:20Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="c0a0ae42"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="a96d4d2d"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="d7f274ca"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="ba26cc5a"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c32285ab"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="a789c5e0"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="41eb17be"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="9b18ad0a"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="2683b8e7"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="ce7c01cd"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

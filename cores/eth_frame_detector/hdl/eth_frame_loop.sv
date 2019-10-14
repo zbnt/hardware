@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_loop
+module eth_frame_loop #(parameter C_LOOP_FIFO_SIZE = 512)
 (
 	input logic clk,
 	input logic rst_n,
@@ -34,7 +34,7 @@ module eth_frame_loop
 		m_axis_tuser = 1'b0;
 	end
 
-	loop_fifo U0
+	loop_fifo #(C_LOOP_FIFO_SIZE) U0
 	(
 		.m_aclk(m_axis_clk),
 		.s_aclk(s_axis_clk),

@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module log_fifo
+module log_fifo #(parameter C_LOG_FIFO_SIZE = 4096)
 (
 	input logic clk,
 	input logic rst,
@@ -13,11 +13,11 @@ module log_fifo
 	output logic valid,
 
 	output logic full,
-	input logic [71:0] din,
+	input logic [201:0] din,
 	input logic wr_en,
 
 	output logic empty,
-	output logic [71:0] dout,
+	output logic [201:0] dout,
 	input logic rd_en
 );
 	xpm_fifo_sync
@@ -26,16 +26,16 @@ module log_fifo
 		.ECC_MODE("no_ecc"),
 		.FIFO_MEMORY_TYPE("block"),
 		.FIFO_READ_LATENCY(1),
-		.FIFO_WRITE_DEPTH(2048),
+		.FIFO_WRITE_DEPTH(C_LOG_FIFO_SIZE),
 		.FULL_RESET_VALUE(0),
 		.PROG_EMPTY_THRESH(10),
 		.PROG_FULL_THRESH(10),
 		.RD_DATA_COUNT_WIDTH(1),
-		.READ_DATA_WIDTH(72),
+		.READ_DATA_WIDTH(202),
 		.READ_MODE("std"),
 		.USE_ADV_FEATURES("1010"),
 		.WAKEUP_TIME(0),
-		.WRITE_DATA_WIDTH(72),
+		.WRITE_DATA_WIDTH(202),
 		.WR_DATA_COUNT_WIDTH(1)
 	)
 	U0

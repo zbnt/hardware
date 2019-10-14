@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
+module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 4096)
 (
 	input logic clk,
 	input logic rst_n,
@@ -87,9 +87,13 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 
 	input logic [3:0] match_a,
 	input logic [1:0] match_a_id,
+	input logic [4:0] match_a_ext_num,
+	input logic [127:0] match_a_ext_data,
 
 	input logic [3:0] match_b,
-	input logic [1:0] match_b_id
+	input logic [1:0] match_b_id,
+	input logic [4:0] match_b_ext_num,
+	input logic [127:0] match_b_ext_data
 );
 	// Handle AXI4-Lite requests
 
@@ -159,10 +163,13 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 	logic mem_d_rreq, mem_d_wreq;
 
 	logic fifo_read, fifo_written, fifo_we, fifo_full, fifo_empty, fifo_pop, fifo_busy;
-	logic [71:0] fifo_out, fifo_in;
-	logic [10:0] fifo_occupancy;
+	logic [$clog2(C_LOG_FIFO_SIZE)-1:0] fifo_occupancy;
+	logic [201:0] fifo_out, fifo_in;
 	logic [63:0] fifo_time;
-	logic [7:0] fifo_matches;
+	logic [3:0] fifo_matches;
+	logic [4:0] fifo_ext_num;
+	logic [127:0] fifo_ext_data;
+	logic fifo_match_dir;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n | srst) begin
@@ -174,13 +181,16 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 			last_match_b_id <= 2'd0;
 
 			fifo_we <= 1'b0;
-			fifo_in <= 72'd0;
+			fifo_in <= 202'd0;
 
 			fifo_pop <= 1'b0;
 			fifo_busy <= 1'b0;
 
 			fifo_time <= 64'd0;
-			fifo_matches <= 8'd0;
+			fifo_matches <= 4'd0;
+			fifo_ext_num <= 5'd0;
+			fifo_ext_data <= 128'd0;
+			fifo_match_dir <= 1'b0;
 		end else begin
 			if(write_req) begin
 				// Write to config bits if requested via AXI
@@ -219,14 +229,21 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 
 			if(fifo_read) begin
 				fifo_time <= fifo_out[63:0];
-				fifo_matches <= fifo_out[71:64];
+				fifo_matches <= fifo_out[67:64];
+				fifo_ext_num <= fifo_out[72:68];
+				fifo_ext_data <= fifo_out[200:73];
+				fifo_match_dir <= fifo_out[201];
 			end
 
-			fifo_we <= enable && time_running && (last_match_a_id != match_a_id && |match_a || last_match_b_id != match_b_id && |match_b);
-			fifo_in <= {match_b, match_a, current_time};
-
-			last_match_a_id <= match_a_id;
-			last_match_b_id <= match_b_id;
+			if(last_match_a_id != match_a_id && |match_a) begin
+				fifo_we <= enable && time_running;
+				fifo_in <= {1'b0, match_a_ext_data, match_a_ext_num, match_a, current_time};
+				last_match_a_id <= match_a_id;
+			end else if(last_match_b_id != match_b_id && |match_b) begin
+				fifo_we <= enable && time_running;
+				fifo_in <= {1'b1, match_b_ext_data, match_b_ext_num, match_b, current_time};
+				last_match_b_id <= match_b_id;
+			end
 		end
 
 		// SRST must be writable even after it has been set to 1
@@ -255,32 +272,39 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 		// Handle read requests
 
 		if(read_req) begin
-			if(s_axi_araddr <= 16'd27) begin
+			if(s_axi_araddr <= 16'd43) begin
 				// Register address
 				read_ready = 1'b1;
 				read_response = 1'b1;
 
 				if(C_AXI_WIDTH == 32) begin
-					case(s_axi_araddr[4:2])
-						3'd0: read_value = {22'd0, match_en, srst, enable};
-						3'd1: read_value = {21'd0, fifo_occupancy};
-						3'd2: read_value = 32'd0;
-						3'd3: read_value = 32'd0;
-						3'd4: read_value = fifo_time[31:0];
-						3'd5: read_value = fifo_time[63:32];
-						3'd6: read_value = {24'd0, fifo_matches};
+					case(s_axi_araddr[5:2])
+						4'h0: read_value = {22'd0, match_en, srst, enable};
+						4'h1: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE)){1'd0}}, fifo_occupancy};
+						4'h2: read_value = 32'd0;
+						4'h3: read_value = 32'd0;
+						4'h4: read_value = fifo_time[31:0];
+						4'h5: read_value = fifo_time[63:32];
+						4'h6: read_value = {11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir};
+						4'h7: read_value = fifo_ext_data[31:0];
+						4'h8: read_value = fifo_ext_data[63:32];
+						4'h9: read_value = fifo_ext_data[95:64];
+						4'hA: read_value = fifo_ext_data[127:96];
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
-					case(s_axi_araddr[4:3])
-						2'd0: read_value = {21'd0, fifo_occupancy, 22'd0, match_en, srst, enable};
-						2'd1: read_value = 64'd0;
-						2'd2: read_value = fifo_time;
-						2'd3: read_value = {56'd0, fifo_matches};
+					case(s_axi_araddr[5:3])
+						3'd0: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
+						3'd1: read_value = 64'd0;
+						3'd2: read_value = fifo_time;
+						3'd3: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir};
+						3'd4: read_value = fifo_ext_data[95:32];
+						3'd5: read_value = {32'd0, fifo_ext_data[127:96]};
 					endcase
 				end else if(C_AXI_WIDTH == 128) begin
-					case(s_axi_araddr[4])
-						1'd0: read_value = {85'd0, fifo_occupancy, 22'd0, match_en, srst, enable};
-						1'd1: read_value = {56'd0, fifo_matches, fifo_time};
+					case(s_axi_araddr[5:4])
+						2'd0: read_value = {{(96-$clog2(C_LOG_FIFO_SIZE)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
+						2'd1: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir, fifo_time};
+						2'd2: read_value = {32'd0, fifo_ext_data[127:32]};
 					endcase
 				end
 			end else if(s_axi_araddr[15:13] == 3'd1) begin
@@ -317,7 +341,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 		// Handle write requests
 
 		if(write_req) begin
-			if(write_addr <= 16'd27) begin
+			if(write_addr <= 16'd43) begin
 				// Register address
 				write_ready = 1'b1;
 				write_response = 1'b1;
@@ -363,7 +387,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 		end
 	end
 
-	log_fifo U1
+	log_fifo #(C_LOG_FIFO_SIZE) U1
 	(
 		.clk(clk),
 		.rst(~rst_n | srst),
@@ -380,7 +404,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32)
 		.rd_en((fifo_pop | fifo_full) & ~fifo_empty)
 	);
 
-	counter #(11) U2
+	counter #($clog2(C_LOG_FIFO_SIZE)) U2
 	(
 		.clk(clk),
 		.rst(~rst_n | srst),

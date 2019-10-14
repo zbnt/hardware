@@ -13,7 +13,7 @@
 	regarding the matched patterns.
 */
 
-module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
+module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 4096, parameter C_LOOP_FIFO_SIZE = 512)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -93,6 +93,8 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 	logic [7:0] match_en;
 	logic [3:0] match_a, match_b;
 	logic [1:0] match_a_id, match_b_id;
+	logic [4:0] match_a_ext_num, match_b_ext_num;
+	logic [127:0] match_a_ext_data, match_b_ext_data;
 
 	logic mem_a_pa_req, mem_a_pa_we, mem_a_pa_ack;
 	logic mem_b_pa_req, mem_b_pa_we, mem_b_pa_ack;
@@ -109,7 +111,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 	logic [C_AXI_WIDTH-1:0] mem_c_pa_wdata, mem_c_pa_rdata;
 	logic [C_AXI_WIDTH-1:0] mem_d_pa_wdata, mem_d_pa_rdata;
 
-	eth_frame_detector_axi #(C_AXI_WIDTH) U0
+	eth_frame_detector_axi #(C_AXI_WIDTH, C_LOG_FIFO_SIZE) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -192,9 +194,13 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 
 		.match_a(match_a),
 		.match_a_id(match_a_id),
+		.match_a_ext_num(match_a_ext_num),
+		.match_a_ext_data(match_a_ext_data),
 
 		.match_b(match_b),
-		.match_b_id(match_b_id)
+		.match_b_id(match_b_id),
+		.match_b_ext_num(match_b_ext_num),
+		.match_b_ext_data(match_b_ext_data)
 	);
 
 	// Interface loop, transmit frames received from one interface through the other
@@ -203,7 +209,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 	logic s_axis_a_mod_tuser, s_axis_a_mod_tlast, s_axis_a_mod_tvalid;
 	logic s_axis_b_mod_tuser, s_axis_b_mod_tlast, s_axis_b_mod_tvalid;
 
-	eth_frame_loop U1
+	eth_frame_loop #(C_LOOP_FIFO_SIZE) U1
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -228,7 +234,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 		.s_axis_tvalid(s_axis_b_mod_tvalid)
 	);
 
-	eth_frame_loop U2
+	eth_frame_loop #(C_LOOP_FIFO_SIZE) U2
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -265,6 +271,8 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 
 		.match(match_a),
 		.match_id(match_a_id),
+		.match_ext_num(match_a_ext_num),
+		.match_ext_data(match_a_ext_data),
 		.match_en(match_en[3:0]),
 
 		// S_AXIS_A
@@ -297,6 +305,8 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32)
 
 		.match(match_b),
 		.match_id(match_b_id),
+		.match_ext_num(match_b_ext_num),
+		.match_ext_data(match_b_ext_data),
 		.match_en(match_en[7:4]),
 
 		// S_AXIS_B

@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module loop_fifo
+module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 512)
 (
 	input logic m_aclk,
 	input logic s_aclk,
@@ -25,7 +25,7 @@ module loop_fifo
 		.CDC_SYNC_STAGES(2),
 		.CLOCKING_MODE("independent_clock"),
 		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(512),
+		.FIFO_DEPTH(C_LOOP_FIFO_SIZE),
 		.FIFO_MEMORY_TYPE("block"),
 		.PACKET_FIFO("false"),
 		.PROG_EMPTY_THRESH(384),
