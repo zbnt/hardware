@@ -568,7 +568,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ae85e3bd</spirit:value>
+            <spirit:value>5135707c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -593,7 +593,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ae85e3bd</spirit:value>
+            <spirit:value>5135707c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1308,7 +1308,7 @@
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_LOG_FIFO_SIZE</spirit:name>
         <spirit:displayName>C Log Fifo Size</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LOG_FIFO_SIZE">4096</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_LOG_FIFO_SIZE">2048</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_LOOP_FIFO_SIZE</spirit:name>
@@ -1392,7 +1392,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_frame_detector_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_7e9a1f0c</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_ffa07f91</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1549,7 +1549,7 @@
     <spirit:parameter>
       <spirit:name>C_LOG_FIFO_SIZE</spirit:name>
       <spirit:displayName>Log FIFO</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_LOG_FIFO_SIZE" spirit:choiceRef="choice_list_1f1af28c">4096</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_LOG_FIFO_SIZE" spirit:choiceRef="choice_list_1f1af28c">2048</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>C_LOOP_FIFO_SIZE</spirit:name>
@@ -1568,20 +1568,20 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Frame Detector</xilinx:displayName>
-      <xilinx:coreRevision>7</xilinx:coreRevision>
+      <xilinx:coreRevision>8</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>oscar-rc.dev:zbnt_hw:eth_frame_detector:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2019-10-14T02:10:40Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-10-16T02:05:13Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="c0a0ae42"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="ba26cc5a"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="7b4a107e"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="14197808"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="a789c5e0"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="2683b8e7"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="a6e3d57a"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="08cd50ac"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="5c061f07"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

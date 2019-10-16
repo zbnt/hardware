@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module log_fifo #(parameter C_LOG_FIFO_SIZE = 4096)
+module log_fifo #(parameter C_LOG_FIFO_SIZE = 2048)
 (
 	input logic clk,
 	input logic rst,
