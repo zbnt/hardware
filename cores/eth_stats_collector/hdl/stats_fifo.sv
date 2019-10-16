@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module stats_fifo
+module stats_fifo #(parameter C_FIFO_SIZE = 1024)
 (
 	input logic clk,
 	input logic rst,
@@ -26,7 +26,7 @@ module stats_fifo
 		.ECC_MODE("no_ecc"),
 		.FIFO_MEMORY_TYPE("block"),
 		.FIFO_READ_LATENCY(1),
-		.FIFO_WRITE_DEPTH(2048),
+		.FIFO_WRITE_DEPTH(C_FIFO_SIZE),
 		.FULL_RESET_VALUE(0),
 		.PROG_EMPTY_THRESH(10),
 		.PROG_FULL_THRESH(10),

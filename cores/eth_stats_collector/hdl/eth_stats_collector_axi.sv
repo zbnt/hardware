@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO = 1)
+module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO = 1, parameter C_FIFO_SIZE = 1024)
 (
 	input logic clk,
 	input logic rst_n,
@@ -359,7 +359,7 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_
 	);
 
 	if(C_ENABLE_FIFO) begin
-		stats_fifo U2
+		stats_fifo #(C_FIFO_SIZE) U2
 		(
 			.clk(clk),
 			.rst(~rst_n | srst),

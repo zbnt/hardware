@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER = 1, parameter C_ENABLE_FIFO = 1, parameter C_SHARED_TX_CLK = 1)
+module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER = 1, parameter C_ENABLE_FIFO = 1, parameter C_SHARED_TX_CLK = 1, parameter C_FIFO_SIZE = 1024)
 (
 	input wire clk,
 	input wire clk_tx,
@@ -52,7 +52,7 @@ module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER
 	input wire axis_rx_tlast,
 	input wire axis_rx_tuser
 );
-	eth_stats_collector #(C_AXI_WIDTH, C_ENABLE_FIFO, C_SHARED_TX_CLK) U0
+	eth_stats_collector #(C_AXI_WIDTH, C_ENABLE_FIFO, C_SHARED_TX_CLK, C_FIFO_SIZE) U0
 	(
 		.clk(clk),
 		.clk_tx(C_SHARED_TX_CLK ? clk : clk_tx),

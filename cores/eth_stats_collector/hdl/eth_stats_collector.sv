@@ -12,7 +12,7 @@
 	read from the PS without losing intermediate states as long as the FIFO doesn't overflow.
 */
 
-module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO = 1, parameter C_SHARED_TX_CLK = 1)
+module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO = 1, parameter C_SHARED_TX_CLK = 1, parameter C_FIFO_SIZE = 1024)
 (
 	input logic clk,
 	input logic clk_tx,
@@ -66,7 +66,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad;
 	logic [5:0] stats_id;
 
-	eth_stats_collector_axi #(C_AXI_WIDTH, C_ENABLE_FIFO) U0
+	eth_stats_collector_axi #(C_AXI_WIDTH, C_ENABLE_FIFO, C_FIFO_SIZE) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
