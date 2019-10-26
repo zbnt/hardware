@@ -36,6 +36,7 @@
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
       <spirit:slave/>
+      <spirit:connectionRequired>true</spirit:connectionRequired>
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
@@ -49,7 +50,7 @@
       <spirit:vendorExtensions>
         <xilinx:busInterfaceInfo>
           <xilinx:enablement>
-            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.gtx_clk90" xilinx:dependency="$iface_type = &quot;RGMII&quot; and $use_clk90 != 0">false</xilinx:isEnabled>
+            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.gtx_clk90" xilinx:dependency="$C_IFACE_TYPE = &quot;RGMII&quot; and $C_USE_CLK90 != 0">false</xilinx:isEnabled>
           </xilinx:enablement>
         </xilinx:busInterfaceInfo>
       </spirit:vendorExtensions>
@@ -195,7 +196,6 @@
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="rgmii" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="rgmii_rtl" spirit:version="1.0"/>
       <spirit:master/>
-      <spirit:connectionRequired>true</spirit:connectionRequired>
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
@@ -249,7 +249,7 @@
       <spirit:vendorExtensions>
         <xilinx:busInterfaceInfo>
           <xilinx:enablement>
-            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.RGMII" xilinx:dependency="$iface_type = &quot;RGMII&quot;">false</xilinx:isEnabled>
+            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.RGMII" xilinx:dependency="$C_IFACE_TYPE = &quot;RGMII&quot;">false</xilinx:isEnabled>
           </xilinx:enablement>
         </xilinx:busInterfaceInfo>
       </spirit:vendorExtensions>
@@ -336,7 +336,7 @@
       <spirit:vendorExtensions>
         <xilinx:busInterfaceInfo>
           <xilinx:enablement>
-            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.GMII" xilinx:dependency="$iface_type = &quot;GMII&quot;">true</xilinx:isEnabled>
+            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.GMII" xilinx:dependency="$C_IFACE_TYPE = &quot;GMII&quot;">true</xilinx:isEnabled>
           </xilinx:enablement>
         </xilinx:busInterfaceInfo>
       </spirit:vendorExtensions>
@@ -356,7 +356,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>1bcdb72f</spirit:value>
+            <spirit:value>aa300be3</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -372,7 +372,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>335d5a4b</spirit:value>
+            <spirit:value>37ad5a0c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -386,7 +386,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>0b3369b8</spirit:value>
+            <spirit:value>c851ded1</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -400,7 +400,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>c7a83756</spirit:value>
+            <spirit:value>574ca33c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -877,23 +877,35 @@
     </spirit:ports>
     <spirit:modelParameters>
       <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="string">
-        <spirit:name>iface_type</spirit:name>
-        <spirit:displayName>Iface Type</spirit:displayName>
-        <spirit:value spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.iface_type">GMII</spirit:value>
-      </spirit:modelParameter>
-      <spirit:modelParameter spirit:dataType="string">
-        <spirit:name>family_name</spirit:name>
-        <spirit:displayName>Family Name</spirit:displayName>
-        <spirit:value spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.family_name">7-Series</spirit:value>
+        <spirit:name>C_IFACE_TYPE</spirit:name>
+        <spirit:displayName>C Iface Type</spirit:displayName>
+        <spirit:value spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_IFACE_TYPE">GMII</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>use_clk90</spirit:name>
-        <spirit:displayName>Use Clk90</spirit:displayName>
-        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.use_clk90">false</spirit:value>
+        <spirit:name>C_USE_CLK90</spirit:name>
+        <spirit:displayName>C Use Clk90</spirit:displayName>
+        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_USE_CLK90">false</spirit:value>
         <spirit:vendorExtensions>
           <xilinx:parameterInfo>
             <xilinx:enablement>
-              <xilinx:isEnabled xilinx:id="MODELPARAM_ENABLEMENT.use_clk90">false</xilinx:isEnabled>
+              <xilinx:isEnabled xilinx:id="MODELPARAM_ENABLEMENT.C_USE_CLK90">false</xilinx:isEnabled>
+            </xilinx:enablement>
+          </xilinx:parameterInfo>
+        </spirit:vendorExtensions>
+      </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="string">
+        <spirit:name>C_CLK_INPUT_STYLE</spirit:name>
+        <spirit:displayName>C Clk Input Style</spirit:displayName>
+        <spirit:value spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_CLK_INPUT_STYLE">BUFR</spirit:value>
+      </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_GTX_AS_RX_CLK</spirit:name>
+        <spirit:displayName>C Gtx As Rx Clk</spirit:displayName>
+        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_GTX_AS_RX_CLK">false</spirit:value>
+        <spirit:vendorExtensions>
+          <xilinx:parameterInfo>
+            <xilinx:enablement>
+              <xilinx:isEnabled xilinx:id="MODELPARAM_ENABLEMENT.C_GTX_AS_RX_CLK">false</xilinx:isEnabled>
             </xilinx:enablement>
           </xilinx:parameterInfo>
         </spirit:vendorExtensions>
@@ -901,11 +913,6 @@
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
-    <spirit:choice>
-      <spirit:name>choice_list_175cda8e</spirit:name>
-      <spirit:enumeration>7-Series</spirit:enumeration>
-      <spirit:enumeration>UltraScale / UltraScale+</spirit:enumeration>
-    </spirit:choice>
     <spirit:choice>
       <spirit:name>choice_list_28ef26b4</spirit:name>
       <spirit:enumeration>RGMII</spirit:enumeration>
@@ -915,6 +922,11 @@
       <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
+    </spirit:choice>
+    <spirit:choice>
+      <spirit:name>choice_list_b598e34e</spirit:name>
+      <spirit:enumeration>BUFR</spirit:enumeration>
+      <spirit:enumeration>BUFG</spirit:enumeration>
     </spirit:choice>
   </spirit:choices>
   <spirit:fileSets>
@@ -979,7 +991,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_mac_1g_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_50096285</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_06533c59</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1046,7 +1058,7 @@
       <spirit:file>
         <spirit:name>xgui/eth_mac_1g_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_0b3369b8</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_c851ded1</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1065,23 +1077,42 @@
       <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">eth_measurer_v1_0</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
-      <spirit:name>iface_type</spirit:name>
+      <spirit:name>C_IFACE_TYPE</spirit:name>
       <spirit:displayName>Interface Type</spirit:displayName>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.iface_type" spirit:choiceRef="choice_list_28ef26b4">GMII</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.C_IFACE_TYPE" spirit:choiceRef="choice_list_28ef26b4">GMII</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
-      <spirit:name>family_name</spirit:name>
-      <spirit:displayName>Hardware Family</spirit:displayName>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.family_name" spirit:choiceRef="choice_list_175cda8e">7-Series</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>use_clk90</spirit:name>
+      <spirit:name>C_USE_CLK90</spirit:name>
       <spirit:displayName>Enable TX clock skew</spirit:displayName>
-      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.use_clk90">false</spirit:value>
+      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.C_USE_CLK90">false</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
-            <xilinx:isEnabled xilinx:resolve="generated" xilinx:id="PARAM_ENABLEMENT.use_clk90">false</xilinx:isEnabled>
+            <xilinx:isEnabled xilinx:resolve="generated" xilinx:id="PARAM_ENABLEMENT.C_USE_CLK90">false</xilinx:isEnabled>
+          </xilinx:enablement>
+        </xilinx:parameterInfo>
+      </spirit:vendorExtensions>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_CLK_INPUT_STYLE</spirit:name>
+      <spirit:displayName>Clock buffer type</spirit:displayName>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.C_CLK_INPUT_STYLE" spirit:choiceRef="choice_list_b598e34e">BUFR</spirit:value>
+      <spirit:vendorExtensions>
+        <xilinx:parameterInfo>
+          <xilinx:enablement>
+            <xilinx:isEnabled xilinx:resolve="generated" xilinx:id="PARAM_ENABLEMENT.C_CLK_INPUT_STYLE">true</xilinx:isEnabled>
+          </xilinx:enablement>
+        </xilinx:parameterInfo>
+      </spirit:vendorExtensions>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_GTX_AS_RX_CLK</spirit:name>
+      <spirit:displayName>Use gtx_clk as TX and RX clocks</spirit:displayName>
+      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.C_GTX_AS_RX_CLK">false</spirit:value>
+      <spirit:vendorExtensions>
+        <xilinx:parameterInfo>
+          <xilinx:enablement>
+            <xilinx:isEnabled xilinx:resolve="generated" xilinx:id="PARAM_ENABLEMENT.C_GTX_AS_RX_CLK">false</xilinx:isEnabled>
           </xilinx:enablement>
         </xilinx:parameterInfo>
       </spirit:vendorExtensions>
@@ -1117,16 +1148,16 @@
       </xilinx:taxonomies>
       <xilinx:displayName>1G Ethernet MAC</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>10</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-10-05T23:10:14Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>11</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-10-26T02:41:51Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="6c81efd6"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="4e0967cd"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="d5e4fb47"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="5274df02"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="626a95aa"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="dad313b4"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="58cc9338"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="e1ce4e1f"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="b0c22a53"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
