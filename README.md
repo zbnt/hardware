@@ -18,7 +18,7 @@ This repository includes block designs for the following boards:
 The following boards will be supported in a later version:
 
 * _(In progress)_ [NetFPGA-1G-CML](https://store.digilentinc.com/netfpga-1g-cml-kintex-7-fpga-development-board)
-* _(Planned)_ [Ultra96](https://www.96boards.org/product/ultra96) with [96B Quad Ethernet Mezzanine](https://opsero.com/product/96b-quad-ethernet-mezzanine)
+* _(In progress)_ [Ultra96](https://www.96boards.org/product/ultra96) with [96B Quad Ethernet Mezzanine](https://opsero.com/product/96b-quad-ethernet-mezzanine)
 
 ### Software
 
