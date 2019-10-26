@@ -41,3 +41,10 @@ set_property -dict {PACKAGE_PIN T3 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports
 set_property -dict {PACKAGE_PIN T2 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports eth96_p3_rxn]
 set_property -dict {PACKAGE_PIN J5 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p3_txp]
 set_property -dict {PACKAGE_PIN H5 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p3_txn]
+
+# Unused lanes
+
+set_property -dict {PACKAGE_PIN J3 IOSTANDARD DIFF_SSTL12} [get_ports eth96_unused_rxp]
+set_property -dict {PACKAGE_PIN J2 IOSTANDARD DIFF_SSTL12} [get_ports eth96_unused_rxn]
+set_property -dict {PACKAGE_PIN R4 IOSTANDARD DIFF_SSTL12} [get_ports eth96_unused_txp]
+set_property -dict {PACKAGE_PIN T4 IOSTANDARD DIFF_SSTL12} [get_ports eth96_unused_txn]
