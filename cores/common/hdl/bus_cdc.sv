@@ -1,18 +1,19 @@
 
-module bus_cdc #(parameter width, parameter stages = 2)
+module bus_cdc #(parameter width, parameter stages = 2, parameter ext_trigger = 0)
 (
 	input logic clk_src,
 	input logic clk_dst,
+	input logic trigger,
 	input logic [width-1:0] data_in,
 	output logic [width-1:0] data_out
 );
 	// source clock domain
 
-	logic [width-1:0] bus_sync_in;
+	(* DONT_TOUCH = "TRUE" *) logic [width-1:0] bus_sync_in;
 	logic bus_sync_ack;
 
 	always_ff @(posedge clk_src) begin
-		if(~bus_sync_ack) begin
+		if(~bus_sync_ack && (trigger || ~ext_trigger)) begin
 			bus_sync_in <= data_in;
 		end
 	end
@@ -38,7 +39,7 @@ module bus_cdc #(parameter width, parameter stages = 2)
 	(
 		.clk_src(clk_src),
 		.clk_dst(clk_dst),
-		.data_in(~bus_sync_ack),
+		.data_in(~bus_sync_ack && (trigger || ~ext_trigger)),
 		.data_out(bus_sync_ready)
 	);
 

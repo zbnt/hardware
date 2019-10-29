@@ -7,7 +7,7 @@ module sync_ffs #(parameter width, parameter stages = 2)
 	output logic [width-1:0] data_out
 );
 	(* ASYNC_REG = "TRUE" *) logic [width-1:0] sync_stages[0:stages-1];
-	logic [width-1:0] sync_stages_in;
+	(* DONT_TOUCH = "TRUE" *) logic [width-1:0] sync_stages_in;
 
 	// source clock domain
 
