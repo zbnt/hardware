@@ -356,7 +356,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>aa300be3</spirit:value>
+            <spirit:value>6e21c7b9</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -372,7 +372,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>37ad5a0c</spirit:value>
+            <spirit:value>d8c07119</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -386,7 +386,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>c851ded1</spirit:value>
+            <spirit:value>90ab290e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -400,7 +400,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>488987a5</spirit:value>
+            <spirit:value>4a4550d5</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -903,6 +903,18 @@
         <spirit:displayName>C Gtx As Rx Clk</spirit:displayName>
         <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_GTX_AS_RX_CLK">false</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>IDELAY_VALUE</spirit:name>
+        <spirit:displayName>Idelay Value</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.IDELAY_VALUE">12</spirit:value>
+        <spirit:vendorExtensions>
+          <xilinx:parameterInfo>
+            <xilinx:enablement>
+              <xilinx:isEnabled xilinx:id="MODELPARAM_ENABLEMENT.IDELAY_VALUE">false</xilinx:isEnabled>
+            </xilinx:enablement>
+          </xilinx:parameterInfo>
+        </spirit:vendorExtensions>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
@@ -984,7 +996,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_mac_1g_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_06533c59</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_d9d0a273</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1051,7 +1063,7 @@
       <spirit:file>
         <spirit:name>xgui/eth_mac_1g_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_c851ded1</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_90ab290e</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1110,6 +1122,18 @@
         </xilinx:parameterInfo>
       </spirit:vendorExtensions>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>IDELAY_VALUE</spirit:name>
+      <spirit:displayName>IDELAY Value</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.IDELAY_VALUE" spirit:minimum="0" spirit:maximum="31" spirit:rangeType="long">12</spirit:value>
+      <spirit:vendorExtensions>
+        <xilinx:parameterInfo>
+          <xilinx:enablement>
+            <xilinx:isEnabled xilinx:resolve="generated" xilinx:id="PARAM_ENABLEMENT.IDELAY_VALUE">false</xilinx:isEnabled>
+          </xilinx:enablement>
+        </xilinx:parameterInfo>
+      </spirit:vendorExtensions>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -1141,16 +1165,16 @@
       </xilinx:taxonomies>
       <xilinx:displayName>1G Ethernet MAC</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>12</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-10-26T09:25:11Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>13</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-10-29T07:21:54Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="d5e4fb47"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="d3e294d7"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c44c5edf"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="626a95aa"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="8d1cd63a"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="606598e5"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="30744def"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="e9db1225"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

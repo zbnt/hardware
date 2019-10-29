@@ -11,6 +11,7 @@ proc init_gui { IPINST } {
   #Adding Group
   set Interface_options [ipgui::add_group $IPINST -name "Interface options" -parent ${Page_0}]
   ipgui::add_param $IPINST -name "C_CLK_INPUT_STYLE" -parent ${Interface_options} -widget comboBox
+  ipgui::add_param $IPINST -name "IDELAY_VALUE" -parent ${Interface_options}
   set C_USE_CLK90 [ipgui::add_param $IPINST -name "C_USE_CLK90" -parent ${Interface_options}]
   set_property tooltip {Add a 2ns delay to the TX clock output} ${C_USE_CLK90}
   ipgui::add_param $IPINST -name "C_GTX_AS_RX_CLK" -parent ${Interface_options}
@@ -73,6 +74,24 @@ proc validate_PARAM_VALUE.C_USE_CLK90 { PARAM_VALUE.C_USE_CLK90 } {
 	return true
 }
 
+proc update_PARAM_VALUE.IDELAY_VALUE { PARAM_VALUE.IDELAY_VALUE PARAM_VALUE.C_IFACE_TYPE } {
+	# Procedure called to update IDELAY_VALUE when any of the dependent parameters in the arguments change
+	
+	set IDELAY_VALUE ${PARAM_VALUE.IDELAY_VALUE}
+	set C_IFACE_TYPE ${PARAM_VALUE.C_IFACE_TYPE}
+	set values(C_IFACE_TYPE) [get_property value $C_IFACE_TYPE]
+	if { [gen_USERPARAMETER_IDELAY_VALUE_ENABLEMENT $values(C_IFACE_TYPE)] } {
+		set_property enabled true $IDELAY_VALUE
+	} else {
+		set_property enabled false $IDELAY_VALUE
+	}
+}
+
+proc validate_PARAM_VALUE.IDELAY_VALUE { PARAM_VALUE.IDELAY_VALUE } {
+	# Procedure called to validate IDELAY_VALUE
+	return true
+}
+
 proc update_PARAM_VALUE.C_IFACE_TYPE { PARAM_VALUE.C_IFACE_TYPE } {
 	# Procedure called to update C_IFACE_TYPE when any of the dependent parameters in the arguments change
 }
@@ -101,5 +120,10 @@ proc update_MODELPARAM_VALUE.C_CLK_INPUT_STYLE { MODELPARAM_VALUE.C_CLK_INPUT_ST
 proc update_MODELPARAM_VALUE.C_GTX_AS_RX_CLK { MODELPARAM_VALUE.C_GTX_AS_RX_CLK PARAM_VALUE.C_GTX_AS_RX_CLK } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_GTX_AS_RX_CLK}] ${MODELPARAM_VALUE.C_GTX_AS_RX_CLK}
+}
+
+proc update_MODELPARAM_VALUE.IDELAY_VALUE { MODELPARAM_VALUE.IDELAY_VALUE PARAM_VALUE.IDELAY_VALUE } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.IDELAY_VALUE}] ${MODELPARAM_VALUE.IDELAY_VALUE}
 }
 

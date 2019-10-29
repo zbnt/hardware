@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STYLE = "BUFR", parameter C_USE_CLK90 = 0, parameter C_GTX_AS_RX_CLK = 0)
+module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STYLE = "BUFR", parameter C_USE_CLK90 = 0, parameter C_GTX_AS_RX_CLK = 0, parameter IDELAY_VALUE = 12)
 (
 	// Clock signals
 
@@ -106,29 +106,34 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 			.ifg_delay(8'd12)
 		);
 
-		for(genvar i = 0; i < 4; i = i + 1) begin
+		if(IDELAY_VALUE > 0) begin
+			for(genvar i = 0; i < 4; i = i + 1) begin
+				IDELAYE2
+				#(
+					.IDELAY_TYPE("FIXED"),
+					.IDELAY_VALUE(IDELAY_VALUE)
+				)
+				rd_idelay_inst
+				(
+					.IDATAIN(rgmii_rd[i]),
+					.DATAOUT(rgmii_rd_delayed[i])
+				);
+			end
+
 			IDELAYE2
 			#(
 				.IDELAY_TYPE("FIXED"),
-				.IDELAY_VALUE(12)
+				.IDELAY_VALUE(IDELAY_VALUE)
 			)
-			rd_idelay_inst
+			rx_ctl_idelay_inst
 			(
-				.IDATAIN(rgmii_rd[i]),
-				.DATAOUT(rgmii_rd_delayed[i])
+				.IDATAIN(rgmii_rx_ctl),
+				.DATAOUT(rgmii_rx_ctl_delayed)
 			);
+		end else begin
+			assign rgmii_rd_delayed = rgmii_rd;
+			assign rgmii_rx_ctl_delayed = rgmii_rx_ctl;
 		end
-
-		IDELAYE2
-		#(
-			.IDELAY_TYPE("FIXED"),
-			.IDELAY_VALUE(12)
-		)
-		rx_ctl_idelay_inst
-		(
-			.IDATAIN(rgmii_rx_ctl),
-			.DATAOUT(rgmii_rx_ctl_delayed)
-		);
 
 		assign gmii_txd = 8'd0;
 		assign gmii_tx_clk = 1'b0;
