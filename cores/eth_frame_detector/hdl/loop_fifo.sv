@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 512)
+module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 (
 	input logic m_aclk,
 	input logic s_aclk,
@@ -12,11 +12,13 @@ module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 512)
 
 	input logic [7:0] s_axis_tdata,
 	input logic s_axis_tlast,
+	input logic s_axis_tuser,
 	input logic s_axis_tvalid,
 	output logic s_axis_tready,
 
 	output logic [7:0] m_axis_tdata,
 	output logic m_axis_tlast,
+	output logic m_axis_tuser,
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
 );
@@ -28,15 +30,15 @@ module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 512)
 		.FIFO_DEPTH(C_LOOP_FIFO_SIZE),
 		.FIFO_MEMORY_TYPE("block"),
 		.PACKET_FIFO("false"),
-		.PROG_EMPTY_THRESH(384),
-		.PROG_FULL_THRESH(448),
+		.PROG_EMPTY_THRESH(10),
+		.PROG_FULL_THRESH(10),
 		.RD_DATA_COUNT_WIDTH(1),
 		.RELATED_CLOCKS(0),
 		.TDATA_WIDTH(8),
 		.TDEST_WIDTH(1),
 		.TID_WIDTH(1),
 		.TUSER_WIDTH(1),
-		.USE_ADV_FEATURES("0202"),
+		.USE_ADV_FEATURES("1000"),
 		.WR_DATA_COUNT_WIDTH(1)
 	)
 	U0
@@ -50,11 +52,13 @@ module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 512)
 
 		.s_axis_tdata(s_axis_tdata),
 		.s_axis_tlast(s_axis_tlast),
+		.s_axis_tuser(s_axis_tuser),
 		.s_axis_tvalid(s_axis_tvalid),
 		.s_axis_tready(s_axis_tready),
 
 		.m_axis_tdata(m_axis_tdata),
 		.m_axis_tlast(m_axis_tlast),
+		.m_axis_tuser(m_axis_tuser),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready),
 

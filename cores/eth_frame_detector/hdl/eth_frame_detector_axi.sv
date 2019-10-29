@@ -79,6 +79,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 
 	output logic srst,
 	output logic [7:0] match_en,
+	output logic mode,
 
 	// Status
 
@@ -176,6 +177,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 			enable <= 1'b0;
 			srst <= srst & rst_n;
 			match_en <= 8'd0;
+			mode <= 1'b0;
 
 			last_match_a_id <= 2'd0;
 			last_match_b_id <= 2'd0;
@@ -197,6 +199,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 				if(write_addr[15:$clog2(C_AXI_WIDTH/8)] == '0) begin
 					enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 					match_en <= (s_axi_wdata[9:2] & write_mask[9:2]) | (match_en & ~write_mask[9:2]);
+					mode <= (s_axi_wdata[10] & write_mask[10]) | (mode & ~write_mask[10]);
 				end
 
 				// Special FIFO_POP register
@@ -281,7 +284,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[5:2])
-						4'h0: read_value = {22'd0, match_en, srst, enable};
+						4'h0: read_value = {21'd0, mode, match_en, srst, enable};
 						4'h1: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy};
 						4'h2: read_value = 32'd0;
 						4'h3: read_value = 32'd0;
@@ -295,7 +298,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[5:3])
-						3'd0: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
+						3'd0: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 21'd0, mode, match_en, srst, enable};
 						3'd1: read_value = 64'd0;
 						3'd2: read_value = fifo_time;
 						3'd3: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir};
@@ -304,7 +307,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 					endcase
 				end else if(C_AXI_WIDTH == 128) begin
 					case(s_axi_araddr[5:4])
-						2'd0: read_value = {{(96-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 22'd0, match_en, srst, enable};
+						2'd0: read_value = {{(96-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 21'd0, mode, match_en, srst, enable};
 						2'd1: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir, fifo_time};
 						2'd2: read_value = {32'd0, fifo_ext_data[127:32]};
 					endcase

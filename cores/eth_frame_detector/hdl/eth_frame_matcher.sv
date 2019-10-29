@@ -27,7 +27,7 @@ module eth_frame_matcher
 	// M_AXIS : Modified data
 
 	output logic [7:0] m_axis_tdata,
-	output logic m_axis_tuser,
+	output logic [1:0] m_axis_tuser,
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid,
 
@@ -56,6 +56,7 @@ module eth_frame_matcher
 	logic [4:0] frame_match_ext_num;
 	logic [127:0] frame_match_ext_data;
 
+	logic frame_modified;
 	logic [3:0] repl_req;
 	logic [7:0] repl_data[0:3];
 	logic [7:0] lfsr_val;
@@ -89,6 +90,7 @@ module eth_frame_matcher
 			frame_match_ext_data <= pattern_match_ext_data;
 		end
 
+		frame_modified <= ((|repl_req) | frame_modified) & ~frame_end;
 		frame_end <= axis_valid_q & axis_last_q;
 
 		axis_data_q <= s_axis_tdata;
@@ -160,20 +162,27 @@ module eth_frame_matcher
 		end
 	end
 
-	always_comb begin
-		m_axis_tdata = axis_data_q;
-		m_axis_tuser = axis_user_q;
-		m_axis_tlast = axis_last_q;
-		m_axis_tvalid = axis_valid_q;
+	always_ff @(posedge s_axis_clk) begin
+		if(~rst_n_cdc) begin
+			m_axis_tdata <= 8'd0;
+			m_axis_tuser <= 2'd0;
+			m_axis_tlast <= 1'b0;
+			m_axis_tvalid <= 1'b0;
+		end else begin
+			m_axis_tdata <= axis_data_q;
+			m_axis_tuser <= {frame_modified | (|repl_req), axis_user_q};
+			m_axis_tlast <= axis_last_q;
+			m_axis_tvalid <= axis_valid_q;
 
-		if(repl_req[0]) begin
-			m_axis_tdata = repl_data[0];
-		end else if(repl_req[1]) begin
-			m_axis_tdata = repl_data[1];
-		end else if(repl_req[2]) begin
-			m_axis_tdata = repl_data[2];
-		end else if(repl_req[3]) begin
-			m_axis_tdata = repl_data[3];
+			if(repl_req[0]) begin
+				m_axis_tdata <= repl_data[0];
+			end else if(repl_req[1]) begin
+				m_axis_tdata <= repl_data[1];
+			end else if(repl_req[2]) begin
+				m_axis_tdata <= repl_data[2];
+			end else if(repl_req[3]) begin
+				m_axis_tdata <= repl_data[3];
+			end
 		end
 	end
 

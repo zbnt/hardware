@@ -13,7 +13,7 @@
 	regarding the matched patterns.
 */
 
-module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 2048, parameter C_LOOP_FIFO_SIZE = 512)
+module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 2048, parameter C_LOOP_FIFO_SIZE = 2048)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -89,7 +89,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 );
 	// axi4_lite registers
 
-	logic srst;
+	logic srst, mode;
 	logic [7:0] match_en;
 	logic [3:0] match_a, match_b;
 	logic [1:0] match_a_id, match_b_id;
@@ -186,6 +186,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 
 		.srst(srst),
 		.match_en(match_en),
+		.mode(mode),
 
 		// Status
 
@@ -206,13 +207,16 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 	// Interface loop, transmit frames received from one interface through the other
 
 	logic [7:0] s_axis_a_mod_tdata, s_axis_b_mod_tdata;
-	logic s_axis_a_mod_tuser, s_axis_a_mod_tlast, s_axis_a_mod_tvalid;
-	logic s_axis_b_mod_tuser, s_axis_b_mod_tlast, s_axis_b_mod_tvalid;
+	logic [1:0] s_axis_a_mod_tuser, s_axis_b_mod_tuser;
+	logic s_axis_a_mod_tlast, s_axis_a_mod_tvalid;
+	logic s_axis_b_mod_tlast, s_axis_b_mod_tvalid;
 
 	eth_frame_loop #(C_LOOP_FIFO_SIZE) U1
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
+
+		.mode(mode),
 
 		// M_AXIS_A
 
@@ -238,6 +242,8 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
+
+		.mode(mode),
 
 		// M_AXIS_B
 

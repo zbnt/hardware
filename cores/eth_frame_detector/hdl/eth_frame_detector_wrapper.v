@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 2048, parameter C_LOOP_FIFO_SIZE = 512)
+module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 2048, parameter C_LOOP_FIFO_SIZE = 65536)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
