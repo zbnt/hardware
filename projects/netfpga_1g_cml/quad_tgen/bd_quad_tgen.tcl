@@ -310,8 +310,8 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   # Create instance: mac, and set properties
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
-   CONFIG.iface_type {RGMII} \
-   CONFIG.use_clk90 {true} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
  ] $mac
 
   # Create instance: stats, and set properties
@@ -395,8 +395,8 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   # Create instance: mac, and set properties
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
-   CONFIG.iface_type {RGMII} \
-   CONFIG.use_clk90 {true} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
  ] $mac
 
   # Create instance: stats, and set properties
@@ -480,8 +480,8 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   # Create instance: mac, and set properties
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
-   CONFIG.iface_type {RGMII} \
-   CONFIG.use_clk90 {true} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
  ] $mac
 
   # Create instance: stats, and set properties
@@ -565,8 +565,8 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   # Create instance: mac, and set properties
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
-   CONFIG.iface_type {RGMII} \
-   CONFIG.use_clk90 {true} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
  ] $mac
 
   # Create instance: stats, and set properties
