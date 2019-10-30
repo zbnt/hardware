@@ -356,7 +356,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>6e21c7b9</spirit:value>
+            <spirit:value>9900c7ba</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -372,7 +372,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>d8c07119</spirit:value>
+            <spirit:value>47fe57d9</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -386,7 +386,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>90ab290e</spirit:value>
+            <spirit:value>fbb5fd1a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -929,9 +929,11 @@
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
     </spirit:choice>
     <spirit:choice>
-      <spirit:name>choice_list_b598e34e</spirit:name>
-      <spirit:enumeration>BUFR</spirit:enumeration>
-      <spirit:enumeration>BUFG</spirit:enumeration>
+      <spirit:name>choice_pairs_bcd6c585</spirit:name>
+      <spirit:enumeration spirit:text="BUFIO - BUFR">BUFR</spirit:enumeration>
+      <spirit:enumeration spirit:text="BUFIO - BUFG">BUFIO</spirit:enumeration>
+      <spirit:enumeration spirit:text="BUFG - BUFG">BUFG</spirit:enumeration>
+      <spirit:enumeration spirit:text="None">NONE</spirit:enumeration>
     </spirit:choice>
   </spirit:choices>
   <spirit:fileSets>
@@ -996,7 +998,7 @@
       <spirit:file>
         <spirit:name>hdl/eth_mac_1g_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_d9d0a273</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_a4ed3615</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1063,7 +1065,7 @@
       <spirit:file>
         <spirit:name>xgui/eth_mac_1g_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_90ab290e</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_fbb5fd1a</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1100,8 +1102,8 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>C_CLK_INPUT_STYLE</spirit:name>
-      <spirit:displayName>Clock buffer type</spirit:displayName>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.C_CLK_INPUT_STYLE" spirit:choiceRef="choice_list_b598e34e">BUFR</spirit:value>
+      <spirit:displayName>RX clock buffers</spirit:displayName>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.C_CLK_INPUT_STYLE" spirit:choiceRef="choice_pairs_bcd6c585">BUFR</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -1165,16 +1167,16 @@
       </xilinx:taxonomies>
       <xilinx:displayName>1G Ethernet MAC</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>13</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-10-29T07:21:54Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>14</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2019-10-30T09:51:33Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="d5e4fb47"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c44c5edf"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="b54d4885"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="626a95aa"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="30744def"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="e9db1225"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="823ad54f"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="57e33f2b"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

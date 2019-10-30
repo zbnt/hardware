@@ -10,7 +10,8 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "C_IFACE_TYPE" -parent ${Page_0} -widget comboBox
   #Adding Group
   set Interface_options [ipgui::add_group $IPINST -name "Interface options" -parent ${Page_0}]
-  ipgui::add_param $IPINST -name "C_CLK_INPUT_STYLE" -parent ${Interface_options} -widget comboBox
+  set C_CLK_INPUT_STYLE [ipgui::add_param $IPINST -name "C_CLK_INPUT_STYLE" -parent ${Interface_options} -widget comboBox]
+  set_property tooltip {Clock buffer for the IDDR instances and the rx_clk output, respectively.} ${C_CLK_INPUT_STYLE}
   ipgui::add_param $IPINST -name "IDELAY_VALUE" -parent ${Interface_options}
   set C_USE_CLK90 [ipgui::add_param $IPINST -name "C_USE_CLK90" -parent ${Interface_options}]
   set_property tooltip {Add a 2ns delay to the TX clock output} ${C_USE_CLK90}
