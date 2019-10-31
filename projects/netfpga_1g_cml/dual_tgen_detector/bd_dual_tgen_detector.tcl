@@ -136,7 +136,6 @@ oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1\
 oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1\
 xilinx.com:ip:axi_pcie:2.9\
 xilinx.com:ip:util_ds_buf:2.1\
-xilinx.com:ip:fifo_generator:13.2\
 "
 
    set list_ips_missing ""
@@ -214,35 +213,10 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir I time_running
 
-  # Create instance: bufg_inst, and set properties
-  set bufg_inst [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 bufg_inst ]
-  set_property -dict [ list \
-   CONFIG.C_BUF_TYPE {BUFG} \
- ] $bufg_inst
-
-  # Create instance: fifo, and set properties
-  set fifo [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo ]
-  set_property -dict [ list \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TUSER_WIDTH {1} \
- ] $fifo
-
   # Create instance: mac, and set properties
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac
@@ -256,18 +230,16 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   # Create interface connections
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins S_AXI] [get_bd_intf_pins stats/S_AXI]
   connect_bd_intf_net -intf_net eth3_mac_RGMII [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/RGMII]
-  connect_bd_intf_net -intf_net fifo_M_AXIS [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins fifo/M_AXIS]
+  connect_bd_intf_net -intf_net fifo_M_AXIS [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins mac/RX_AXIS]
   connect_bd_intf_net -intf_net [get_bd_intf_nets fifo_M_AXIS] [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins stats/AXIS_RX]
-  connect_bd_intf_net -intf_net mac_RX_AXIS [get_bd_intf_pins fifo/S_AXIS] [get_bd_intf_pins mac/RX_AXIS]
   connect_bd_intf_net -intf_net measurer_M_AXIS_LOOP [get_bd_intf_pins TX_AXIS] [get_bd_intf_pins mac/TX_AXIS]
   connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_LOOP] [get_bd_intf_pins TX_AXIS] [get_bd_intf_pins stats/AXIS_TX]
 
   # Create port connections
-  connect_bd_net -net bufg_inst_BUFG_O [get_bd_pins clk_rx] [get_bd_pins bufg_inst/BUFG_O] [get_bd_pins stats/clk_rx]
+  connect_bd_net -net bufg_inst_BUFG_O [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
   connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx]
-  connect_bd_net -net mac_rx_clk [get_bd_pins bufg_inst/BUFG_I] [get_bd_pins fifo/s_aclk] [get_bd_pins mac/rx_clk]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running]
 
@@ -323,35 +295,10 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir I time_running
 
-  # Create instance: bufg_inst, and set properties
-  set bufg_inst [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 bufg_inst ]
-  set_property -dict [ list \
-   CONFIG.C_BUF_TYPE {BUFG} \
- ] $bufg_inst
-
-  # Create instance: fifo, and set properties
-  set fifo [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo ]
-  set_property -dict [ list \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TUSER_WIDTH {1} \
- ] $fifo
-
   # Create instance: mac, and set properties
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac
@@ -365,17 +312,15 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   # Create interface connections
   connect_bd_intf_net -intf_net Conn6 [get_bd_intf_pins S_AXI] [get_bd_intf_pins stats/S_AXI]
   connect_bd_intf_net -intf_net eth2_mac_RGMII [get_bd_intf_pins rgmii] [get_bd_intf_pins mac/RGMII]
-  connect_bd_intf_net -intf_net eth2_mac_RX_AXIS [get_bd_intf_pins fifo/S_AXIS] [get_bd_intf_pins mac/RX_AXIS]
-  connect_bd_intf_net -intf_net fifo_M_AXIS [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins fifo/M_AXIS]
+  connect_bd_intf_net -intf_net fifo_M_AXIS [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins mac/RX_AXIS]
   connect_bd_intf_net -intf_net [get_bd_intf_nets fifo_M_AXIS] [get_bd_intf_pins RX_AXIS] [get_bd_intf_pins stats/AXIS_RX]
   connect_bd_intf_net -intf_net measurer_M_AXIS_MAIN [get_bd_intf_pins AXIS_TX] [get_bd_intf_pins mac/TX_AXIS]
   connect_bd_intf_net -intf_net [get_bd_intf_nets measurer_M_AXIS_MAIN] [get_bd_intf_pins AXIS_TX] [get_bd_intf_pins stats/AXIS_TX]
 
   # Create port connections
-  connect_bd_net -net bufg_inst_BUFG_O [get_bd_pins clk_rx] [get_bd_pins bufg_inst/BUFG_O] [get_bd_pins stats/clk_rx]
+  connect_bd_net -net bufg_inst_BUFG_O [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net clk_125M_90_1 [get_bd_pins clk_125M_90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net eth2_mac_rx_clk [get_bd_pins bufg_inst/BUFG_I] [get_bd_pins fifo/s_aclk] [get_bd_pins mac/rx_clk]
   connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins mac/gtx_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins stats/rst_n]
   connect_bd_net -net time_running_0_1 [get_bd_pins time_running] [get_bd_pins stats/time_running]
