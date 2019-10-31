@@ -26,13 +26,13 @@ module transport_checksum
 	logic [15:0] checksum_next;
 	logic [16:0] checksum_sum;
 
-	logic header_valid;
-	logic [15:0] header_offset;
+	logic frame_end, header_valid, ignore_tlast;
+	logic [15:0] checksum_data_begin, checksum_data_end;
 
 	enum logic [1:0] {ETH_UNKNOWN, IPV4, IPV6} eth_proto;
 
 	always_ff @(posedge clk) begin
-		if(~rst_n | checksum_done) begin
+		if(~rst_n | frame_end) begin
 			count <= 16'd0;
 
 			last_byte <= 8'd0;
@@ -41,22 +41,29 @@ module transport_checksum
 			checksum_orig <= 16'd0;
 			checksum_done <= 1'b0;
 
+			frame_end <= 1'b0;
 			header_valid <= 1'b0;
-			header_offset <= 16'd0;
+			ignore_tlast <= 1'b0;
+			checksum_data_begin <= 16'd0;
+			checksum_data_end <= 16'd0;
 
 			eth_proto <= ETH_UNKNOWN;
 		end else if(s_axis_tvalid) begin
 			count <= count + 16'd1;
 			last_byte <= s_axis_tdata;
+			frame_end <= s_axis_tlast;
 
-			if(s_axis_tlast) begin
+			if(s_axis_tlast || count == checksum_data_end && checksum_data_end != 16'd0) begin
 				if(header_valid) begin
 					checksum <= checksum_next;
 				end else begin
 					checksum <= 16'd0;
 				end
 
-				checksum_done <= 1'b1;
+				checksum_done <= ~ignore_tlast;
+				ignore_tlast <= 1'b1;
+			end else begin
+				checksum_done <= 1'b0;
 			end
 
 			if(count == 16'd13) begin
@@ -64,6 +71,8 @@ module transport_checksum
 					eth_proto <= IPV4;
 				end else if(last_byte == 8'h86 && s_axis_tdata == 16'hDD) begin
 					eth_proto <= IPV6;
+				end else begin
+					checksum_data_end <= 16'd14;
 				end
 			end
 
@@ -76,7 +85,7 @@ module transport_checksum
 					// subtract IPv4 header length
 					if(count == 16'd14) begin
 						checksum <= ~{2'd0, s_axis_tdata[3:0], 10'd0};
-						header_offset <= {10'd0, s_axis_tdata[3:0], 2'd0};
+						checksum_data_begin <= {10'd0, s_axis_tdata[3:0], 2'd0};
 					end
 
 					// pseudoheader
@@ -84,27 +93,34 @@ module transport_checksum
 						checksum <= checksum_next;
 					end
 
+					// offset of last IPv4 data byte
+					if(count == 16'd17) begin
+						checksum_data_end <= {last_byte, s_axis_tdata} + 16'd13;
+					end
+
 					// detect protocol, set TCP/UDP/ICMP header offset
 					if(count == 16'd23) begin
 						if(s_axis_tdata == 8'h06) begin
 							// TCP
-							checksum_pos <= header_offset + 16'd31;
+							checksum_pos <= checksum_data_begin + 16'd31;
 							header_valid <= 1'b1;
 						end else if(s_axis_tdata == 8'h11) begin
 							// UDP
-							checksum_pos <= header_offset + 16'd21;
+							checksum_pos <= checksum_data_begin + 16'd21;
 							header_valid <= 1'b1;
 						end else if(s_axis_tdata == 8'h01) begin
 							// ICMP
-							checksum_pos <= header_offset + 16'd17;
+							checksum_pos <= checksum_data_begin + 16'd17;
 							header_valid <= 1'b1;
+						end else begin
+							checksum_data_end <= 16'd24;
 						end
 
-						header_offset <= header_offset + 16'd15;
+						checksum_data_begin <= checksum_data_begin + 16'd15;
 					end
 
 					// data, excluding checksum field
-					if(count >= header_offset && count[0] && header_valid) begin
+					if(count >= checksum_data_begin && count[0] && header_valid) begin
 						if(count != checksum_pos) begin
 							checksum <= checksum_next;
 						end else begin
@@ -117,6 +133,11 @@ module transport_checksum
 					// pseudoheader
 					if(count == 16'd19 || count == 16'd20 || (count >= 16'd23 && count <= 16'd53 && count[0])) begin
 						checksum <= checksum_next;
+					end
+
+					// offset of last IPv6 data byte
+					if(count == 16'd19) begin
+						checksum_data_end <= {last_byte, s_axis_tdata} + 16'd53;
 					end
 
 					// detect protocol, set TCP/UDP/ICMPv6 header offset
@@ -134,9 +155,11 @@ module transport_checksum
 							// ICMPv6
 							checksum_pos <= 16'd57;
 							header_valid <= 1'b1;
+						end else begin
+							checksum_data_end <= 16'd21;
 						end
 
-						header_offset <= header_offset + 16'd15;
+						checksum_data_begin <= checksum_data_begin + 16'd15;
 					end
 
 					// data, excluding checksum field
@@ -153,14 +176,14 @@ module transport_checksum
 	end
 
 	always_comb begin
-		if(s_axis_tlast & ~count[0]) begin
+		if((s_axis_tlast || count == checksum_data_end && checksum_data_end != 16'd0) && ~count[0]) begin
 			// add padding 0 if needed
 			checksum_sum = {1'b0, checksum} + {9'd0, s_axis_tdata};
 		end else begin
 			checksum_sum = {1'b0, checksum} + {1'b0, s_axis_tdata, last_byte};
 		end
 
-		if(s_axis_tlast) begin
+		if(s_axis_tlast || count == checksum_data_end && checksum_data_end != 16'd0) begin
 			// one's complement, avoid all-0 checksum
 			if(&checksum_sum[16:1] && ~checksum_sum[0]) begin
 				checksum_next = 16'hFFFF;
