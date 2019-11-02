@@ -39,6 +39,7 @@ module eth_frame_loop #(parameter C_LOOP_FIFO_SIZE = 2048)
 	logic checksum_done, checksum_ready;
 
 	logic [1:0] overflow;
+	logic overflow_ack;
 	logic s_axis_tready, s_axis_tvalid_last;
 
 	transport_checksum U0
@@ -53,29 +54,39 @@ module eth_frame_loop #(parameter C_LOOP_FIFO_SIZE = 2048)
 
 		.s_axis_tdata(s_axis_tdata),
 		.s_axis_tlast(s_axis_tlast | (s_axis_tvalid & ~s_axis_tready) | (~s_axis_tvalid_last & s_axis_tvalid & ~mode_s_q)),
-		.s_axis_tvalid(mode_s_q ? (s_axis_tvalid && overflow == 2'd0) : (~s_axis_tvalid_last & s_axis_tvalid))
+		.s_axis_tvalid(((mode_s_q & s_axis_tvalid) | (~mode_s_q & ~s_axis_tvalid_last & s_axis_tvalid)) && overflow == 2'd0)
 	);
 
 	always_ff @(posedge s_axis_clk) begin
 		if(~rst_n_s) begin
 			mode_s_q <= 1'b0;
 			overflow <= 2'b0;
+			overflow_ack <= 1'b0;
 			s_axis_tvalid_last <= 1'b0;
 		end else begin
 			s_axis_tvalid_last <= s_axis_tvalid;
 
-			if(s_axis_tvalid) begin
-				if(~s_axis_tready) begin
-					overflow[0] <= 1'b1;
-				end else if(s_axis_tlast) begin
-					overflow[0] <= 1'b0;
-				end
+			if(s_axis_tvalid & ~s_axis_tready) begin
+				overflow[0] <= 1'b1;
+				overflow_ack <= 1'b0;
 			end
 
 			if(~checksum_ready) begin
 				overflow[1] <= 1'b1;
-			end else if(s_axis_tvalid & s_axis_tlast) begin
-				overflow[1] <= 1'b0;
+			end
+
+			if(s_axis_tvalid_last & ~s_axis_tvalid) begin
+				if(s_axis_tready & overflow_ack) begin
+					overflow[0] <= 1'b0;
+				end
+
+				if(checksum_ready) begin
+					overflow[1] <= 1'b0;
+				end
+			end
+
+			if(s_axis_tready & overflow[0]) begin
+				overflow_ack <= 1'b1;
 			end
 
 			if(~s_axis_tvalid) begin
@@ -108,6 +119,10 @@ module eth_frame_loop #(parameter C_LOOP_FIFO_SIZE = 2048)
 
 			m_fifo_csum_tready <= 1'b0;
 			m_fifo_frame_tready <= 1'b0;
+
+			checksum_m <= 16'd0;
+			checksum_pos_m <= 15'd0;
+			fix_checksum_m <= 1'b0;
 		end else begin
 			if(~tx_enable) begin
 				m_fifo_csum_tready <= 1'b1;
@@ -173,12 +188,12 @@ module eth_frame_loop #(parameter C_LOOP_FIFO_SIZE = 2048)
 	(
 		.m_aclk(m_axis_clk),
 		.s_aclk(s_axis_clk),
-		.s_aresetn(1'b1),
+		.s_aresetn(rst_n_s),
 
 		.s_axis_frame_tdata(s_axis_tdata),
-		.s_axis_frame_tlast(s_axis_tlast | (s_axis_tvalid & ~s_axis_tready)),
-		.s_axis_frame_tuser(s_axis_tuser[0] | (s_axis_tvalid & ~s_axis_tready)),
-		.s_axis_frame_tvalid(s_axis_tvalid && overflow == 2'd0),
+		.s_axis_frame_tlast(s_axis_tlast | overflow[0]),
+		.s_axis_frame_tuser(s_axis_tuser[0] | overflow[0]),
+		.s_axis_frame_tvalid(((s_axis_tvalid & ~overflow[0]) | (overflow[0] & ~overflow_ack)) & ~overflow[1]),
 		.s_axis_frame_tready(s_axis_tready),
 
 		.m_axis_frame_tdata(m_fifo_frame_tdata),
@@ -188,7 +203,7 @@ module eth_frame_loop #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.m_axis_frame_tready(m_fifo_frame_tready & m_axis_tready),
 
 		.s_axis_csum_tdata({checksum, checksum_pos[15:1], s_axis_tuser[1] && mode_s_q && overflow == 2'd0}),
-		.s_axis_csum_tvalid(checksum_done),
+		.s_axis_csum_tvalid(checksum_done & ~overflow[1]),
 		.s_axis_csum_tready(checksum_ready),
 
 		.m_axis_csum_tdata(m_fifo_csum_tdata),
