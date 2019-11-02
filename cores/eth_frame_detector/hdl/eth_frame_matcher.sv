@@ -56,10 +56,13 @@ module eth_frame_matcher
 	logic [4:0] frame_match_ext_num;
 	logic [127:0] frame_match_ext_data;
 
-	logic frame_modified;
 	logic [3:0] repl_req;
 	logic [7:0] repl_data[0:3];
 	logic [7:0] lfsr_val;
+
+	logic [3:0] sum_req;
+	logic [9:0] sum_full[0:3];
+	logic [1:0] sum_carry[0:3];
 
 	always_ff @(posedge s_axis_clk) begin
 		if(~rst_n_cdc | s_axis_tlast) begin
@@ -90,7 +93,6 @@ module eth_frame_matcher
 			frame_match_ext_data <= pattern_match_ext_data;
 		end
 
-		frame_modified <= ((|repl_req) | frame_modified) & ~frame_end;
 		frame_end <= axis_valid_q & axis_last_q;
 
 		axis_data_q <= s_axis_tdata;
@@ -114,6 +116,8 @@ module eth_frame_matcher
 			end
 		end
 
+		// Replacement stage
+
 		always_comb begin
 			repl_req[i] = 1'b0;
 			repl_data[i] = 8'd0;
@@ -128,7 +132,44 @@ module eth_frame_matcher
 				end
 			end
 		end
+
+		// Addition stage
+
+		always_ff @(posedge s_axis_clk) begin
+			if(~rst_n_cdc | frame_end) begin
+				sum_carry[i] <= 2'd0;
+			end else if(sum_req[i]) begin
+				sum_carry[i] <= sum_full[i][9:8];
+			end
+		end
+
+		always_comb begin
+			sum_req[i] = 1'b0;
+			sum_full[i] = 10'd0;
+
+			if(rst_n_cdc & axis_valid_q & ~pattern_end & pattern_match[i]) begin
+				if(pattern_flags[8*i+5]) begin
+					sum_req[i] = 1'b1;
+
+					if(pattern_flags[8*i+3]) begin
+						sum_full[i] = {2'd0, lfsr_val} + {2'd0, axis_data_q};
+					end else begin
+						sum_full[i] = {2'd0, pattern_data[8*i+7:8*i]} + {2'd0, axis_data_q};
+					end
+				end else if(pattern_flags[8*i+6]) begin
+					sum_req[i] = 1'b1;
+
+					if(pattern_flags[8*i+3]) begin
+						sum_full[i] = {2'd0, lfsr_val} + {2'd0, axis_data_q} + {8'd0, sum_carry[i]};
+					end else begin
+						sum_full[i] = {2'd0, pattern_data[8*i+7:8*i]} + {2'd0, axis_data_q} + {8'd0, sum_carry[i]};
+					end
+				end
+			end
+		end
 	end
+
+	// Extraction stage
 
 	always_ff @(posedge s_axis_clk) begin
 		if(~rst_n_cdc | frame_end) begin
@@ -162,6 +203,8 @@ module eth_frame_matcher
 		end
 	end
 
+	// Output stage
+
 	always_ff @(posedge s_axis_clk) begin
 		if(~rst_n_cdc) begin
 			m_axis_tdata <= 8'd0;
@@ -170,16 +213,24 @@ module eth_frame_matcher
 			m_axis_tvalid <= 1'b0;
 		end else begin
 			m_axis_tdata <= axis_data_q;
-			m_axis_tuser <= {frame_modified | (|repl_req), axis_user_q};
+			m_axis_tuser <= {(m_axis_tuser[1] | (|repl_req) | (|sum_req)) & ~frame_end, axis_user_q};
 			m_axis_tlast <= axis_last_q;
 			m_axis_tvalid <= axis_valid_q;
 
-			if(repl_req[0]) begin
+			if(sum_req[0]) begin
+				m_axis_tdata <= sum_full[0][7:0];
+			end else if(repl_req[0]) begin
 				m_axis_tdata <= repl_data[0];
+			end else if(sum_req[1]) begin
+				m_axis_tdata <= sum_full[1][7:0];
 			end else if(repl_req[1]) begin
 				m_axis_tdata <= repl_data[1];
+			end else if(sum_req[2]) begin
+				m_axis_tdata <= sum_full[2][7:0];
 			end else if(repl_req[2]) begin
 				m_axis_tdata <= repl_data[2];
+			end else if(sum_req[3]) begin
+				m_axis_tdata <= sum_full[3][7:0];
 			end else if(repl_req[3]) begin
 				m_axis_tdata <= repl_data[3];
 			end
