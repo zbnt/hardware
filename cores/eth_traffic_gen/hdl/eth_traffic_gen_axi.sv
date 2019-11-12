@@ -56,7 +56,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 	input logic [1:0] tx_state,
 	input logic [10:0] tx_ptr,
 
-	output logic [11:0] frame_size,
+	output logic [15:0] frame_size,
 	output logic [31:0] frame_delay,
 
 	output logic use_burst,
@@ -133,7 +133,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			srst <= srst & rst_n;
 			use_burst <= 1'b0;
 
-			frame_size <= 12'd60;
+			frame_size <= 16'd60;
 			frame_delay <= 32'd12;
 
 			burst_on_time <= 16'd0;
@@ -203,7 +203,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						end
 
 						3'd2: begin
-							frame_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (frame_size & ~write_mask[11:0]);
+							frame_size <= (s_axi_wdata[15:0] & write_mask[15:0]) | (frame_size & ~write_mask[15:0]);
 						end
 
 						3'd3: begin
@@ -229,7 +229,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 						end
 
 						2'd1: begin
-							frame_size <= (s_axi_wdata[11:0] & write_mask[11:0]) | (frame_size & ~write_mask[11:0]);
+							frame_size <= (s_axi_wdata[15:0] & write_mask[15:0]) | (frame_size & ~write_mask[15:0]);
 							frame_delay <= (s_axi_wdata[63:32] & write_mask[63:32]) | (frame_delay & ~write_mask[63:32]);
 						end
 
@@ -247,7 +247,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 							use_burst <= (s_axi_wdata[2] & write_mask[2]) | (use_burst & ~write_mask[2]);
 							lfsr_seed_req <= (s_axi_wdata[3] & write_mask[3]) | (lfsr_seed_req & ~write_mask[3]);
 
-							frame_size <= (s_axi_wdata[75:64] & write_mask[75:64]) | (frame_size & ~write_mask[75:64]);
+							frame_size <= (s_axi_wdata[79:64] & write_mask[79:64]) | (frame_size & ~write_mask[79:64]);
 							frame_delay <= (s_axi_wdata[127:96] & write_mask[127:96]) | (frame_delay & ~write_mask[127:96]);
 						end
 
@@ -291,7 +291,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 					case(s_axi_araddr[4:2])
 						3'd0: read_value = {29'd0, use_burst, srst, tx_enable};
 						3'd1: read_value = {19'd0, tx_ptr, tx_state};
-						3'd2: read_value = {20'd0, frame_size};
+						3'd2: read_value = {16'd0, frame_size};
 						3'd3: read_value = frame_delay;
 						3'd4: read_value = {burst_off_time, burst_on_time};
 						3'd5: read_value = {24'd0, lfsr_seed_val};
@@ -299,14 +299,14 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 				end else if(axi_width == 64) begin
 					case(s_axi_araddr[4:3])
 						2'd0: read_value = {19'd0, tx_ptr, tx_state, 29'd0, use_burst, srst, tx_enable};
-						2'd1: read_value = {frame_delay, 20'd0, frame_size};
+						2'd1: read_value = {frame_delay, 16'd0, frame_size};
 						2'd2: read_value = {24'd0, lfsr_seed_val, burst_off_time, burst_on_time};
 					endcase
 				end else if(axi_width == 128) begin
 					case(s_axi_araddr[4])
 						2'd0: begin
 							read_value[63:0] = {19'd0, tx_ptr, tx_state, 29'd0, use_burst, srst, tx_enable};
-							read_value[127:64] = {frame_delay, 20'd0, frame_size};
+							read_value[127:64] = {frame_delay, 16'd0, frame_size};
 						end
 
 						2'd1: begin

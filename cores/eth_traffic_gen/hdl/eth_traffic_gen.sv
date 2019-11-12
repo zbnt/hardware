@@ -58,7 +58,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	logic tx_enable;
 	logic tx_busy;
 	logic [1:0] tx_state;
-	logic [11:0] frame_size;
+	logic [15:0] frame_size;
 	logic [31:0] frame_delay;
 
 	logic use_burst, burst_enable;

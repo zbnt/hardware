@@ -16,7 +16,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	// Config
 
 	input logic enable,
-	input logic [11:0] frame_size,
+	input logic [15:0] frame_size,
 	input logic [31:0] frame_delay,
 
 	input logic lfsr_seed_req,
@@ -42,7 +42,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 );
 	enum logic [1:0] {ST_WAIT_ENABLE, ST_SEND_DATA, ST_FRAME_DELAY} state, state_next;
 	logic [31:0] count, count_next;
-	logic [11:0] fsize, fsize_next;
+	logic [15:0] fsize, fsize_next;
 
 	logic [7:0] m_axis_tdata_next;
 	logic m_axis_tlast_next;
@@ -66,7 +66,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		if(rst) begin
 			state <= ST_WAIT_ENABLE;
 			count <= 32'd0;
-			fsize <= 12'd0;
+			fsize <= 16'd0;
 
 			m_axis_tdata <= 8'd0;
 			m_axis_tlast <= 1'b0;
@@ -141,7 +141,9 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 							count_next = count + 32'd1;
 						end
 
-						if(count[$clog2(axi_width)-1:0] == '0) begin
+						if(count >= 32'd2047) begin
+							pqueue_next = '1;
+						end else if(count[$clog2(axi_width)-1:0] == '0) begin
 							pqueue_next = mem_pattern_rdata;
 						end else begin
 							pqueue_next = {1'd0, pqueue[axi_width-1:1]};
