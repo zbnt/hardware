@@ -213,7 +213,7 @@ module eth_frame_matcher
 			m_axis_tvalid <= 1'b0;
 		end else begin
 			m_axis_tdata <= axis_data_q;
-			m_axis_tuser <= {(m_axis_tuser[1] | (|repl_req) | (|sum_req)) & ~frame_end, axis_user_q};
+			m_axis_tuser <= {repl_req != '0 || sum_req != '0, axis_user_q};
 			m_axis_tlast <= axis_last_q;
 			m_axis_tvalid <= axis_valid_q;
 

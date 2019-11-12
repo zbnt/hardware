@@ -20,7 +20,7 @@ module eth_frame_loop_tx
 	// S_AXIS_FRAME
 
 	input logic [7:0] s_axis_frame_tdata,
-	input logic [1:0] s_axis_frame_tuser,
+	input logic s_axis_frame_tuser,
 	input logic s_axis_frame_tlast,
 	input logic s_axis_frame_tvalid,
 	output logic s_axis_frame_tready,

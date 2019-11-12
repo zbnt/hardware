@@ -37,20 +37,24 @@ module eth_frame_loop_rx
 	logic [15:0] checksum, checksum_pos;
 	logic checksum_done;
 	logic checksum_written, checksum_written_next;
+	logic frame_modified, frame_modified_next;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state <= ST_WAIT_FIFO;
 			checksum_written <= 1'b0;
+			frame_modified <= 1'b0;
 		end else begin
 			state <= state_next;
 			checksum_written <= checksum_written_next;
+			frame_modified <= frame_modified_next;
 		end
 	end
 
 	always_comb begin
 		state_next = state;
 		checksum_written_next = checksum_written;
+		frame_modified_next = frame_modified;
 
 		m_axis_frame_tdata = 8'd0;
 		m_axis_frame_tuser = 1'b0;
@@ -73,6 +77,7 @@ module eth_frame_loop_rx
 							state_next = ST_TX_MODE_0;
 							m_axis_csum_tvalid = 1'b1;
 							checksum_written_next = 1'b1;
+							frame_modified_next = s_axis_tuser[1];
 						end else begin
 							state_next = ST_TX_MODE_1;
 							checksum_written_next = 1'b0;
@@ -100,8 +105,12 @@ module eth_frame_loop_rx
 				m_axis_frame_tlast = s_axis_tlast;
 				m_axis_frame_tvalid = s_axis_tvalid;
 
-				m_axis_csum_tdata = {checksum, checksum_pos[15:1], s_axis_tuser[1]};
+				m_axis_csum_tdata = {checksum, checksum_pos[15:1], frame_modified};
 				m_axis_csum_tvalid = checksum_done;
+
+				if(s_axis_tuser[1]) begin
+					frame_modified_next = 1'b1;
+				end
 
 				if(checksum_done) begin
 					checksum_written_next = 1'b1;
