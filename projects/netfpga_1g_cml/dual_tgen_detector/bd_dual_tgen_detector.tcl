@@ -471,6 +471,9 @@ proc create_hier_cell_mitm { parentCell nameHier } {
 
   # Create instance: detector, and set properties
   set detector [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1 detector ]
+  set_property -dict [ list \
+   CONFIG.C_AXI_WIDTH {64} \
+ ] $detector
 
   # Create instance: eth2
   create_hier_cell_eth2 $hier_obj eth2
