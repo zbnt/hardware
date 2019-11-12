@@ -11,7 +11,7 @@ module eth_stats_adder
 	input logic enable,
 
 	input logic valid,
-	input logic [13:0] frame_length,
+	input logic [16:0] frame_length,
 	input logic frame_good,
 
 	output logic [63:0] total_bytes,
@@ -26,7 +26,7 @@ module eth_stats_adder
 			total_bad <= 64'd0;
 			stats_id <= 3'd0;
 		end else if(valid & enable) begin
-			total_bytes <= total_bytes + {50'd0, frame_length};
+			total_bytes <= total_bytes + {47'd0, frame_length};
 			total_good <= total_good + {63'd0, frame_good};
 			total_bad <= total_bad + {63'd0, ~frame_good};
 			stats_id <= stats_id + 3'd1;

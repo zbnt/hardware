@@ -113,7 +113,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	logic enable_tx, tx_frame_good, tx_valid;
 	logic [1:0] rst_tx_n;
 	logic [2:0] tx_stats_id;
-	logic [15:0] tx_frame_length;
+	logic [16:0] tx_frame_length;
 	logic [63:0] tx_bytes_cdc, tx_good_cdc, tx_bad_cdc;
 
 	eth_stats_counter_tx U2
@@ -186,7 +186,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	logic enable_rx, rx_frame_good, rx_valid;
 	logic [1:0] rst_rx_n;
 	logic [2:0] rx_stats_id;
-	logic [15:0] rx_frame_length;
+	logic [16:0] rx_frame_length;
 	logic [63:0] rx_bytes_cdc, rx_good_cdc, rx_bad_cdc;
 
 	eth_stats_counter_rx U4
