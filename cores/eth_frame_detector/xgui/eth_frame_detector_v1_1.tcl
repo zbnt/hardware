@@ -8,9 +8,9 @@ proc init_gui { IPINST } {
   #Adding Group
   set FIFO_Sizes [ipgui::add_group $IPINST -name "FIFO Sizes" -parent ${Page_0}]
   set C_LOG_FIFO_SIZE [ipgui::add_param $IPINST -name "C_LOG_FIFO_SIZE" -parent ${FIFO_Sizes} -widget comboBox]
-  set_property tooltip {Maximum number of entries that can be stored in the detection log FIFO} ${C_LOG_FIFO_SIZE}
+  set_property tooltip {Maximum number of entries that can be stored in the detection log FIFO.} ${C_LOG_FIFO_SIZE}
   set C_LOOP_FIFO_SIZE [ipgui::add_param $IPINST -name "C_LOOP_FIFO_SIZE" -parent ${FIFO_Sizes} -widget comboBox]
-  set_property tooltip {Maximum number of bytes that can be stored in the frame loop FIFO} ${C_LOOP_FIFO_SIZE}
+  set_property tooltip {Maximum number of bytes that can be stored in the frame loop FIFO. Frames larger than this value will be dropped when running in store-and-forward mode.} ${C_LOOP_FIFO_SIZE}
 
 
 

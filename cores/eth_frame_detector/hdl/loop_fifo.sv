@@ -114,8 +114,8 @@ module loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.s_axis_tready(s_axis_csum_tready),
 
 		.m_axis_tdata(m_axis_csum_tdata),
-		.m_axis_tlast(1'b0),
-		.m_axis_tuser(1'b0),
+		.m_axis_tlast(),
+		.m_axis_tuser(),
 		.m_axis_tvalid(m_axis_csum_tvalid),
 		.m_axis_tready(m_axis_csum_tready),
 
