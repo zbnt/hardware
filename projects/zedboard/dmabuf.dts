@@ -1,0 +1,21 @@
+/*
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		__overlay__ {
+			udmabuf {
+				compatible = "ikwzm,u-dma-buf";
+				device-name = "udmabuf_zbnt";
+				minor-number = <0>;
+				size = <0x00A00000>;
+			};
+		};
+	};
+};
