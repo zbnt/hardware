@@ -4,7 +4,15 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER = 1, parameter C_ENABLE_FIFO = 1, parameter C_SHARED_TX_CLK = 1, parameter C_FIFO_SIZE = 1024)
+module eth_stats_collector_w
+#(
+	parameter C_AXI_WIDTH = 32,
+	parameter C_USE_TIMER = 1,
+	parameter C_SHARED_TX_CLK = 1,
+	parameter C_AXIS_LOG_ENABLE = 1,
+	parameter C_AXIS_LOG_WIDTH = 64,
+	parameter C_AXIS_LOG_ID = 0
+)
 (
 	input wire clk,
 	input wire clk_tx,
@@ -40,6 +48,13 @@ module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
 
+	// M_AXIS_LOG
+
+	output wire [C_AXIS_LOG_WIDTH-1:0] m_axis_log_tdata,
+	output wire m_axis_log_tlast,
+	output wire m_axis_log_tvalid,
+	input wire m_axis_log_tready,
+
 	// AXIS_TX
 
 	input wire axis_tx_tready,
@@ -52,7 +67,15 @@ module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER
 	input wire axis_rx_tlast,
 	input wire axis_rx_tuser
 );
-	eth_stats_collector #(C_AXI_WIDTH, C_ENABLE_FIFO, C_SHARED_TX_CLK, C_FIFO_SIZE) U0
+	eth_stats_collector
+	#(
+		C_AXI_WIDTH,
+		C_SHARED_TX_CLK,
+		C_AXIS_LOG_ENABLE,
+		C_AXIS_LOG_WIDTH,
+		C_AXIS_LOG_ID
+	)
+	U0
 	(
 		.clk(clk),
 		.clk_tx(C_SHARED_TX_CLK ? clk : clk_tx),
@@ -87,6 +110,13 @@ module eth_stats_collector_w #(parameter C_AXI_WIDTH = 32, parameter C_USE_TIMER
 		.s_axi_rresp(s_axi_rresp),
 		.s_axi_rvalid(s_axi_rvalid),
 		.s_axi_rready(s_axi_rready),
+
+		// M_AXIS_LOG
+
+		.m_axis_log_tdata(m_axis_log_tdata),
+		.m_axis_log_tlast(m_axis_log_tlast),
+		.m_axis_log_tvalid(m_axis_log_tvalid),
+		.m_axis_log_tready(m_axis_log_tready),
 
 		// AXIS_TX
 

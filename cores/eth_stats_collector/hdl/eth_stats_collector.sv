@@ -12,7 +12,14 @@
 	read from the PS without losing intermediate states as long as the FIFO doesn't overflow.
 */
 
-module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO = 1, parameter C_SHARED_TX_CLK = 1, parameter C_FIFO_SIZE = 1024)
+module eth_stats_collector
+#(
+	parameter C_AXI_WIDTH = 32,
+	parameter C_SHARED_TX_CLK = 1,
+	parameter C_AXIS_LOG_ENABLE = 1,
+	parameter C_AXIS_LOG_WIDTH = 64,
+	parameter C_AXIS_LOG_ID = 0
+)
 (
 	input logic clk,
 	input logic clk_tx,
@@ -48,6 +55,13 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
 
+	// M_AXIS_LOG
+
+	output logic [C_AXIS_LOG_WIDTH-1:0] m_axis_log_tdata,
+	output logic m_axis_log_tlast,
+	output logic m_axis_log_tvalid,
+	input logic m_axis_log_tready,
+
 	// AXIS_TX
 
 	input logic axis_tx_tready,
@@ -63,13 +77,15 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	// axi4_lite registers
 
 	logic enable, srst;
-	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad;
-	logic [5:0] stats_id;
+	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad, overflow_count;
+	logic [31:0] sample_period;
 
-	eth_stats_collector_axi #(C_AXI_WIDTH, C_ENABLE_FIFO, C_FIFO_SIZE) U0
+	eth_stats_collector_axi #(C_AXI_WIDTH, C_AXIS_LOG_ENABLE, C_AXIS_LOG_ID) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
+
+		.current_time(current_time),
 
 		.s_axi_awaddr(s_axi_awaddr),
 		.s_axi_awprot(s_axi_awprot),
@@ -98,8 +114,9 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 		.enable(enable),
 		.srst(srst),
 
-		.current_time(current_time),
-		.stats_id(stats_id),
+		.sample_period(sample_period),
+		.overflow_count(overflow_count),
+
 		.tx_bytes(tx_bytes),
 		.tx_good(tx_good),
 		.tx_bad(tx_bad),
@@ -107,6 +124,51 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 		.rx_good(rx_good),
 		.rx_bad(rx_bad)
 	);
+
+	// AXIS
+
+	logic stats_changed;
+	logic [5:0] stats_id, stats_id_prev;
+	logic [31:0] sample_timer;
+
+	eth_stats_collector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH, C_AXIS_LOG_ID) U1
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.trigger(stats_changed),
+		.overflow_count(overflow_count),
+
+		.current_time(current_time),
+		.tx_bytes(tx_bytes),
+		.tx_good(tx_good),
+		.tx_bad(tx_bad),
+		.rx_bytes(rx_bytes),
+		.rx_good(rx_good),
+		.rx_bad(rx_bad),
+
+		// M_AXIS_LOG
+
+		.m_axis_log_tdata(m_axis_log_tdata),
+		.m_axis_log_tlast(m_axis_log_tlast),
+		.m_axis_log_tvalid(m_axis_log_tvalid),
+		.m_axis_log_tready(m_axis_log_tready)
+	);
+
+	counter_big #(32) U2
+	(
+		.clk(clk),
+		.rst(~rst_n | srst | stats_changed),
+
+		.enable(~&sample_timer),
+
+		.count(sample_timer)
+	);
+
+	always_ff @(posedge clk) begin
+		stats_id_prev <= stats_id;
+		stats_changed <= stats_id != stats_id_prev && sample_timer >= sample_period;
+	end
 
 	// TX statistics, CDC needed only if C_SHARED_TX_CLK == 0
 
@@ -116,7 +178,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	logic [16:0] tx_frame_length;
 	logic [63:0] tx_bytes_cdc, tx_good_cdc, tx_bad_cdc;
 
-	eth_stats_counter_tx U2
+	eth_stats_counter_tx U3
 	(
 		.clk(clk_tx),
 		.rst_n(rst_tx_n[1]),
@@ -130,7 +192,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 		.valid(tx_valid)
 	);
 
-	eth_stats_adder U3
+	eth_stats_adder U4
 	(
 		.clk(clk_tx),
 		.rst_n(rst_tx_n[0]),
@@ -189,7 +251,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 	logic [16:0] rx_frame_length;
 	logic [63:0] rx_bytes_cdc, rx_good_cdc, rx_bad_cdc;
 
-	eth_stats_counter_rx U4
+	eth_stats_counter_rx U5
 	(
 		.clk(clk_rx),
 		.rst_n(rst_rx_n[1]),
@@ -203,7 +265,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 		.valid(rx_valid)
 	);
 
-	eth_stats_adder U5
+	eth_stats_adder U6
 	(
 		.clk(clk_rx),
 		.rst_n(rst_rx_n[0]),
@@ -219,7 +281,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 		.stats_id(rx_stats_id)
 	);
 
-	bus_cdc #(195, 2) U6
+	bus_cdc #(195, 2) U7
 	(
 		.clk_src(clk_rx),
 		.clk_dst(clk),
@@ -227,7 +289,7 @@ module eth_stats_collector #(parameter C_AXI_WIDTH = 32, parameter C_ENABLE_FIFO
 		.data_out({stats_id[5:3], rx_bytes, rx_good, rx_bad})
 	);
 
-	sync_ffs #(3, 2) U7
+	sync_ffs #(3, 2) U8
 	(
 		.clk_src(clk),
 		.clk_dst(clk_rx),
