@@ -32,6 +32,13 @@
 				interrupts = <0 29 4>;
 			};
 
+			udmabuf {
+				compatible = "ikwzm,u-dma-buf";
+				device-name = "udmabuf_zbnt";
+				minor-number = <0>;
+				size = <0x00A00000>;
+			};
+
 			zbnt_timer@43c00000 {
 				compatible = "generic-uio";
 				reg = <0x43c00000 0x10000>;
