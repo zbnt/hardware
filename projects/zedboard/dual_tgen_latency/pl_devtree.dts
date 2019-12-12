@@ -12,7 +12,7 @@
 		target = <&fpga_full>;
 
 		__overlay__ {
-			firmware-name = "zbnt/dual_tgen_latency.bin";
+			firmware-name = "zbnt/zedboard/dual_tgen_latency.bin";
 		};
 	};
 
@@ -23,6 +23,13 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
+			udmabuf {
+				compatible = "ikwzm,u-dma-buf";
+				device-name = "zbnt_dmabuf_zedboard";
+				minor-number = <0>;
+				size = <0x00A00000>;
+			};
+
 			dma@40400000 {
 				compatible = "generic-uio";
 				reg = <0x40400000 0x10000>;
@@ -30,13 +37,6 @@
 				interrupt-names = "s2mm_introut";
 				interrupt-parent = <&intc>;
 				interrupts = <0 29 4>;
-			};
-
-			udmabuf {
-				compatible = "ikwzm,u-dma-buf";
-				device-name = "udmabuf_zbnt";
-				minor-number = <0>;
-				size = <0x00A00000>;
 			};
 
 			zbnt_timer@43c00000 {
