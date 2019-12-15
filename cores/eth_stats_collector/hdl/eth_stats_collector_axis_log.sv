@@ -4,17 +4,13 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_axis_log
-#(
-	parameter C_AXIS_LOG_ENABLE = 1,
-	parameter C_AXIS_LOG_WIDTH = 64,
-	parameter C_AXIS_LOG_ID = 0
-)
+module eth_stats_collector_axis_log #(parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
 (
 	input logic clk,
 	input logic rst_n,
 
 	input logic trigger,
+	input logic [15:0] log_id,
 	output logic [63:0] overflow_count,
 
 	input logic [63:0] current_time,
@@ -50,7 +46,7 @@ module eth_stats_collector_axis_log
 				if(~tx_enable) begin
 					if(trigger) begin
 						tx_enable <= 1'b1;
-						tx_buffer <= {rx_bad, rx_good, rx_bytes, tx_bad, tx_good, tx_bytes, current_time, 16'd56, C_AXIS_LOG_ID[7:0], 8'h80, 32'h02425AFF};
+						tx_buffer <= {rx_bad, rx_good, rx_bytes, tx_bad, tx_good, tx_bytes, current_time, 16'd56, log_id, 32'h02425AFF};
 						tx_count <= '0;
 					end
 				end else begin

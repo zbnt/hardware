@@ -1,3 +1,2 @@
 # This file is automatically written.  Do not modify.
 proc gen_USERPARAMETER_C_AXIS_LOG_WIDTH_ENABLEMENT {C_AXIS_LOG_ENABLE } {expr {$C_AXIS_LOG_ENABLE}}
-proc gen_USERPARAMETER_C_AXIS_LOG_ID_ENABLEMENT {C_AXIS_LOG_ENABLE } {expr {$C_AXIS_LOG_ENABLE}}

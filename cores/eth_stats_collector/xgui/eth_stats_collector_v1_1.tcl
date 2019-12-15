@@ -15,8 +15,6 @@ proc init_gui { IPINST } {
   set_property tooltip {Enable AXIS interface for saving data to external memory} ${C_AXIS_LOG_ENABLE}
   set C_AXIS_LOG_WIDTH [ipgui::add_param $IPINST -name "C_AXIS_LOG_WIDTH" -parent ${Log_options} -widget comboBox]
   set_property tooltip {Width of the AXIS interface, in bits.} ${C_AXIS_LOG_WIDTH}
-  set C_AXIS_LOG_ID [ipgui::add_param $IPINST -name "C_AXIS_LOG_ID" -parent ${Log_options}]
-  set_property tooltip {Number of the interface this core is connected to.} ${C_AXIS_LOG_ID}
 
   #Adding Group
   set Other_options [ipgui::add_group $IPINST -name "Other options" -parent ${Page_0}]
@@ -25,24 +23,6 @@ proc init_gui { IPINST } {
 
 
 
-}
-
-proc update_PARAM_VALUE.C_AXIS_LOG_ID { PARAM_VALUE.C_AXIS_LOG_ID PARAM_VALUE.C_AXIS_LOG_ENABLE } {
-	# Procedure called to update C_AXIS_LOG_ID when any of the dependent parameters in the arguments change
-	
-	set C_AXIS_LOG_ID ${PARAM_VALUE.C_AXIS_LOG_ID}
-	set C_AXIS_LOG_ENABLE ${PARAM_VALUE.C_AXIS_LOG_ENABLE}
-	set values(C_AXIS_LOG_ENABLE) [get_property value $C_AXIS_LOG_ENABLE]
-	if { [gen_USERPARAMETER_C_AXIS_LOG_ID_ENABLEMENT $values(C_AXIS_LOG_ENABLE)] } {
-		set_property enabled true $C_AXIS_LOG_ID
-	} else {
-		set_property enabled false $C_AXIS_LOG_ID
-	}
-}
-
-proc validate_PARAM_VALUE.C_AXIS_LOG_ID { PARAM_VALUE.C_AXIS_LOG_ID } {
-	# Procedure called to validate C_AXIS_LOG_ID
-	return true
 }
 
 proc update_PARAM_VALUE.C_AXIS_LOG_WIDTH { PARAM_VALUE.C_AXIS_LOG_WIDTH PARAM_VALUE.C_AXIS_LOG_ENABLE } {
@@ -123,10 +103,5 @@ proc update_MODELPARAM_VALUE.C_AXIS_LOG_ENABLE { MODELPARAM_VALUE.C_AXIS_LOG_ENA
 proc update_MODELPARAM_VALUE.C_AXIS_LOG_WIDTH { MODELPARAM_VALUE.C_AXIS_LOG_WIDTH PARAM_VALUE.C_AXIS_LOG_WIDTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_AXIS_LOG_WIDTH}] ${MODELPARAM_VALUE.C_AXIS_LOG_WIDTH}
-}
-
-proc update_MODELPARAM_VALUE.C_AXIS_LOG_ID { MODELPARAM_VALUE.C_AXIS_LOG_ID PARAM_VALUE.C_AXIS_LOG_ID } {
-	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.C_AXIS_LOG_ID}] ${MODELPARAM_VALUE.C_AXIS_LOG_ID}
 }
 

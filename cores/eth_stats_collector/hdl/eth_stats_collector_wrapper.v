@@ -10,8 +10,7 @@ module eth_stats_collector_w
 	parameter C_USE_TIMER = 1,
 	parameter C_SHARED_TX_CLK = 1,
 	parameter C_AXIS_LOG_ENABLE = 1,
-	parameter C_AXIS_LOG_WIDTH = 64,
-	parameter C_AXIS_LOG_ID = 0
+	parameter C_AXIS_LOG_WIDTH = 64
 )
 (
 	input wire clk,
@@ -72,8 +71,7 @@ module eth_stats_collector_w
 		C_AXI_WIDTH,
 		C_SHARED_TX_CLK,
 		C_AXIS_LOG_ENABLE,
-		C_AXIS_LOG_WIDTH,
-		C_AXIS_LOG_ID
+		C_AXIS_LOG_WIDTH
 	)
 	U0
 	(

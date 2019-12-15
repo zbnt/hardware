@@ -17,8 +17,7 @@ module eth_stats_collector
 	parameter C_AXI_WIDTH = 32,
 	parameter C_SHARED_TX_CLK = 1,
 	parameter C_AXIS_LOG_ENABLE = 1,
-	parameter C_AXIS_LOG_WIDTH = 64,
-	parameter C_AXIS_LOG_ID = 0
+	parameter C_AXIS_LOG_WIDTH = 64
 )
 (
 	input logic clk,
@@ -76,11 +75,12 @@ module eth_stats_collector
 );
 	// axi4_lite registers
 
-	logic enable, srst;
+	logic enable, srst, log_enable;
+	logic [15:0] log_id;
 	logic [63:0] tx_bytes, tx_good, tx_bad, rx_bytes, rx_good, rx_bad, overflow_count;
 	logic [31:0] sample_period;
 
-	eth_stats_collector_axi #(C_AXI_WIDTH, C_AXIS_LOG_ENABLE, C_AXIS_LOG_ID) U0
+	eth_stats_collector_axi #(C_AXI_WIDTH, C_AXIS_LOG_ENABLE) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -113,6 +113,8 @@ module eth_stats_collector
 
 		.enable(enable),
 		.srst(srst),
+		.log_enable(log_enable),
+		.log_id(log_id),
 
 		.sample_period(sample_period),
 		.overflow_count(overflow_count),
@@ -131,12 +133,13 @@ module eth_stats_collector
 	logic [5:0] stats_id, stats_id_prev;
 	logic [31:0] sample_timer;
 
-	eth_stats_collector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH, C_AXIS_LOG_ID) U1
+	eth_stats_collector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.trigger(stats_changed),
+		.trigger(stats_changed & log_enable),
+		.log_id(log_id),
 		.overflow_count(overflow_count),
 
 		.current_time(current_time),

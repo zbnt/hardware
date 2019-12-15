@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_ID = 0)
+module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1)
 (
 	input logic clk,
 	input logic rst_n,
@@ -41,6 +41,8 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 
 	output logic enable,
 	output logic srst,
+	output logic log_enable,
+	output logic [15:0] log_id,
 
 	output logic [31:0] sample_period,
 	input logic [63:0] overflow_count,
@@ -118,6 +120,8 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 			enable <= 1'b0;
 			srst <= srst & rst_n;
 			hold <= 1'b0;
+			log_enable <= 1'b0;
+			log_id <= 15'd0;
 			sample_period <= 32'd0;
 
 			time_reg <= 64'd0;
@@ -146,6 +150,8 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 							2'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 								hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
+								log_enable <= (s_axi_wdata[3] & write_mask[3]) | (log_enable & ~write_mask[3]);
+								log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
 							end
 
 							2'd1: begin
@@ -157,12 +163,16 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 							1'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 								hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
+								log_enable <= (s_axi_wdata[3] & write_mask[3]) | (log_enable & ~write_mask[3]);
+								log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
 								sample_period <= (s_axi_wdata[63:32] & write_mask[63:32]) | (sample_period & ~write_mask[63:32]);
 							end
 						endcase
 					end else if(C_AXI_WIDTH == 128) begin
 						enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
 						hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
+						log_enable <= (s_axi_wdata[3] & write_mask[3]) | (log_enable & ~write_mask[3]);
+						log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
 						sample_period <= (s_axi_wdata[63:32] & write_mask[63:32]) | (sample_period & ~write_mask[63:32]);
 					end
 				end
@@ -197,7 +207,7 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[6:2])
-						5'd00: read_value = {16'd0, C_AXIS_LOG_ID[7:0], 4'b0, C_AXIS_LOG_ENABLE[0], hold, srst, enable};
+						5'd00: read_value = {log_id, 12'd0, log_enable & C_AXIS_LOG_ENABLE[0], hold, srst, enable};
 						5'd01: read_value = sample_period;
 						5'd02: read_value = overflow_count[31:0];
 						5'd03: read_value = overflow_count[63:32];
@@ -218,7 +228,7 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[6:3])
-						4'd0: read_value = {sample_period, 16'd0, C_AXIS_LOG_ID[7:0], 4'b0, C_AXIS_LOG_ENABLE[0], hold, srst, enable};
+						4'd0: read_value = {sample_period, log_id, 12'd0, log_enable & C_AXIS_LOG_ENABLE[0], hold, srst, enable};
 						4'd1: read_value = overflow_count;
 						4'd2: read_value = time_reg;
 						4'd3: read_value = tx_bytes_reg;
@@ -230,7 +240,7 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 					endcase
 				end else if(C_AXI_WIDTH == 128) begin
 					case(s_axi_araddr[6:4])
-						3'd0: read_value = {overflow_count, sample_period, 16'd0, C_AXIS_LOG_ID[7:0], 4'b0, C_AXIS_LOG_ENABLE[0], hold, srst, enable};
+						3'd0: read_value = {overflow_count, sample_period, log_id, 12'd0, log_enable & C_AXIS_LOG_ENABLE[0], hold, srst, enable};
 						3'd1: read_value = {tx_bytes_reg, time_reg};
 						3'd2: read_value = {tx_bad_reg, tx_good_reg};
 						3'd3: read_value = {rx_good_reg, rx_bytes_reg};
