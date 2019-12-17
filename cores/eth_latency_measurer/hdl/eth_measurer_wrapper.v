@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65_64_6E_74_6D, parameter loop_mac = 48'h7A_65_64_6E_74_4C, parameter identifier = 32'h50696E47)
+module eth_latency_measurer_w #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -16,8 +16,8 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
 
-	input wire [axi_width-1:0] s_axi_wdata,
-	input wire [(axi_width/8)-1:0] s_axi_wstrb,
+	input wire [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input wire [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input wire s_axi_wvalid,
 	output wire s_axi_wready,
 
@@ -30,7 +30,7 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
 
-	output wire [axi_width-1:0] s_axi_rdata,
+	output wire [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output wire [1:0] s_axi_rresp,
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
@@ -69,12 +69,19 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 	input wire s_axis_loop_tlast,
 	input wire s_axis_loop_tvalid,
 
+	// M_AXIS_LOG
+
+	output wire [C_AXIS_LOG_WIDTH-1:0] m_axis_log_tdata,
+	output wire m_axis_log_tlast,
+	output wire m_axis_log_tvalid,
+	input wire m_axis_log_tready,
+
 	// Timer
 
 	input wire [63:0] current_time,
 	input wire time_running
 );
-	eth_measurer #(axi_width, main_mac, loop_mac, identifier) U0
+	eth_latency_measurer #(C_AXI_WIDTH, C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U0
 	(
 		// S_AXI
 
@@ -139,10 +146,16 @@ module eth_measurer_w #(parameter axi_width = 32, parameter main_mac = 48'h7A_65
 		.s_axis_loop_tlast(s_axis_loop_tlast),
 		.s_axis_loop_tvalid(s_axis_loop_tvalid),
 
+		// M_AXIS_LOG
+
+		.m_axis_log_tdata(m_axis_log_tdata),
+		.m_axis_log_tlast(m_axis_log_tlast),
+		.m_axis_log_tvalid(m_axis_log_tvalid),
+		.m_axis_log_tready(m_axis_log_tready),
+
 		// Timer
 
 		.current_time(current_time),
 		.time_running(time_running)
 	);
 endmodule
-

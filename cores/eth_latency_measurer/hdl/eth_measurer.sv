@@ -5,137 +5,15 @@
 */
 
 /*!
-	\core eth_measurer: Ethernet Latency Measurer
+	eth_latency_measurer: Ethernet Latency Measurer
 
-	This module measures the latency between two ethernet interfaces and stores the results in a FIFO.
-	Latency measurement is performed by sending special frames and measuring the time from transmission
-	to arrival on the other network interface. The measurement sequence starts with a _ping_ from the
-	main interface and is followed by a _pong_ from the loopback interface when it receives the previously
-	mentioned _ping_.
-
-	\parameters
-		\int main_mac   : MAC address for the main interface, the one that sends pings.
-		\int loop_mac   : MAC address for the loopback interface, the one that replies to pings with pongs.
-		\int identifier : 32 bits magic constant used to identify ping/pong frames.
-
-	\ports
-		\iface s_axi: Configuration interface from PS.
-			\type AXI4-Lite
-
-			\clk   s_axi_clk
-			\rst_n s_axi_resetn
-
-		\iface m_axis_main: Transmission stream for the main TEMAC.
-			\type AXI4-Stream
-
-			\clk   s_axi_clk
-			\rst_n s_axi_resetn
-
-		\iface m_axis_loop: Transmission stream for the loopback TEMAC.
-			\type AXI4-Stream
-
-			\clk   s_axi_clk
-			\rst_n s_axi_resetn
-
-		\iface s_axis_main: Reception stream for the main TEMAC.
-			\type AXI4-Stream
-
-			\clk   s_axis_main_clk
-
-		\iface s_axis_loop: Reception stream for the loopback TEMAC.
-			\type AXI4-Stream
-
-			\clk   s_axis_loop_clk
-
-	\memorymap S_AXI_ADDR
-		\regsize 32
-
-		\reg LM_CFG: Latency measurer configuration register.
-			\access RW
-
-			\field EN     0      Enable latency measurement.
-			\field SRST   1      Software reset, active high, must be set back to 0 again manually.
-
-		\reg LM_PADDING: Frame padding amount.
-			\access RW
-
-			\field PSIZE  0-15  Number of bytes of padding to add to ping/pong frames, must be at least 38.
-
-		\reg LM_DELAY: Delay between ping-pong sequences.
-			\access RW
-
-			\field DELAY  0-31  Number of clock cycles to wait before starting a new ping-pong sequence.
-
-		\reg LM_TIMEOUT: Ping/pong time limit.
-			\access RW
-
-			\field TOUT   0-31   Maximum number of clock cycles to wait for ping/pong reception.
-
-		\reg LM_FIFO_OCCUP: FIFO occupancy.
-			\access RO
-
-			\field FOCCUP 0-15   Number of entries currently stored in the internal FIFO.
-
-		\reg LM_FIFO_POP: Read values from FIFO.
-			\access RW
-
-			\field FPOP   0-31   If set to a value different from 0, read the next set of values from the FIFO and store them in
-			                     the registers. If read, always returns 0.
-
-		\reg LM_TIME_L: Measurement time, lower half.
-			\access RO
-
-			\field TIMEL  0-31   Time at which the latency measurement ended, lower 32 bits.
-
-		\reg LM_TIME_H: Measurement time, upper half.
-			\access RO
-
-			\field TIMEH  0-31   Time at which the latency measurement ended, upper 32 bits.
-
-		\reg LM_PING_LATENCY: Measured ping latency.
-			\access RO
-
-			\field PINGL  0-31   Number of clock cycles elapsed between first byte transmission from main interface and last byte
-			                     reception on loopback interface.
-
-		\reg LM_PONG_LATENCY: Measured pong latency.
-			\access RO
-
-			\field PONGL  0-31   Number of clock cycles elapsed between first byte transmission from loopback interface and last
-			                     byte reception on main interface.
-
-		\reg LM_PP_GOOD_L: Ping-pong sequences completed without error, lower half.
-			\access RO
-
-			\field PPGL   0-31   Number of ping-pongs completed successfully, lower 32 bits.
-
-		\reg LM_PP_GOOD_H: Ping-pong sequences completed without error, upper half.
-			\access RO
-
-			\field PPGH   0-31   Number of ping-pongs completed successfully, upper 32 bits.
-
-		\reg LM_PINGS_LOST_L: Pings not received in time, lower half.
-			\access RO
-
-			\field LPINGL 0-31   Number of pings not received under the maximum time, lower 32 bits.
-
-		\reg LM_PINGS_LOST_H: Pings not received in time, upper half.
-			\access RO
-
-			\field LPINGH 0-31   Number of pings not received under the maximum time, upper 32 bits.
-
-		\reg LM_PONGS_LOST_L: Pongs not received in time, lower half.
-			\access RO
-
-			\field LPONGL 0-31   Number of pongs not received under the maximum time, lower 32 bits.
-
-		\reg LM_PONGS_LOST_H: Pongs not received in time, upper half.
-			\access RO
-
-			\field LPINGH 0-31   Number of pongs not received under the maximum time, upper 32 bits.
+	This module measures the latency between two ethernet interfaces.	Latency measurement is performed by
+	sending ICMP echo frames and measuring the time from transmission to arrival on the other network interface.
+	The measurement sequence starts with a "ping" from the main interface and the	loopback interface replies with
+	a "pong".
 */
 
-module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_mac, parameter identifier)
+module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -147,8 +25,8 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [axi_width-1:0] s_axi_wdata,
-	input logic [(axi_width/8)-1:0] s_axi_wstrb,
+	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -161,7 +39,7 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [axi_width-1:0] s_axi_rdata,
+	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -200,6 +78,13 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 	input logic s_axis_loop_tlast,
 	input logic s_axis_loop_tvalid,
 
+	// M_AXIS_LOG
+
+	output logic [C_AXIS_LOG_WIDTH-1:0] m_axis_log_tdata,
+	output logic m_axis_log_tlast,
+	output logic m_axis_log_tvalid,
+	input logic m_axis_log_tready,
+
 	// Timer
 
 	input logic [63:0] current_time,
@@ -207,12 +92,14 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 );
 	// axi4_lite registers
 
-	logic enable, srst, ping_pong_done;
-	logic [15:0] padding_req;
+	logic enable, srst, log_enable, use_broadcast, ping_done;
+	logic [15:0] padding_req, log_id;
+	logic [47:0] mac_addr_a, mac_addr_b;
+	logic [31:0] ip_addr_a, ip_addr_b;
 	logic [31:0] delay, timeout, ping_time, pong_time;
-	logic [63:0] ping_pongs_good, pings_lost, pongs_lost;
+	logic [63:0] ping_count, pings_lost, pongs_lost, overflow_count;
 
-	eth_measurer_axi #(axi_width) U0
+	eth_latency_measurer_axi #(C_AXI_WIDTH, C_AXIS_LOG_ENABLE) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -243,39 +130,90 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 
 		.enable(enable),
 		.srst(srst),
+		.log_enable(log_enable),
+		.use_broadcast(use_broadcast),
+		.log_id(log_id),
+
+		.mac_addr_a(mac_addr_a),
+		.mac_addr_b(mac_addr_b),
+		.ip_addr_a(ip_addr_a),
+		.ip_addr_b(ip_addr_b),
+
 		.padding(padding_req),
 		.delay(delay),
 		.timeout(timeout),
+		.overflow_count(overflow_count),
 
 		.current_time(current_time),
 
-		.ping_pong_done(ping_pong_done),
+		.ping_count(ping_count),
 		.ping_time(ping_time),
 		.pong_time(pong_time),
-		.ping_pongs_good(ping_pongs_good),
 		.pings_lost(pings_lost),
 		.pongs_lost(pongs_lost)
+	);
+
+	// AXIS log
+
+	eth_latency_measurer_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U1
+	(
+		.clk(s_axi_clk),
+		.rst_n(s_axi_resetn),
+
+		.trigger(ping_done),
+		.log_id(log_id),
+		.overflow_count(overflow_count),
+
+		.current_time(current_time),
+		.ping_count(ping_count),
+		.ping_time(ping_time),
+		.pong_time(pong_time),
+		.pings_lost(pings_lost),
+		.pongs_lost(pongs_lost),
+
+		.m_axis_log_tdata(m_axis_log_tdata),
+		.m_axis_log_tlast(m_axis_log_tlast),
+		.m_axis_log_tvalid(m_axis_log_tvalid),
+		.m_axis_log_tready(m_axis_log_tready)
 	);
 
 	// traffic coordinator
 
 	logic main_tx_trigger, loop_tx_trigger, main_tx_begin, loop_tx_begin;
-	logic [63:0] ping_id, main_rx_ping_id, loop_rx_ping_id;
+	logic [15:0] main_rx_ping_id, loop_rx_ping_id;
 	logic [15:0] psize;
 
-	eth_measurer_coord U1
+	logic [47:0] mac_addr_src_a, mac_addr_dst_a, mac_addr_src_b, mac_addr_dst_b;
+	logic [31:0] ip_addr_src_a, ip_addr_dst_a, ip_addr_src_b, ip_addr_dst_b;
+
+	eth_latency_measurer_coord U2
 	(
 		.clk(s_axi_clk),
 		.rst(~s_axi_resetn | srst),
 		.enable(enable & time_running),
 
-		.psize_req(padding_req),
+		.use_broadcast(use_broadcast),
 		.delay_time(delay),
 		.timeout(timeout),
 
+		.psize_req(padding_req),
+		.mac_addr_src_req(mac_addr_a),
+		.mac_addr_dst_req(mac_addr_b),
+		.ip_addr_src_req(ip_addr_a),
+		.ip_addr_dst_req(ip_addr_b),
+
 		.psize(psize),
 
-		.ping_id(ping_id),
+		.mac_addr_src_a(mac_addr_src_a),
+		.mac_addr_dst_a(mac_addr_dst_a),
+		.ip_addr_src_a(ip_addr_src_a),
+		.ip_addr_dst_a(ip_addr_dst_a),
+
+		.mac_addr_src_b(mac_addr_src_b),
+		.mac_addr_dst_b(mac_addr_dst_b),
+		.ip_addr_src_b(ip_addr_src_b),
+		.ip_addr_dst_b(ip_addr_dst_b),
+
 		.main_rx_ping_id(main_rx_ping_id),
 		.loop_rx_ping_id(loop_rx_ping_id),
 
@@ -284,28 +222,33 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 		.main_tx_begin(main_tx_begin),
 		.loop_tx_begin(loop_tx_begin),
 
-		.done(ping_pong_done),
+		.done(ping_done),
+		.ping_count(ping_count),
 		.ping_time(ping_time),
 		.pong_time(pong_time),
-		.ping_pongs_good(ping_pongs_good),
 		.pings_lost(pings_lost),
 		.pongs_lost(pongs_lost)
 	);
 
 	// main eth interface
 
-	logic main_rx_rst;
-
-	eth_measurer_tx #(main_mac, identifier) U2
+	eth_latency_measurer_tx #(0) U3
 	(
 		.clk(s_axi_clk),
 		.rst(~s_axi_resetn),
-
 		.trigger(main_tx_trigger),
 		.tx_begin(main_tx_begin),
 
+		.mac_addr_src(mac_addr_src_a),
+		.ip_addr_src(ip_addr_src_a),
+
+		.mac_addr_dst(mac_addr_dst_a),
+		.ip_addr_dst(ip_addr_dst_a),
+
 		.padding_size(psize),
-		.ping_id(ping_id),
+		.frame_id(ping_count[15:0]),
+		.log_id(log_id),
+		.ping_id(ping_count[15:0]),
 
 		.m_axis_tdata(m_axis_main_tdata),
 		.m_axis_tkeep(m_axis_main_tkeep),
@@ -314,13 +257,20 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 		.m_axis_tready(m_axis_main_tready)
 	);
 
-	eth_measurer_rx #(loop_mac, identifier) U3
+	eth_latency_measurer_rx #(1) U4
 	(
 		.clk(s_axi_clk),
 		.rst(~s_axi_resetn),
-
 		.clk_rx(s_axis_main_clk),
 
+		.mac_addr_src(mac_addr_src_b),
+		.ip_addr_src(ip_addr_src_b),
+
+		.mac_addr_dst(mac_addr_dst_b),
+		.ip_addr_dst(ip_addr_dst_b),
+
+		.frame_id(ping_count[15:0]),
+		.log_id(log_id),
 		.ping_id(main_rx_ping_id),
 
 		.s_axis_tdata(s_axis_main_tdata),
@@ -331,18 +281,23 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 
 	// loopback eth interface
 
-	logic loop_rx_rst;
-
-	eth_measurer_tx #(loop_mac, identifier) U4
+	eth_latency_measurer_tx #(1) U5
 	(
 		.clk(s_axi_clk),
 		.rst(~s_axi_resetn),
-
 		.trigger(loop_tx_trigger),
 		.tx_begin(loop_tx_begin),
 
+		.mac_addr_src(mac_addr_src_b),
+		.ip_addr_src(ip_addr_src_b),
+
+		.mac_addr_dst(mac_addr_dst_b),
+		.ip_addr_dst(ip_addr_dst_b),
+
 		.padding_size(psize),
-		.ping_id(ping_id),
+		.frame_id(ping_count[15:0]),
+		.log_id(log_id),
+		.ping_id(ping_count[15:0]),
 
 		.m_axis_tdata(m_axis_loop_tdata),
 		.m_axis_tkeep(m_axis_loop_tkeep),
@@ -351,13 +306,20 @@ module eth_measurer #(parameter axi_width, parameter main_mac, parameter loop_ma
 		.m_axis_tready(m_axis_loop_tready)
 	);
 
-	eth_measurer_rx #(main_mac, identifier) U5
+	eth_latency_measurer_rx #(0) U6
 	(
 		.clk(s_axi_clk),
 		.rst(~s_axi_resetn),
-
 		.clk_rx(s_axis_loop_clk),
 
+		.mac_addr_src(mac_addr_src_a),
+		.ip_addr_src(ip_addr_src_a),
+
+		.mac_addr_dst(mac_addr_dst_a),
+		.ip_addr_dst(ip_addr_dst_a),
+
+		.frame_id(ping_count[15:0]),
+		.log_id(log_id),
 		.ping_id(loop_rx_ping_id),
 
 		.s_axis_tdata(s_axis_loop_tdata),

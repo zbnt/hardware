@@ -189,7 +189,7 @@
         </spirit:parameter>
         <spirit:parameter>
           <spirit:name>ASSOCIATED_BUSIF</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXI_CLK.ASSOCIATED_BUSIF">S_AXI:M_AXIS_MAIN:M_AXIS_LOOP</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXI_CLK.ASSOCIATED_BUSIF">S_AXI:M_AXIS_MAIN:M_AXIS_LOOP:M_AXIS_LOG</spirit:value>
         </spirit:parameter>
         <spirit:parameter>
           <spirit:name>ASSOCIATED_RESET</spirit:name>
@@ -439,6 +439,53 @@
         </spirit:portMap>
       </spirit:portMaps>
     </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>M_AXIS_LOG</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="axis" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="axis_rtl" spirit:version="1.0"/>
+      <spirit:master/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TDATA</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>m_axis_log_tdata</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TLAST</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>m_axis_log_tlast</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TVALID</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>m_axis_log_tvalid</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TREADY</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>m_axis_log_tready</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:vendorExtensions>
+        <xilinx:busInterfaceInfo>
+          <xilinx:enablement>
+            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.M_AXIS_LOG" xilinx:dependency="$C_AXIS_LOG_ENABLE != 0">true</xilinx:isEnabled>
+          </xilinx:enablement>
+        </xilinx:busInterfaceInfo>
+      </spirit:vendorExtensions>
+    </spirit:busInterface>
   </spirit:busInterfaces>
   <spirit:memoryMaps>
     <spirit:memoryMap>
@@ -454,78 +501,93 @@
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PADDING</spirit:name>
+          <spirit:name>LM_MAC_ADDR_A</spirit:name>
           <spirit:addressOffset>4</spirit:addressOffset>
-          <spirit:size spirit:format="long">32</spirit:size>
+          <spirit:size spirit:format="long">48</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_DELAY</spirit:name>
-          <spirit:addressOffset>8</spirit:addressOffset>
-          <spirit:size spirit:format="long">32</spirit:size>
+          <spirit:name>LM_MAC_ADDR_B</spirit:name>
+          <spirit:addressOffset>10</spirit:addressOffset>
+          <spirit:size spirit:format="long">48</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_TIMEOUT</spirit:name>
-          <spirit:addressOffset>12</spirit:addressOffset>
-          <spirit:size spirit:format="long">32</spirit:size>
-        </spirit:register>
-        <spirit:register>
-          <spirit:name>LM_FIFO_OCCUP</spirit:name>
+          <spirit:name>LM_IP_ADDR_A</spirit:name>
           <spirit:addressOffset>16</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_FIFO_POP</spirit:name>
+          <spirit:name>LM_IP_ADDR_B</spirit:name>
           <spirit:addressOffset>20</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_TIME_L</spirit:name>
+          <spirit:name>LM_PADDING</spirit:name>
           <spirit:addressOffset>24</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_TIME_H</spirit:name>
+          <spirit:name>LM_DELAY</spirit:name>
           <spirit:addressOffset>28</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PING_LATENCY</spirit:name>
+          <spirit:name>LM_TIMEOUT</spirit:name>
           <spirit:addressOffset>32</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PONG_LATENCY</spirit:name>
+          <spirit:name>LM_RSVD</spirit:name>
           <spirit:addressOffset>36</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PP_GOOD_L</spirit:name>
+          <spirit:name>LM_OVERFLOW_COUNT_L</spirit:name>
           <spirit:addressOffset>40</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PP_GOOD_H</spirit:name>
+          <spirit:name>LM_OVERFLOW_COUNT_H</spirit:name>
           <spirit:addressOffset>44</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PINGS_LOST_L</spirit:name>
+          <spirit:name>LM_PING_COUNT_L</spirit:name>
           <spirit:addressOffset>48</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PINGS_LOST_H</spirit:name>
+          <spirit:name>LM_PING_COUNT_H</spirit:name>
           <spirit:addressOffset>52</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PONGS_LOST_L</spirit:name>
+          <spirit:name>LM_PING_LATENCY</spirit:name>
           <spirit:addressOffset>56</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
         <spirit:register>
-          <spirit:name>LM_PONGS_LOST_H</spirit:name>
+          <spirit:name>LM_PONG_LATENCY</spirit:name>
           <spirit:addressOffset>60</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LM_PINGS_LOST_L</spirit:name>
+          <spirit:addressOffset>64</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LM_PINGS_LOST_H</spirit:name>
+          <spirit:addressOffset>68</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LM_PONGS_LOST_L</spirit:name>
+          <spirit:addressOffset>72</spirit:addressOffset>
+          <spirit:size spirit:format="long">32</spirit:size>
+        </spirit:register>
+        <spirit:register>
+          <spirit:name>LM_PONGS_LOST_H</spirit:name>
+          <spirit:addressOffset>76</spirit:addressOffset>
           <spirit:size spirit:format="long">32</spirit:size>
         </spirit:register>
       </spirit:addressBlock>
@@ -538,7 +600,7 @@
         <spirit:displayName>Verilog Synthesis</spirit:displayName>
         <spirit:envIdentifier>verilogSource:vivado.xilinx.com:synthesis</spirit:envIdentifier>
         <spirit:language>verilog</spirit:language>
-        <spirit:modelName>eth_measurer_w</spirit:modelName>
+        <spirit:modelName>eth_latency_measurer_w</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_verilogsynthesis_xilinx_com_ip_fifo_generator_13_2__ref_view_fileset</spirit:localName>
         </spirit:fileSetRef>
@@ -551,7 +613,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>9cb8af3b</spirit:value>
+            <spirit:value>93a8c88a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -560,7 +622,7 @@
         <spirit:displayName>Verilog Simulation</spirit:displayName>
         <spirit:envIdentifier>verilogSource:vivado.xilinx.com:simulation</spirit:envIdentifier>
         <spirit:language>verilog</spirit:language>
-        <spirit:modelName>eth_measurer_w</spirit:modelName>
+        <spirit:modelName>eth_latency_measurer_w</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_verilogbehavioralsimulation_xilinx_com_ip_fifo_generator_13_2__ref_view_fileset</spirit:localName>
         </spirit:fileSetRef>
@@ -573,7 +635,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>e00e0baa</spirit:value>
+            <spirit:value>bcc83649</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -587,7 +649,21 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>21ae988a</spirit:value>
+            <spirit:value>433f74df</spirit:value>
+          </spirit:parameter>
+        </spirit:parameters>
+      </spirit:view>
+      <spirit:view>
+        <spirit:name>xilinx_utilityxitfiles</spirit:name>
+        <spirit:displayName>Utility XIT/TTCL</spirit:displayName>
+        <spirit:envIdentifier>:vivado.xilinx.com:xit.util</spirit:envIdentifier>
+        <spirit:fileSetRef>
+          <spirit:localName>xilinx_utilityxitfiles_view_fileset</spirit:localName>
+        </spirit:fileSetRef>
+        <spirit:parameters>
+          <spirit:parameter>
+            <spirit:name>viewChecksum</spirit:name>
+            <spirit:value>095bea37</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -684,7 +760,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.axi_width&apos;)) - 1)">31</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_AXI_WIDTH&apos;)) - 1)">31</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -701,7 +777,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="((spirit:decode(id(&apos;MODELPARAM_VALUE.axi_width&apos;)) / 8) - 1)">3</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="((spirit:decode(id(&apos;MODELPARAM_VALUE.C_AXI_WIDTH&apos;)) / 8) - 1)">3</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -847,7 +923,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.axi_width&apos;)) - 1)">31</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_AXI_WIDTH&apos;)) - 1)">31</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -1203,6 +1279,62 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
+        <spirit:name>m_axis_log_tdata</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:vector>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_AXIS_LOG_WIDTH&apos;)) - 1)">63</spirit:left>
+            <spirit:right spirit:format="long">0</spirit:right>
+          </spirit:vector>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>xilinx_verilogsynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_verilogbehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>m_axis_log_tlast</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>xilinx_verilogsynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_verilogbehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>m_axis_log_tvalid</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>xilinx_verilogsynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_verilogbehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>m_axis_log_tready</spirit:name>
+        <spirit:wire>
+          <spirit:direction>in</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>xilinx_verilogsynthesis</spirit:viewNameRef>
+              <spirit:viewNameRef>xilinx_verilogbehavioralsimulation</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
         <spirit:name>current_time</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
@@ -1234,25 +1366,20 @@
       </spirit:port>
     </spirit:ports>
     <spirit:modelParameters>
-      <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="std_logic_vector">
-        <spirit:name>main_mac</spirit:name>
-        <spirit:displayName>Main Mac</spirit:displayName>
-        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.main_mac" spirit:bitStringLength="48">0x7A65646E746D</spirit:value>
-      </spirit:modelParameter>
-      <spirit:modelParameter spirit:dataType="std_logic_vector">
-        <spirit:name>loop_mac</spirit:name>
-        <spirit:displayName>Loop Mac</spirit:displayName>
-        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.loop_mac" spirit:bitStringLength="48">0x7A65646E744C</spirit:value>
+      <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="integer">
+        <spirit:name>C_AXI_WIDTH</spirit:name>
+        <spirit:displayName>C Axi Width</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_AXI_WIDTH">32</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>identifier</spirit:name>
-        <spirit:displayName>Identifier</spirit:displayName>
-        <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.identifier" spirit:bitStringLength="32">0x50696E47</spirit:value>
+        <spirit:name>C_AXIS_LOG_ENABLE</spirit:name>
+        <spirit:displayName>C Axis Log Enable</spirit:displayName>
+        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_AXIS_LOG_ENABLE">true</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>axi_width</spirit:name>
-        <spirit:displayName>Axi Width</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.axi_width">32</spirit:value>
+        <spirit:name>C_AXIS_LOG_WIDTH</spirit:name>
+        <spirit:displayName>C Axis Log Width</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_AXIS_LOG_WIDTH">64</spirit:value>
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
@@ -1267,6 +1394,12 @@
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
     </spirit:choice>
+    <spirit:choice>
+      <spirit:name>choice_list_a2e5156e</spirit:name>
+      <spirit:enumeration>64</spirit:enumeration>
+      <spirit:enumeration>128</spirit:enumeration>
+      <spirit:enumeration>256</spirit:enumeration>
+    </spirit:choice>
   </spirit:choices>
   <spirit:fileSets>
     <spirit:fileSet>
@@ -1276,11 +1409,19 @@
         <spirit:userFileType>xdc</spirit:userFileType>
       </spirit:file>
       <spirit:file>
+        <spirit:name>hdl/checksum_calculator.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>hdl/eth_measurer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/eth_measurer_axi.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/eth_measurer_axis_log.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1296,13 +1437,9 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/latency_fifo.sv</spirit:name>
-        <spirit:fileType>systemVerilogSource</spirit:fileType>
-      </spirit:file>
-      <spirit:file>
         <spirit:name>hdl/eth_measurer_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_9b98cdb2</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_65bfdba2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1328,11 +1465,19 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogbehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
+        <spirit:name>hdl/checksum_calculator.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>hdl/eth_measurer.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/eth_measurer_axi.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/eth_measurer_axis_log.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1345,10 +1490,6 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/eth_measurer_tx.sv</spirit:name>
-        <spirit:fileType>systemVerilogSource</spirit:fileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>hdl/latency_fifo.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1381,8 +1522,15 @@
       <spirit:file>
         <spirit:name>xgui/eth_latency_measurer_v1_1.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_21ae988a</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_433f74df</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
+      </spirit:file>
+    </spirit:fileSet>
+    <spirit:fileSet>
+      <spirit:name>xilinx_utilityxitfiles_view_fileset</spirit:name>
+      <spirit:file>
+        <spirit:name>gui/eth_latency_measurer_v1_1.gtcl</spirit:name>
+        <spirit:userFileType>GTCL</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
@@ -1393,24 +1541,26 @@
       <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">axi4_lite_test_v1_0</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
-      <spirit:name>main_mac</spirit:name>
-      <spirit:displayName>Main MAC</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.main_mac" spirit:bitStringLength="48">0x7A65646E746D</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>loop_mac</spirit:name>
-      <spirit:displayName>Loopback MAC</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.loop_mac" spirit:bitStringLength="48">0x7A65646E744C</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>identifier</spirit:name>
-      <spirit:displayName>Frame magic</spirit:displayName>
-      <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.identifier" spirit:bitStringLength="32">0x50696E47</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>axi_width</spirit:name>
+      <spirit:name>C_AXI_WIDTH</spirit:name>
       <spirit:displayName>AXI Data Width</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.axi_width" spirit:choiceRef="choice_list_99ba8646">32</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXI_WIDTH" spirit:choiceRef="choice_list_99ba8646">32</spirit:value>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_AXIS_LOG_ENABLE</spirit:name>
+      <spirit:displayName>Enable log</spirit:displayName>
+      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXIS_LOG_ENABLE">true</spirit:value>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_AXIS_LOG_WIDTH</spirit:name>
+      <spirit:displayName>Width</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXIS_LOG_WIDTH" spirit:choiceRef="choice_list_a2e5156e">64</spirit:value>
+      <spirit:vendorExtensions>
+        <xilinx:parameterInfo>
+          <xilinx:enablement>
+            <xilinx:isEnabled xilinx:resolve="generated" xilinx:id="PARAM_ENABLEMENT.C_AXIS_LOG_WIDTH">true</xilinx:isEnabled>
+          </xilinx:enablement>
+        </xilinx:parameterInfo>
+      </spirit:vendorExtensions>
     </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
@@ -1424,20 +1574,20 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Latency Measurer</xilinx:displayName>
-      <xilinx:coreRevision>1</xilinx:coreRevision>
+      <xilinx:coreRevision>2</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>oscar-rc.dev:zbnt_hw:eth_measurer:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2019-08-24T20:47:18Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-12-17T02:06:17Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="1f3dcf42"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="d6794f4d"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="41f96eb5"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="860beb92"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="42188f6b"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="24be923c"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="400374d4"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="ce4b5792"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c02cbb29"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="c5905a1c"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="71afec96"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="7278a133"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

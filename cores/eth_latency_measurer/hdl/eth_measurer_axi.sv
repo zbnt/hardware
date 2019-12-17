@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_measurer_axi #(parameter axi_width)
+module eth_latency_measurer_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1)
 (
 	input logic clk,
 	input logic rst_n,
@@ -16,8 +16,8 @@ module eth_measurer_axi #(parameter axi_width)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [axi_width-1:0] s_axi_wdata,
-	input logic [(axi_width/8)-1:0] s_axi_wstrb,
+	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -30,7 +30,7 @@ module eth_measurer_axi #(parameter axi_width)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [axi_width-1:0] s_axi_rdata,
+	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -39,16 +39,25 @@ module eth_measurer_axi #(parameter axi_width)
 
 	output logic enable,
 	output logic srst,
+	output logic log_enable,
+	output logic use_broadcast,
+	output logic [15:0] log_id,
+
+	output logic [47:0] mac_addr_a,
+	output logic [47:0] mac_addr_b,
+	output logic [31:0] ip_addr_a,
+	output logic [31:0] ip_addr_b,
+
 	output logic [15:0] padding,
 	output logic [31:0] delay,
 	output logic [31:0] timeout,
+	input logic [63:0] overflow_count,
 
 	input logic [63:0] current_time,
 
-	input logic ping_pong_done,
+	input logic [63:0] ping_count,
 	input logic [31:0] ping_time,
 	input logic [31:0] pong_time,
-	input logic [63:0] ping_pongs_good,
 	input logic [63:0] pings_lost,
 	input logic [63:0] pongs_lost
 );
@@ -57,14 +66,14 @@ module eth_measurer_axi #(parameter axi_width)
 	logic read_req;
 	logic read_ready;
 	logic read_response;
-	logic [axi_width-1:0] read_value;
+	logic [C_AXI_WIDTH-1:0] read_value;
 
 	logic write_req;
 	logic write_ready;
 	logic write_response;
 	logic [11:0] write_addr;
 
-	axi4_lite_slave_rw #(12, axi_width) U0
+	axi4_lite_slave_rw #(12, C_AXI_WIDTH) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -108,116 +117,123 @@ module eth_measurer_axi #(parameter axi_width)
 
 	// Read/write registers as requested
 
-	logic [axi_width-1:0] write_mask;
+	logic [C_AXI_WIDTH-1:0] write_mask;
 
-	logic fifo_read, fifo_written, fifo_full, fifo_empty, fifo_pop, fifo_busy;
-	logic [15:0] fifo_occupancy;
-	logic [319:0] fifo_out;
-	logic [63:0] fifo_time, fifo_ping_time, fifo_pong_time, fifo_ping_pongs_good, fifo_pings_lost, fifo_pongs_lost;
+	logic hold;
+	logic [63:0] ping_count_reg, ping_time_reg, pong_time_reg, pings_lost_reg, pongs_lost_reg;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n | srst) begin
 			enable <= 1'b0;
 			srst <= srst & rst_n;
+			hold <= 1'b0;
+			log_enable <= 1'b0;
+			log_id <= 15'd0;
+			mac_addr_a <= 48'd0;
+			mac_addr_b <= 48'd0;
+			ip_addr_a <= 32'd0;
+			ip_addr_b <= 32'd0;
 			padding <= 16'd38;
+			delay <= 32'd12500000;
+			timeout <= 32'd125000000;
 
-			fifo_pop <= 1'b0;
-			fifo_busy <= 1'b0;
-
-			fifo_time <= 64'd0;
-			fifo_ping_time <= 32'd0;
-			fifo_pong_time <= 32'd0;
-			fifo_ping_pongs_good <= 64'd0;
-			fifo_pings_lost <= 64'd0;
-			fifo_pongs_lost <= 64'd0;
+			ping_count_reg <= 64'd0;
+			ping_time_reg <= 32'd0;
+			pong_time_reg <= 32'd0;
+			pings_lost_reg <= 64'd0;
+			pongs_lost_reg <= 64'd0;
 		end else begin
-			if(fifo_read) begin
-				fifo_time <= fifo_out[319:256];
-				fifo_ping_time <= fifo_out[255:224];
-				fifo_pong_time <= fifo_out[223:192];
-				fifo_ping_pongs_good <= fifo_out[191:128];
-				fifo_pings_lost <= fifo_out[127:64];
-				fifo_pongs_lost <= fifo_out[63:0];
+			// Update the stored values if hold is set to 0
+			if(~hold) begin
+				ping_count_reg <= ping_count;
+				ping_time_reg <= ping_time;
+				pong_time_reg <= pong_time;
+				pings_lost_reg <= pings_lost_reg;
+				pongs_lost_reg <= pongs_lost_reg;
 			end
 
 			if(write_req) begin
 				if(write_addr[11:5] == 8'd0) begin
-					if(axi_width == 32) begin
-						case(write_addr[4:2])
-							3'd0: begin
+					if(C_AXI_WIDTH == 32) begin
+						case(write_addr[5:2])
+							4'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
+								hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
+								log_enable <= (s_axi_wdata[3] & write_mask[3]) | (log_enable & ~write_mask[3]);
+								use_broadcast <= (s_axi_wdata[4] & write_mask[4]) | (use_broadcast & ~write_mask[4]);
+								log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
 							end
 
-							3'd1: begin
+							4'd1: begin
+								mac_addr_a[31:0] <= (s_axi_wdata & write_mask) | (mac_addr_a[31:0] & ~write_mask);
+							end
+
+							4'd2: begin
+								mac_addr_a[47:32] <= (s_axi_wdata[15:0] & write_mask[15:0]) | (mac_addr_a[47:32] & ~write_mask[15:0]);
+								mac_addr_b[15:0] <= (s_axi_wdata[31:16] & write_mask[31:16]) | (mac_addr_b[15:0] & ~write_mask[31:16]);
+							end
+
+							4'd3: begin
+								mac_addr_b[47:16] <= (s_axi_wdata & write_mask) | (mac_addr_b[47:16] & ~write_mask);
+							end
+
+							4'd4: begin
+								ip_addr_a <= (s_axi_wdata & write_mask) | (ip_addr_a & ~write_mask);
+							end
+
+							4'd5: begin
+								ip_addr_b <= (s_axi_wdata & write_mask) | (ip_addr_b & ~write_mask);
+							end
+
+							4'd6: begin
 								padding <= (s_axi_wdata[15:0] & write_mask[15:0]) | (padding & ~write_mask[15:0]);
 							end
 
-							3'd2: begin
+							4'd7: begin
 								delay <= (s_axi_wdata & write_mask) | (delay & ~write_mask);
 							end
 
-							3'd3: begin
+							4'd8: begin
 								timeout <= (s_axi_wdata & write_mask) | (timeout & ~write_mask);
 							end
-
-							3'd5: begin
-								if(~fifo_busy) begin
-									fifo_pop <= 1'b1;
-									fifo_busy <= 1'b1;
-								end else begin
-									fifo_pop <= 1'b0;
-								end
-							end
 						endcase
-					end else if(axi_width == 64) begin
-						case(write_addr[4:3])
-							2'd0: begin
+					end else if(C_AXI_WIDTH == 64) begin
+						case(write_addr[5:3])
+							3'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-								padding <= (s_axi_wdata[47:32] & write_mask[47:32]) | (padding & ~write_mask[47:32]);
+								hold <= (s_axi_wdata[2] & write_mask[2]) | (hold & ~write_mask[2]);
+								log_enable <= (s_axi_wdata[3] & write_mask[3]) | (log_enable & ~write_mask[3]);
+								use_broadcast <= (s_axi_wdata[4] & write_mask[4]) | (use_broadcast & ~write_mask[4]);
+								log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
+								mac_addr_a[31:0] <= (s_axi_wdata[63:32] & write_mask[63:32]) | (mac_addr_a[31:0] & ~write_mask[63:32]);
 							end
 
-							2'd1: begin
-								delay <= (s_axi_wdata[31:0] & write_mask[31:0]) | (delay & ~write_mask[31:0]);
-								timeout <= (s_axi_wdata[63:32] & write_mask[63:32]) | (timeout & ~write_mask[63:32]);
+							3'd1: begin
+								mac_addr_a[47:32] <= (s_axi_wdata[15:0] & write_mask[15:0]) | (mac_addr_a[47:32] & ~write_mask[15:0]);
+								mac_addr_b <= (s_axi_wdata[63:16] & write_mask[63:16]) | (mac_addr_b & ~write_mask[63:16]);
 							end
 
-							2'd2: begin
-								if(~fifo_busy && |s_axi_wstrb[7:4]) begin
-									fifo_pop <= 1'b1;
-									fifo_busy <= 1'b1;
-								end else begin
-									fifo_pop <= 1'b0;
-								end
-							end
-						endcase
-					end else if(axi_width == 128) begin
-						case(write_addr[4])
-							1'd0: begin
-								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-								padding <= (s_axi_wdata[47:32] & write_mask[47:32]) | (padding & ~write_mask[47:32]);
-								delay <= (s_axi_wdata[95:64] & write_mask[95:64]) | (delay & ~write_mask[95:64]);
-								timeout <= (s_axi_wdata[127:96] & write_mask[127:96]) | (timeout & ~write_mask[127:96]);
+							3'd2: begin
+								ip_addr_a <= (s_axi_wdata[31:0] & write_mask[31:0]) | (ip_addr_a & ~write_mask[31:0]);
+								ip_addr_b <= (s_axi_wdata[63:32] & write_mask[63:32]) | (ip_addr_b & ~write_mask[63:32]);
 							end
 
-							1'd1: begin
-								if(~fifo_busy && |s_axi_wstrb[7:4]) begin
-									fifo_pop <= 1'b1;
-									fifo_busy <= 1'b1;
-								end else begin
-									fifo_pop <= 1'b0;
-								end
+							3'd3: begin
+								padding <= (s_axi_wdata[15:0] & write_mask[15:0]) | (padding & ~write_mask[15:0]);
+								delay <= (s_axi_wdata[63:32] & write_mask[63:32]) | (delay & ~write_mask[63:32]);
+							end
+
+							3'd4: begin
+								timeout <= (s_axi_wdata[31:0] & write_mask[31:0]) | (timeout & ~write_mask[31:0]);
 							end
 						endcase
 					end
 				end
-			end else begin
-				fifo_pop <= 1'b0;
-				fifo_busy <= 1'b0;
 			end
 		end
 
 		// SRST must be writable even after it has been set to 1
-		if(rst_n & write_req && write_addr[11:$clog2(axi_width/8)] == '0) begin
+		if(rst_n & write_req && write_addr[11:$clog2(C_AXI_WIDTH/8)] == '0) begin
 			srst <= (s_axi_wdata[1] & write_mask[1]) | (srst & ~write_mask[1]);
 		end
 	end
@@ -230,54 +246,53 @@ module eth_measurer_axi #(parameter axi_width)
 		write_ready = 1'b0;
 		write_response = 1'b0;
 
-		for(int i = 0; i < axi_width; ++i) begin
+		for(int i = 0; i < C_AXI_WIDTH; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
 		end
 
 		// Handle read requests
 
 		if(read_req) begin
-			if(s_axi_araddr <= 12'd63) begin
+			if(s_axi_araddr <= 12'd79) begin
 				// Register address
 				read_ready = 1'b1;
 				read_response = 1'b1;
 
-				if(axi_width == 32) begin
-					case(s_axi_araddr[5:2])
-						4'h0: read_value = {30'd0, srst, enable};
-						4'h1: read_value = {16'd0, padding};
-						4'h2: read_value = delay;
-						4'h3: read_value = timeout;
-						4'h4: read_value = {16'd0, fifo_occupancy};
-						4'h5: read_value = 32'd0;
-						4'h6: read_value = fifo_time[31:0];
-						4'h7: read_value = fifo_time[63:32];
-						4'h8: read_value = fifo_ping_time;
-						4'h9: read_value = fifo_pong_time;
-						4'hA: read_value = fifo_ping_pongs_good[31:0];
-						4'hB: read_value = fifo_ping_pongs_good[63:32];
-						4'hC: read_value = fifo_pings_lost[31:0];
-						4'hD: read_value = fifo_pings_lost[63:32];
-						4'hE: read_value = fifo_pongs_lost[31:0];
-						4'hF: read_value = fifo_pongs_lost[63:32];
+				if(C_AXI_WIDTH == 32) begin
+					case(s_axi_araddr[6:2])
+						5'h00: read_value = {log_id, 11'd0, use_broadcast, log_enable & C_AXIS_LOG_ENABLE[0], hold, srst, enable};
+						5'h01: read_value = mac_addr_a[31:0];
+						5'h02: read_value = {mac_addr_b[15:0], mac_addr_a[47:32]};
+						5'h03: read_value = mac_addr_b[47:16];
+						5'h04: read_value = ip_addr_a;
+						5'h05: read_value = ip_addr_b;
+						5'h06: read_value = {16'd0, padding};
+						5'h07: read_value = delay;
+						5'h08: read_value = timeout;
+						5'h09: read_value = 32'd0;
+						5'h0A: read_value = overflow_count[31:0];
+						5'h0B: read_value = overflow_count[63:32];
+						5'h0C: read_value = ping_count_reg[31:0];
+						5'h0D: read_value = ping_count_reg[63:32];
+						5'h0E: read_value = ping_time_reg;
+						5'h0F: read_value = pong_time_reg;
+						5'h10: read_value = pings_lost_reg[31:0];
+						5'h11: read_value = pings_lost_reg[63:32];
+						5'h12: read_value = pongs_lost_reg[31:0];
+						5'h13: read_value = pongs_lost_reg[63:32];
 					endcase
-				end else if(axi_width == 64) begin
-					case(s_axi_araddr[5:3])
-						3'h0: read_value = {16'd0, padding, 30'd0, srst, enable};
-						3'h1: read_value = {timeout, delay};
-						3'h2: read_value = {48'd0, fifo_occupancy};
-						3'h3: read_value = fifo_time;
-						3'h4: read_value = {fifo_pong_time, fifo_ping_time};
-						3'h5: read_value = fifo_ping_pongs_good;
-						3'h6: read_value = fifo_pings_lost;
-						3'h7: read_value = fifo_pongs_lost;
-					endcase
-				end else if(axi_width == 128) begin
-					case(s_axi_araddr[5:4])
-						2'h0: read_value = {timeout, delay, 16'd0, padding, 30'd0, srst, enable};
-						2'h1: read_value = {fifo_time, 48'd0, fifo_occupancy};
-						2'h2: read_value = {fifo_ping_pongs_good, fifo_pong_time, fifo_ping_time};
-						2'h3: read_value = {fifo_pongs_lost, fifo_pings_lost};
+				end else if(C_AXI_WIDTH == 64) begin
+					case(s_axi_araddr[6:3])
+						4'h00: read_value = {mac_addr_a[31:0], log_id, 11'd0, use_broadcast, log_enable & C_AXIS_LOG_ENABLE[0], hold, srst, enable};
+						4'h01: read_value = {mac_addr_b, mac_addr_a[47:32]};
+						4'h02: read_value = {ip_addr_b, ip_addr_a};
+						4'h03: read_value = {delay, 16'd0, padding};
+						4'h04: read_value = {32'd0, timeout};
+						4'h05: read_value = overflow_count;
+						4'h06: read_value = ping_count_reg;
+						4'h07: read_value = {pong_time_reg, ping_time_reg};
+						4'h08: read_value = pings_lost_reg;
+						4'h09: read_value = pongs_lost_reg;
 					endcase
 				end
 			end else begin
@@ -290,46 +305,8 @@ module eth_measurer_axi #(parameter axi_width)
 		// Handle write requests
 
 		if(write_req) begin
-			if(write_addr <= 12'd63) begin
-				write_response = 1'b1;
-
-				if(~fifo_empty && write_addr[11:$clog2(axi_width/8)] == 10'd160/axi_width && (axi_width == 32 || |s_axi_wstrb[7:4])) begin
-					write_ready = fifo_read;
-				end else begin
-					write_ready = 1'b1;
-				end
-			end else begin
-				write_ready = 1'b1;
-				write_response = 1'b0;
-			end
+			write_ready = 1'b1;
+			write_response = (write_addr <= 12'd79);
 		end
 	end
-
-	latency_fifo U1
-	(
-		.clk(clk),
-		.rst(~rst_n | srst),
-
-		.wr_ack(fifo_written),
-		.valid(fifo_read),
-
-		.full(fifo_full),
-		.din({current_time, ping_time, pong_time, ping_pongs_good, pings_lost, pongs_lost}),
-		.wr_en(ping_pong_done & ~fifo_full),
-
-		.empty(fifo_empty),
-		.dout(fifo_out),
-		.rd_en((fifo_pop | fifo_full) & ~fifo_empty)
-	);
-
-	counter #(16) U2
-	(
-		.clk(clk),
-		.rst(~rst_n | srst),
-
-		.up(fifo_written),
-		.down(fifo_read),
-
-		.count(fifo_occupancy)
-	);
 endmodule
