@@ -133,7 +133,7 @@ module eth_latency_measurer_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_L
 			mac_addr_b <= 48'd0;
 			ip_addr_a <= 32'd0;
 			ip_addr_b <= 32'd0;
-			padding <= 16'd38;
+			padding <= 16'd0;
 			delay <= 32'd12500000;
 			timeout <= 32'd125000000;
 

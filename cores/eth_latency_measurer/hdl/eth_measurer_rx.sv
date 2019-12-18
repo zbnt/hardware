@@ -68,7 +68,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 			count_next = count + 16'd1;
 			rx_buffer_next = {rx_buffer[311:0], 8'd0};
 
-			if(count <= 16'd39) begin
+			if(count <= 16'd39 && count != 16'd24 && count != 16'd25 && count != 16'd36 && count != 16'd37) begin
 				if(rx_buffer[319:312] != s_axis_tdata) begin
 					is_valid_next = 1'b0;
 				end
