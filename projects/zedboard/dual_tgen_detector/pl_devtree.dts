@@ -27,7 +27,7 @@
 				compatible = "ikwzm,u-dma-buf";
 				device-name = "zbnt_dmabuf_zedboard";
 				minor-number = <0>;
-				size = <0x00A00000>;
+				size = <0x00010000>;
 			};
 
 			dma@40400000 {
@@ -82,7 +82,7 @@
 
 			zbnt_fd@43c70000 {
 				compatible = "generic-uio";
-				reg = <0x43cb0000 0x10000>;
+				reg = <0x43c70000 0x10000>;
 				zbnt,ports = <2 3>;
 			};
 		};

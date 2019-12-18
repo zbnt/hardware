@@ -27,7 +27,7 @@
 				compatible = "ikwzm,u-dma-buf";
 				device-name = "zbnt_dmabuf_zedboard";
 				minor-number = <0>;
-				size = <0x00A00000>;
+				size = <0x00010000>;
 			};
 
 			dma@40400000 {
@@ -47,36 +47,43 @@
 			zbnt_sc@43c10000 {
 				compatible = "generic-uio";
 				reg = <0x43c10000 0x10000>;
+				zbnt,ports = <0>;
 			};
 
 			zbnt_sc@43c20000 {
 				compatible = "generic-uio";
 				reg = <0x43c20000 0x10000>;
+				zbnt,ports = <1>;
 			};
 
 			zbnt_sc@43c30000 {
 				compatible = "generic-uio";
 				reg = <0x43c30000 0x10000>;
+				zbnt,ports = <2>;
 			};
 
 			zbnt_sc@43c40000 {
 				compatible = "generic-uio";
 				reg = <0x43c40000 0x10000>;
+				zbnt,ports = <3>;
 			};
 
 			zbnt_tg@43c50000 {
 				compatible = "generic-uio";
 				reg = <0x43c50000 0x10000>;
+				zbnt,ports = <0>;
 			};
 
 			zbnt_tg@43c60000 {
 				compatible = "generic-uio";
 				reg = <0x43c60000 0x10000>;
+				zbnt,ports = <1>;
 			};
 
 			zbnt_lm@43c70000 {
 				compatible = "generic-uio";
-				reg = <0x43c90000 0x10000>;
+				reg = <0x43c70000 0x10000>;
+				zbnt,ports = <2 3>;
 			};
 		};
 	};
