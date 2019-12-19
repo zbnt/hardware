@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 2048)
+module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1)
 (
 	input logic clk,
 	input logic rst_n,
@@ -77,24 +77,14 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 
 	// Registers
 
+	output logic enable,
 	output logic srst,
-	output logic [7:0] match_en,
 	output logic mode,
+	output logic [7:0] match_en,
+	output logic [15:0] log_id,
 
-	// Status
-
-	input logic [63:0] current_time,
-	input logic time_running,
-
-	input logic [3:0] match_a,
-	input logic [1:0] match_a_id,
-	input logic [4:0] match_a_ext_num,
-	input logic [127:0] match_a_ext_data,
-
-	input logic [3:0] match_b,
-	input logic [1:0] match_b_id,
-	input logic [4:0] match_b_ext_num,
-	input logic [127:0] match_b_ext_data
+	input logic [63:0] overflow_count_a,
+	input logic [63:0] overflow_count_b
 );
 	// Handle AXI4-Lite requests
 
@@ -152,9 +142,6 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 
 	// Read/write registers as requested
 
-	logic enable;
-	logic [1:0] last_match_a_id, last_match_b_id;
-
 	logic [C_AXI_WIDTH-1:0] write_mask;
 
 	logic mem_a_done, mem_b_done, mem_c_done, mem_d_done;
@@ -163,91 +150,37 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 	logic mem_c_rreq, mem_c_wreq;
 	logic mem_d_rreq, mem_d_wreq;
 
-	logic fifo_read, fifo_written, fifo_we, fifo_full, fifo_empty, fifo_pop, fifo_busy;
-	logic [$clog2(C_LOG_FIFO_SIZE+1)-1:0] fifo_occupancy;
-	logic [201:0] fifo_out, fifo_in;
-	logic [63:0] fifo_time;
-	logic [3:0] fifo_matches;
-	logic [4:0] fifo_ext_num;
-	logic [127:0] fifo_ext_data;
-	logic fifo_match_dir;
-
 	always_ff @(posedge clk) begin
 		if(~rst_n | srst) begin
 			enable <= 1'b0;
 			srst <= srst & rst_n;
-			match_en <= 8'd0;
 			mode <= 1'b0;
-
-			last_match_a_id <= 2'd0;
-			last_match_b_id <= 2'd0;
-
-			fifo_we <= 1'b0;
-			fifo_in <= 202'd0;
-
-			fifo_pop <= 1'b0;
-			fifo_busy <= 1'b0;
-
-			fifo_time <= 64'd0;
-			fifo_matches <= 4'd0;
-			fifo_ext_num <= 5'd0;
-			fifo_ext_data <= 128'd0;
-			fifo_match_dir <= 1'b0;
+			log_id <= 16'd0;
+			match_en <= 8'd0;
 		end else begin
 			if(write_req) begin
-				// Write to config bits if requested via AXI
-				if(write_addr[15:$clog2(C_AXI_WIDTH/8)] == '0) begin
-					enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-					match_en <= (s_axi_wdata[9:2] & write_mask[9:2]) | (match_en & ~write_mask[9:2]);
-					mode <= (s_axi_wdata[10] & write_mask[10]) | (mode & ~write_mask[10]);
-				end
+				if(write_addr[15:3] == 13'd0) begin
+					if(C_AXI_WIDTH == 32) begin
+						case(write_addr[2])
+							1'd0: begin
+								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
+								mode <= (s_axi_wdata[2] & write_mask[2]) | (mode & ~write_mask[2]);
+								log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
+							end
 
-				// Special FIFO_POP register
-				if(C_AXI_WIDTH == 32) begin
-					if(~fifo_busy && write_addr[11:2] == 10'd2) begin
-						fifo_pop <= 1'b1;
-						fifo_busy <= 1'b1;
-					end else begin
-						fifo_pop <= 1'b0;
-					end
-				end else if(C_AXI_WIDTH == 64) begin
-					if(~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
-						fifo_pop <= 1'b1;
-						fifo_busy <= 1'b1;
-					end else begin
-						fifo_pop <= 1'b0;
-					end
-				end else if(C_AXI_WIDTH == 128) begin
-					if(~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
-						fifo_pop <= 1'b1;
-						fifo_busy <= 1'b1;
-					end else begin
-						fifo_pop <= 1'b0;
+							1'd1: begin
+								match_en[3:0] <= (s_axi_wdata[3:0] & write_mask[3:0]) | (match_en[3:0] & ~write_mask[3:0]);
+								match_en[7:4] <= (s_axi_wdata[19:16] & write_mask[19:16]) | (match_en[7:4] & ~write_mask[19:16]);
+							end
+						endcase
+					end else if(C_AXI_WIDTH == 64) begin
+						enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
+						mode <= (s_axi_wdata[2] & write_mask[2]) | (mode & ~write_mask[2]);
+						log_id <= (s_axi_wdata[31:16] & write_mask[31:16]) | (log_id & ~write_mask[31:16]);
+						match_en[3:0] <= (s_axi_wdata[35:32] & write_mask[35:32]) | (match_en[3:0] & ~write_mask[35:32]);
+						match_en[7:4] <= (s_axi_wdata[51:48] & write_mask[51:48]) | (match_en[7:4] & ~write_mask[51:48]);
 					end
 				end
-			end else begin
-				fifo_pop <= 1'b0;
-				fifo_busy <= 1'b0;
-			end
-
-			if(fifo_read) begin
-				fifo_time <= fifo_out[63:0];
-				fifo_matches <= fifo_out[67:64];
-				fifo_ext_num <= fifo_out[72:68];
-				fifo_ext_data <= fifo_out[200:73];
-				fifo_match_dir <= fifo_out[201];
-			end
-
-			if(last_match_a_id != match_a_id && |match_a) begin
-				fifo_we <= enable && time_running;
-				fifo_in <= {1'b0, match_a_ext_data, match_a_ext_num, match_a, current_time};
-				last_match_a_id <= match_a_id;
-			end else if(last_match_b_id != match_b_id && |match_b) begin
-				fifo_we <= enable && time_running;
-				fifo_in <= {1'b1, match_b_ext_data, match_b_ext_num, match_b, current_time};
-				last_match_b_id <= match_b_id;
-			end else begin
-				fifo_we <= 1'b0;
 			end
 		end
 
@@ -277,39 +210,25 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		// Handle read requests
 
 		if(read_req) begin
-			if(s_axi_araddr <= 16'd43) begin
+			if(s_axi_araddr <= 16'd23) begin
 				// Register address
 				read_ready = 1'b1;
 				read_response = 1'b1;
 
 				if(C_AXI_WIDTH == 32) begin
-					case(s_axi_araddr[5:2])
-						4'h0: read_value = {21'd0, mode, match_en, srst, enable};
-						4'h1: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy};
-						4'h2: read_value = 32'd0;
-						4'h3: read_value = 32'd0;
-						4'h4: read_value = fifo_time[31:0];
-						4'h5: read_value = fifo_time[63:32];
-						4'h6: read_value = {11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir};
-						4'h7: read_value = fifo_ext_data[31:0];
-						4'h8: read_value = fifo_ext_data[63:32];
-						4'h9: read_value = fifo_ext_data[95:64];
-						4'hA: read_value = fifo_ext_data[127:96];
+					case(s_axi_araddr[4:2])
+						3'd0: read_value = {log_id, 13'd0, mode, srst, enable};
+						3'd1: read_value = {12'd0, match_en[7:4], 12'd0, match_en[3:0]};
+						3'd2: read_value = overflow_count_a[31:0];
+						3'd3: read_value = overflow_count_a[63:32];
+						3'd4: read_value = overflow_count_b[31:0];
+						3'd5: read_value = overflow_count_b[63:32];
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
-					case(s_axi_araddr[5:3])
-						3'd0: read_value = {{(32-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 21'd0, mode, match_en, srst, enable};
-						3'd1: read_value = 64'd0;
-						3'd2: read_value = fifo_time;
-						3'd3: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir};
-						3'd4: read_value = fifo_ext_data[95:32];
-						3'd5: read_value = {32'd0, fifo_ext_data[127:96]};
-					endcase
-				end else if(C_AXI_WIDTH == 128) begin
-					case(s_axi_araddr[5:4])
-						2'd0: read_value = {{(96-$clog2(C_LOG_FIFO_SIZE+1)){1'd0}}, fifo_occupancy, 21'd0, mode, match_en, srst, enable};
-						2'd1: read_value = {fifo_ext_data[31:0], 11'd0, fifo_ext_num, 4'd0, fifo_matches, 7'd0, fifo_match_dir, fifo_time};
-						2'd2: read_value = {32'd0, fifo_ext_data[127:32]};
+					case(s_axi_araddr[4:3])
+						2'd0: read_value = {12'd0, match_en[7:4], 12'd0, match_en[3:0], log_id, 13'd0, mode, srst, enable};
+						2'd1: read_value = overflow_count_a;
+						2'd2: read_value = overflow_count_b;
 					endcase
 				end
 			end else if(s_axi_araddr[15:13] == 3'd1) begin
@@ -346,24 +265,10 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		// Handle write requests
 
 		if(write_req) begin
-			if(write_addr <= 16'd43) begin
+			if(write_addr <= 16'd23) begin
 				// Register address
 				write_ready = 1'b1;
 				write_response = 1'b1;
-
-				if(C_AXI_WIDTH == 32) begin
-					if(~fifo_busy && write_addr[11:2] == 10'd2) begin
-						write_ready = fifo_read;
-					end
-				end else if(C_AXI_WIDTH == 64) begin
-					if(~fifo_busy && write_addr[11:3] == 9'd1 && |s_axi_wstrb[3:0]) begin
-						write_ready = fifo_read;
-					end
-				end else if(C_AXI_WIDTH == 128) begin
-					if(~fifo_busy && write_addr[11:4] == 8'd0 && |s_axi_wstrb[11:8]) begin
-						write_ready = fifo_read;
-					end
-				end
 			end else if(write_addr[15:13] == 3'd1) begin
 				// MEM_A address
 				write_ready = mem_a_done;
@@ -392,35 +297,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		end
 	end
 
-	log_fifo #(C_LOG_FIFO_SIZE) U1
-	(
-		.clk(clk),
-		.rst(~rst_n | srst),
-
-		.wr_ack(fifo_written),
-		.valid(fifo_read),
-
-		.full(fifo_full),
-		.din(fifo_in),
-		.wr_en(fifo_we & ~fifo_full),
-
-		.empty(fifo_empty),
-		.dout(fifo_out),
-		.rd_en((fifo_pop | fifo_full) & ~fifo_empty)
-	);
-
-	counter #($clog2(C_LOG_FIFO_SIZE+1)) U2
-	(
-		.clk(clk),
-		.rst(~rst_n | srst),
-
-		.up(fifo_written),
-		.down(fifo_read),
-
-		.count(fifo_occupancy)
-	);
-
-	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U3
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -446,7 +323,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		.mem_rdata(mem_a_rdata)
 	);
 
-	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U4
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U2
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -472,7 +349,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		.mem_rdata(mem_b_rdata)
 	);
 
-	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U5
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U3
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -498,7 +375,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO
 		.mem_rdata(mem_c_rdata)
 	);
 
-	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U6
+	eth_frame_detector_axi_dram #(C_AXI_WIDTH) U4
 	(
 		.clk(clk),
 		.rst_n(rst_n),

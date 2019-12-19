@@ -13,7 +13,7 @@
 	regarding the matched patterns.
 */
 
-module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 2048, parameter C_LOOP_FIFO_SIZE = 2048)
+module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOOP_FIFO_SIZE = 2048, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -82,6 +82,20 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 	input logic s_axis_b_tlast,
 	input logic s_axis_b_tvalid,
 
+	// M_AXIS_LOG_A
+
+	output logic [C_AXIS_LOG_WIDTH-1:0] m_axis_log_a_tdata,
+	output logic m_axis_log_a_tlast,
+	output logic m_axis_log_a_tvalid,
+	input logic m_axis_log_a_tready,
+
+	// M_AXIS_LOG_B
+
+	output logic [C_AXIS_LOG_WIDTH-1:0] m_axis_log_b_tdata,
+	output logic m_axis_log_b_tlast,
+	output logic m_axis_log_b_tvalid,
+	input logic m_axis_log_b_tready,
+
 	// Timer
 
 	input logic [63:0] current_time,
@@ -89,12 +103,10 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 );
 	// axi4_lite registers
 
-	logic srst, mode;
+	logic enable, srst, mode;
 	logic [7:0] match_en;
-	logic [3:0] match_a, match_b;
-	logic [1:0] match_a_id, match_b_id;
-	logic [4:0] match_a_ext_num, match_b_ext_num;
-	logic [127:0] match_a_ext_data, match_b_ext_data;
+	logic [15:0] log_id;
+	logic [63:0] overflow_count_a, overflow_count_b;
 
 	logic mem_a_pa_req, mem_a_pa_we, mem_a_pa_ack;
 	logic mem_b_pa_req, mem_b_pa_we, mem_b_pa_ack;
@@ -111,7 +123,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 	logic [C_AXI_WIDTH-1:0] mem_c_pa_wdata, mem_c_pa_rdata;
 	logic [C_AXI_WIDTH-1:0] mem_d_pa_wdata, mem_d_pa_rdata;
 
-	eth_frame_detector_axi #(C_AXI_WIDTH, C_LOG_FIFO_SIZE) U0
+	eth_frame_detector_axi #(C_AXI_WIDTH, C_AXIS_LOG_ENABLE) U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -184,24 +196,67 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 
 		// Registers
 
+		.enable(enable),
 		.srst(srst),
-		.match_en(match_en),
 		.mode(mode),
+		.match_en(match_en),
+		.log_id(log_id),
 
-		// Status
+		.overflow_count_a(overflow_count_a),
+		.overflow_count_b(overflow_count_b)
+	);
+
+	// AXIS
+
+	logic [3:0] match_a, match_b;
+	logic [1:0] match_a_id, match_b_id;
+	logic [4:0] match_a_ext_num, match_b_ext_num;
+	logic [127:0] match_a_ext_data, match_b_ext_data;
+
+	eth_frame_detector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH, 65) U1
+	(
+		.clk(s_axi_clk),
+		.rst_n(s_axi_resetn),
+
+		.log_id(log_id),
+		.overflow_count(overflow_count_a),
 
 		.current_time(current_time),
-		.time_running(time_running),
 
-		.match_a(match_a),
-		.match_a_id(match_a_id),
-		.match_a_ext_num(match_a_ext_num),
-		.match_a_ext_data(match_a_ext_data),
+		.match(match_a),
+		.match_id(match_a_id),
+		.match_ext_num(match_a_ext_num),
+		.match_ext_data(match_a_ext_data),
 
-		.match_b(match_b),
-		.match_b_id(match_b_id),
-		.match_b_ext_num(match_b_ext_num),
-		.match_b_ext_data(match_b_ext_data)
+		// M_AXIS_LOG
+
+		.m_axis_log_tdata(m_axis_log_a_tdata),
+		.m_axis_log_tlast(m_axis_log_a_tlast),
+		.m_axis_log_tvalid(m_axis_log_a_tvalid),
+		.m_axis_log_tready(m_axis_log_a_tready)
+	);
+
+	eth_frame_detector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH, 66) U2
+	(
+		.clk(s_axi_clk),
+		.rst_n(s_axi_resetn),
+
+		.log_id(log_id),
+		.overflow_count(overflow_count_b),
+
+		.current_time(current_time),
+
+		.match(match_b),
+		.match_id(match_b_id),
+		.match_ext_num(match_b_ext_num),
+		.match_ext_data(match_b_ext_data),
+
+		// M_AXIS_LOG
+
+		.m_axis_log_tdata(m_axis_log_b_tdata),
+		.m_axis_log_tlast(m_axis_log_b_tlast),
+		.m_axis_log_tvalid(m_axis_log_b_tvalid),
+		.m_axis_log_tready(m_axis_log_b_tready)
 	);
 
 	// Interface loop, transmit frames received from one interface through the other
@@ -211,7 +266,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 	logic s_axis_a_mod_tlast, s_axis_a_mod_tvalid;
 	logic s_axis_b_mod_tlast, s_axis_b_mod_tvalid;
 
-	eth_frame_loop #(C_LOOP_FIFO_SIZE) U1
+	eth_frame_loop #(C_LOOP_FIFO_SIZE) U3
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -238,7 +293,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 		.s_axis_tvalid(s_axis_b_mod_tvalid)
 	);
 
-	eth_frame_loop #(C_LOOP_FIFO_SIZE) U2
+	eth_frame_loop #(C_LOOP_FIFO_SIZE) U4
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -270,7 +325,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 	logic [10:0] pattern_a_addr, pattern_b_addr;
 	logic [31:0] mem_a_pb_data, mem_b_pb_data, mem_c_pb_data, mem_d_pb_data;
 
-	eth_frame_matcher U3
+	eth_frame_matcher U5
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -304,7 +359,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 		.pattern_flags(mem_b_pb_data)
 	);
 
-	eth_frame_matcher U4
+	eth_frame_matcher U6
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -340,7 +395,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 
 	// Memory for storing patterns, one for each direction
 
-	eth_frame_pattern_mem #(C_AXI_WIDTH) U5
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U7
 	(
 		.clk(s_axi_clk),
 
@@ -361,7 +416,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 		.mem_pb_rdata(mem_a_pb_data)
 	);
 
-	eth_frame_pattern_mem #(C_AXI_WIDTH) U6
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U8
 	(
 		.clk(s_axi_clk),
 
@@ -382,7 +437,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 		.mem_pb_rdata(mem_b_pb_data)
 	);
 
-	eth_frame_pattern_mem #(C_AXI_WIDTH) U7
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U9
 	(
 		.clk(s_axi_clk),
 
@@ -403,7 +458,7 @@ module eth_frame_detector #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZ
 		.mem_pb_rdata(mem_c_pb_data)
 	);
 
-	eth_frame_pattern_mem #(C_AXI_WIDTH) U8
+	eth_frame_pattern_mem #(C_AXI_WIDTH) U10
 	(
 		.clk(s_axi_clk),
 

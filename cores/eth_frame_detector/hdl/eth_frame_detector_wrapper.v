@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_SIZE = 4096, parameter C_LOOP_FIFO_SIZE = 16384)
+module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOOP_FIFO_SIZE = 16384, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -73,12 +73,26 @@ module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_S
 	input wire s_axis_b_tlast,
 	input wire s_axis_b_tvalid,
 
+	// M_AXIS_LOG_A
+
+	output wire [C_AXIS_LOG_WIDTH-1:0] m_axis_log_a_tdata,
+	output wire m_axis_log_a_tlast,
+	output wire m_axis_log_a_tvalid,
+	input wire m_axis_log_a_tready,
+
+	// M_AXIS_LOG_B
+
+	output wire [C_AXIS_LOG_WIDTH-1:0] m_axis_log_b_tdata,
+	output wire m_axis_log_b_tlast,
+	output wire m_axis_log_b_tvalid,
+	input wire m_axis_log_b_tready,
+
 	// Timer
 
 	input wire [63:0] current_time,
 	input wire time_running
 );
-	eth_frame_detector #(C_AXI_WIDTH, C_LOG_FIFO_SIZE, C_LOOP_FIFO_SIZE) U0
+	eth_frame_detector #(C_AXI_WIDTH, C_LOOP_FIFO_SIZE, C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U0
 	(
 		// S_AXI
 
@@ -146,6 +160,20 @@ module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOG_FIFO_S
 		.s_axis_b_tuser(s_axis_b_tuser),
 		.s_axis_b_tlast(s_axis_b_tlast),
 		.s_axis_b_tvalid(s_axis_b_tvalid),
+
+		// M_AXIS_LOG_A
+
+		.m_axis_log_a_tdata(m_axis_log_a_tdata),
+		.m_axis_log_a_tlast(m_axis_log_a_tlast),
+		.m_axis_log_a_tvalid(m_axis_log_a_tvalid),
+		.m_axis_log_a_tready(m_axis_log_a_tready),
+
+		// M_AXIS_LOG_B
+
+		.m_axis_log_b_tdata(m_axis_log_b_tdata),
+		.m_axis_log_b_tlast(m_axis_log_b_tlast),
+		.m_axis_log_b_tvalid(m_axis_log_b_tvalid),
+		.m_axis_log_b_tready(m_axis_log_b_tready),
 
 		// Timer
 
