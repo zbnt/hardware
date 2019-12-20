@@ -27,7 +27,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_ENABLE = 1, parameter 
 	input logic m_axis_log_tready
 );
 	if(C_AXIS_LOG_ENABLE) begin
-		localparam C_TX_BUFFER_WIDTH = 224;
+		localparam C_TX_BUFFER_WIDTH = 288;
 		localparam C_TX_COUNT_WIDTH = $clog2(((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 1)/C_AXIS_LOG_WIDTH) * (C_AXIS_LOG_WIDTH/8) + 1);
 
 		logic tx_enable;
@@ -49,9 +49,9 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_ENABLE = 1, parameter 
 				if(~tx_enable) begin
 					if(last_match_id != match_id) begin
 						tx_enable <= 1'b1;
-						tx_buffer <= {match_ext_data, 11'd0, match_ext_num, 4'd0, match, C_DIRECTION_ID[7:0], 16'd4 + {3'd0, match_ext_num}, log_id, 32'h02425AFF};
+						tx_buffer <= {match_ext_data, 11'd0, match_ext_num, 4'd0, match, C_DIRECTION_ID[7:0], current_time, 16'd12 + {3'd0, match_ext_num}, log_id, 32'h02425AFF};
 						tx_count <= C_AXIS_LOG_WIDTH[C_TX_COUNT_WIDTH+2:3];
-						tx_limit <= 16'd12 + {3'd0, match_ext_num};
+						tx_limit <= 16'd20 + {3'd0, match_ext_num};
 					end
 				end else begin
 					if(last_match_id != match_id) begin
