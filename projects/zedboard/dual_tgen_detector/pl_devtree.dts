@@ -28,6 +28,7 @@
 				device-name = "zbnt_dmabuf_zedboard";
 				minor-number = <0>;
 				size = <0x00010000>;
+				dma-coherent;
 			};
 
 			dma@40400000 {
