@@ -14,6 +14,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 (
 	input logic clk,
 	input logic rst_n,
+	input logic [31:0] fifo_occupancy,
 
 	output logic irq,
 	output logic dm_rst_n,
@@ -74,13 +75,13 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 );
 	// axi4_lite registers
 
-	logic enable, srst;
+	logic enable, srst, fifo_empty;
 	logic [1:0] bits_irq, clear_irq, enable_irq;
 	logic [C_ADDR_WIDTH-1:0] mem_base;
 	logic [31:0] mem_size, bytes_written, last_msg_end, timeout;
 	logic [3:0] status_flags;
 
-	circular_dma_axi #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH) U0
+	circular_dma_axi #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -112,6 +113,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.enable(enable),
 		.srst(srst),
 		.status_flags(status_flags),
+		.fifo_empty(fifo_empty),
 
 		.irq(bits_irq),
 		.clear_irq(clear_irq),
@@ -170,6 +172,10 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.m_axis_s2mm_cmd_tvalid(m_axis_s2mm_cmd_tvalid),
 		.m_axis_s2mm_cmd_tready(m_axis_s2mm_cmd_tready)
 	);
+
+	always_ff @(posedge clk) begin
+		fifo_empty <= (fifo_occupancy == 32'd0);
+	end
 
 	always_comb begin
 		dm_rst_n = rst_n & ~srst;

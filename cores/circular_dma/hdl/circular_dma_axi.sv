@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 64)
+module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 64, parameter C_MAX_BURST = 16)
 (
 	input logic clk,
 	input logic rst_n,
@@ -40,6 +40,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 	output logic enable,
 	output logic srst,
 	input logic [3:0] status_flags,
+	input logic fifo_empty,
 
 	input logic [1:0] irq,
 	output logic [1:0] clear_irq,
@@ -107,6 +108,8 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 	// Read/write registers as requested
 
+	localparam C_BURST_BYTES = C_MAX_BURST * (C_AXIS_WIDTH / 8);
+
 	logic [C_AXI_WIDTH-1:0] write_mask;
 
 	always_ff @(posedge clk) begin
@@ -137,7 +140,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 							3'd2: begin
 								mem_base[31:0] <= (s_axi_wdata & write_mask) | (mem_base[31:0] & ~write_mask);
-								mem_base[$clog2(C_AXIS_WIDTH/8):0] <= 'd0;
+								mem_base[$clog2(C_AXIS_WIDTH/8)-1:0] <= 'd0;
 							end
 
 							3'd3: begin
@@ -148,7 +151,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 							3'd4: begin
 								mem_size <= (s_axi_wdata & write_mask) | (mem_size & ~write_mask);
-								mem_size[$clog2(C_AXIS_WIDTH/8):0] <= 'd0;
+								mem_size[$clog2(C_BURST_BYTES)-1:0] <= 'd0;
 							end
 
 							3'd7: begin
@@ -165,12 +168,12 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 							2'd1: begin
 								mem_base <= (s_axi_wdata[C_ADDR_WIDTH-1:0] & write_mask[C_ADDR_WIDTH-1:0]) | (mem_base & ~write_mask[C_ADDR_WIDTH-1:0]);
-								mem_base[$clog2(C_AXIS_WIDTH/8):0] <= 'd0;
+								mem_base[$clog2(C_AXIS_WIDTH/8)-1:0] <= 'd0;
 							end
 
 							2'd2: begin
 								mem_size <= (s_axi_wdata[31:0] & write_mask[31:0]) | (mem_size & ~write_mask[31:0]);
-								mem_size[$clog2(C_AXIS_WIDTH/8):0] <= 'd0;
+								mem_size[$clog2(C_BURST_BYTES)-1:0] <= 'd0;
 							end
 
 							3'd3: begin
@@ -210,7 +213,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
-						3'd0: read_value = {12'd0, status_flags, 14'd0, srst, enable};
+						3'd0: read_value = {12'd0, status_flags, 13'd0, fifo_empty, srst, enable};
 						3'd1: read_value = {14'd0, enable_irq, 14'd0, irq};
 						3'd2: read_value = mem_base[31:0];
 						3'd3: read_value = (C_ADDR_WIDTH == 64) ? mem_base[63:32] : 32'd0;
@@ -221,7 +224,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[4:3])
-						2'd0: read_value = {14'd0, enable_irq, 14'd0, irq, 12'd0, status_flags, 14'd0, srst, enable};
+						2'd0: read_value = {14'd0, enable_irq, 14'd0, irq, 12'd0, status_flags, 13'd0, fifo_empty, srst, enable};
 						2'd1: read_value = (C_ADDR_WIDTH == 64) ? mem_base : {32'd0, mem_base};
 						2'd2: read_value = {bytes_written, mem_size};
 						2'd3: read_value = {timeout, last_msg_end};

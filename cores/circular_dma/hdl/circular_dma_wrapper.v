@@ -8,6 +8,7 @@ module circular_dma_w #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32,
 (
 	input wire clk,
 	input wire rst_n,
+	input wire [31:0] fifo_occupancy,
 
 	output wire irq,
 	output wire dm_rst_n,
@@ -70,6 +71,7 @@ module circular_dma_w #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32,
 	(
 		.clk(clk),
 		.rst_n(rst_n),
+		.fifo_occupancy(fifo_occupancy),
 
 		.irq(irq),
 		.dm_rst_n(dm_rst_n),
