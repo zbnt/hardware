@@ -698,6 +698,7 @@ proc create_hier_cell_dma { parentCell nameHier } {
   set fifo_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_6 ]
   set_property -dict [ list \
    CONFIG.FIFO_DEPTH {32768} \
+   CONFIG.HAS_RD_DATA_COUNT {1} \
  ] $fifo_6
 
   # Create instance: switch, and set properties
@@ -736,6 +737,7 @@ proc create_hier_cell_dma { parentCell nameHier } {
   connect_bd_net -net dma_dm_rst_n [get_bd_pins axi_converter/aresetn] [get_bd_pins datamover/m_axi_s2mm_aresetn] [get_bd_pins datamover/m_axis_s2mm_cmdsts_aresetn] [get_bd_pins dma/dm_rst_n] [get_bd_pins fifo_0/s_axis_aresetn] [get_bd_pins fifo_1/s_axis_aresetn] [get_bd_pins fifo_2/s_axis_aresetn] [get_bd_pins fifo_3/s_axis_aresetn] [get_bd_pins fifo_4/s_axis_aresetn] [get_bd_pins fifo_5/s_axis_aresetn] [get_bd_pins fifo_6/s_axis_aresetn] [get_bd_pins switch/aresetn]
   connect_bd_net -net dma_irq [get_bd_pins irq] [get_bd_pins dma/irq]
   connect_bd_net -net ethfmc_clk_buf_IBUF_OUT [get_bd_pins clk] [get_bd_pins axi_converter/aclk] [get_bd_pins datamover/m_axi_s2mm_aclk] [get_bd_pins datamover/m_axis_s2mm_cmdsts_awclk] [get_bd_pins dma/clk] [get_bd_pins fifo_0/s_axis_aclk] [get_bd_pins fifo_1/s_axis_aclk] [get_bd_pins fifo_2/s_axis_aclk] [get_bd_pins fifo_3/s_axis_aclk] [get_bd_pins fifo_4/s_axis_aclk] [get_bd_pins fifo_5/s_axis_aclk] [get_bd_pins fifo_6/s_axis_aclk] [get_bd_pins switch/aclk]
+  connect_bd_net -net fifo_6_axis_rd_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_6/axis_rd_data_count]
   connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins dma/rst_n]
 
   # Restore current instance
