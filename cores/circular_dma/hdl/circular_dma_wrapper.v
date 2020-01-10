@@ -10,6 +10,7 @@ module circular_dma_w #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32,
 	input wire rst_n,
 
 	output wire irq,
+	output wire dm_rst_n,
 
 	// S_AXI
 
@@ -61,7 +62,7 @@ module circular_dma_w #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32,
 
 	// M_AXIS_S2MM_CMD
 
-	output wire [C_ADDR_WIDTH+39:0] m_axis_s2mm_cmd_tdata,
+	output wire [C_ADDR_WIDTH+47:0] m_axis_s2mm_cmd_tdata,
 	output wire m_axis_s2mm_cmd_tvalid,
 	input wire m_axis_s2mm_cmd_tready
 );
@@ -71,6 +72,7 @@ module circular_dma_w #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32,
 		.rst_n(rst_n),
 
 		.irq(irq),
+		.dm_rst_n(dm_rst_n),
 
 		// S_AXI
 

@@ -10,15 +10,17 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 	input logic rst_n,
 
 	input logic enable,
-	input logic clear_irq,
+	input logic [1:0] clear_irq,
+	input logic [1:0] enable_irq,
 
-	output logic irq,
+	output logic [1:0] irq,
 	output logic [3:0] status_flags,
 
 	input logic [C_ADDR_WIDTH-1:0] mem_base,
 	input logic [31:0] mem_size,
 	output logic [31:0] bytes_written,
 	output logic [31:0] last_msg_end,
+	input logic [31:0] timeout,
 
 	// S_AXIS_S2MM
 
@@ -44,20 +46,20 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 
 	// M_AXIS_S2MM_CMD
 
-	output logic [C_ADDR_WIDTH+39:0] m_axis_s2mm_cmd_tdata,
+	output logic [C_ADDR_WIDTH+47:0] m_axis_s2mm_cmd_tdata,
 	output logic m_axis_s2mm_cmd_tvalid,
 	input logic m_axis_s2mm_cmd_tready
 );
 	enum logic {ST_WAIT_ENABLE, ST_WRITE} state;
 	logic [C_ADDR_WIDTH-1:0] mem_ptr;
-	logic [31:0] bytes_left, mem_size_q;
+	logic [31:0] bytes_left, mem_size_q, timeout_count;
 
 	localparam C_MAX_BYTES = C_MAX_BURST * (C_AXIS_WIDTH / 8);
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state <= ST_WAIT_ENABLE;
-			irq <= 1'b0;
+			irq <= 2'b0;
 			mem_ptr <= '0;
 			bytes_left <= 32'd0;
 			bytes_written <= 32'd0;
@@ -67,9 +69,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 			m_axis_s2mm_cmd_tdata <= '0;
 			m_axis_s2mm_cmd_tvalid <= 1'b0;
 		end else begin
-			if(clear_irq) begin
-				irq <= 1'b0;
-			end
+			irq <= irq & ~clear_irq & enable_irq;
 
 			if(s_axis_s2mm_sts_tvalid) begin
 				status_flags <= {s_axis_s2mm_sts_tdata[6:4], s_axis_s2mm_sts_tdata[7]};
@@ -77,7 +77,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 
 			case(state)
 				ST_WAIT_ENABLE: begin
-					if(enable && ~irq && mem_size != 'd0) begin
+					if(enable && irq == 2'd0 && mem_size != 'd0) begin
 						state <= ST_WRITE;
 						mem_ptr <= mem_base;
 						mem_size_q <= mem_size - C_AXIS_WIDTH[31:3];
@@ -91,12 +91,12 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 					if(m_axis_s2mm_cmd_tready) begin
 						if(bytes_left != 24'd0) begin
 							if(bytes_left <= C_MAX_BYTES) begin
-								m_axis_s2mm_cmd_tdata <= {'0, mem_ptr, 9'd1, bytes_left[22:0]};
+								m_axis_s2mm_cmd_tdata <= {8'b00111111, '0, mem_ptr, 9'd1, bytes_left[22:0]};
 								m_axis_s2mm_cmd_tvalid <= 1'b1;
 
 								bytes_left <= 32'd0;
 							end else begin
-								m_axis_s2mm_cmd_tdata <= {'0, mem_ptr, 9'd1, C_MAX_BYTES[22:0]};
+								m_axis_s2mm_cmd_tdata <= {8'b00111111, '0, mem_ptr, 9'd1, C_MAX_BYTES[22:0]};
 								m_axis_s2mm_cmd_tvalid <= 1'b1;
 
 								mem_ptr <= mem_ptr + C_MAX_BYTES;
@@ -112,11 +112,15 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 
 						if(s_axis_s2mm_sts_tlast) begin
 							last_msg_end <= bytes_written + C_AXIS_WIDTH[31:3];
+
+							if(timeout_count >= timeout) begin
+								irq[1] <= enable_irq[1];
+							end
 						end
 
 						if(bytes_written == mem_size_q) begin
 							state <= ST_WAIT_ENABLE;
-							irq <= 1'b1;
+							irq[0] <= enable_irq[0];
 						end
 					end
 				end
@@ -138,4 +142,12 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 			s_axis_s2mm_tready = 1'b0;
 		end
 	end
+
+	counter_big #(32) U0
+	(
+		.clk(clk),
+		.rst(~rst_n | irq[1]),
+		.enable(~&timeout_count),
+		.count(timeout_count)
+	);
 endmodule

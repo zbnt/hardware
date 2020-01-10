@@ -16,6 +16,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 	input logic rst_n,
 
 	output logic irq,
+	output logic dm_rst_n,
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -67,15 +68,16 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 
 	// M_AXIS_S2MM_CMD
 
-	output logic [C_ADDR_WIDTH+39:0] m_axis_s2mm_cmd_tdata,
+	output logic [C_ADDR_WIDTH+47:0] m_axis_s2mm_cmd_tdata,
 	output logic m_axis_s2mm_cmd_tvalid,
 	input logic m_axis_s2mm_cmd_tready
 );
 	// axi4_lite registers
 
-	logic enable, clear_irq;
+	logic enable, srst;
+	logic [1:0] bits_irq, clear_irq, enable_irq;
 	logic [C_ADDR_WIDTH-1:0] mem_base;
-	logic [31:0] mem_size, bytes_written, last_msg_end;
+	logic [31:0] mem_size, bytes_written, last_msg_end, timeout;
 	logic [3:0] status_flags;
 
 	circular_dma_axi #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH) U0
@@ -108,32 +110,37 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.s_axi_rready(s_axi_rready),
 
 		.enable(enable),
+		.srst(srst),
 		.status_flags(status_flags),
 
-		.irq(irq),
+		.irq(bits_irq),
 		.clear_irq(clear_irq),
+		.enable_irq(enable_irq),
 
 		.mem_base(mem_base),
 		.mem_size(mem_size),
 		.bytes_written(bytes_written),
-		.last_msg_end(last_msg_end)
+		.last_msg_end(last_msg_end),
+		.timeout(timeout)
 	);
 
 	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U1
 	(
 		.clk(clk),
-		.rst_n(rst_n),
+		.rst_n(dm_rst_n),
 
 		.enable(enable),
 		.clear_irq(clear_irq),
+		.enable_irq(enable_irq),
 
-		.irq(irq),
+		.irq(bits_irq),
 		.status_flags(status_flags),
 
 		.mem_base(mem_base),
 		.mem_size(mem_size),
 		.bytes_written(bytes_written),
 		.last_msg_end(last_msg_end),
+		.timeout(timeout),
 
 		// S_AXIS_S2MM
 
@@ -163,4 +170,9 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.m_axis_s2mm_cmd_tvalid(m_axis_s2mm_cmd_tvalid),
 		.m_axis_s2mm_cmd_tready(m_axis_s2mm_cmd_tready)
 	);
+
+	always_comb begin
+		dm_rst_n = rst_n & ~srst;
+		irq = |bits_irq;
+	end
 endmodule
