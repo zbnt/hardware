@@ -213,7 +213,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
-						3'd0: read_value = {12'd0, status_flags, 13'd0, fifo_empty, srst, enable};
+						3'd0: read_value = {11'd0, fifo_empty, status_flags, 14'd0, srst, enable};
 						3'd1: read_value = {14'd0, enable_irq, 14'd0, irq};
 						3'd2: read_value = mem_base[31:0];
 						3'd3: read_value = (C_ADDR_WIDTH == 64) ? mem_base[63:32] : 32'd0;
@@ -224,7 +224,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[4:3])
-						2'd0: read_value = {14'd0, enable_irq, 14'd0, irq, 12'd0, status_flags, 13'd0, fifo_empty, srst, enable};
+						2'd0: read_value = {14'd0, enable_irq, 14'd0, irq, 11'd0, fifo_empty, status_flags, 14'd0, srst, enable};
 						2'd1: read_value = (C_ADDR_WIDTH == 64) ? mem_base : {32'd0, mem_base};
 						2'd2: read_value = {bytes_written, mem_size};
 						2'd3: read_value = {timeout, last_msg_end};
