@@ -46,7 +46,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 
 	// M_AXIS_S2MM_CMD
 
-	output logic [C_ADDR_WIDTH+47:0] m_axis_s2mm_cmd_tdata,
+	output logic [C_ADDR_WIDTH+39:0] m_axis_s2mm_cmd_tdata,
 	output logic m_axis_s2mm_cmd_tvalid,
 	input logic m_axis_s2mm_cmd_tready
 );
@@ -72,7 +72,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 			bytes_queued <= 32'd0;
 			bytes_written <= 32'd0;
 			last_msg_end <= 32'd0;
-			status_flags <= 4'd0;
+			status_flags <= 4'd1;
 			queue_done <= 1'b0;
 
 			s_fifo_tdata <= 32'd0;
@@ -95,6 +95,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 						bytes_written <= 32'd0;
 						last_msg_end <= 32'd0;
 						s_fifo_tdata <= 32'd0;
+						status_flags <= 4'd1;
 						queue_done <= 1'b0;
 					end
 				end
@@ -125,7 +126,8 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 						end
 
 						m_fifo_tready <= 1'b1;
-						status_flags <= {s_axis_s2mm_sts_tdata[6:4], s_axis_s2mm_sts_tdata[7]};
+						status_flags[3:1] <= status_flags[3:1] | s_axis_s2mm_sts_tdata[6:4];
+						status_flags[0] <= status_flags[0] & s_axis_s2mm_sts_tdata[7];
 					end
 
 					if(m_fifo_tready & m_fifo_tvalid) begin
@@ -149,7 +151,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 		m_axis_s2mm_tlast = (bytes_queued == mem_size_q || bytes_queued[$clog2(C_BURST_BYTES)-1:$clog2(C_AXIS_WIDTH/8)] == '1);
 		s_axis_s2mm_sts_tready = 1'b1;
 
-		m_axis_s2mm_cmd_tdata = {8'b00111111, '0, mem_ptr, 9'd1, C_BURST_BYTES[22:0]};
+		m_axis_s2mm_cmd_tdata = {8'd0, mem_ptr, 9'd1, C_BURST_BYTES[22:0]};
 		m_axis_s2mm_cmd_tvalid = (state == ST_WRITE && bytes_left_req != 32'd0);
 
 		if(state == ST_WRITE && ~queue_done) begin

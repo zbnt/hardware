@@ -69,7 +69,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 
 	// M_AXIS_S2MM_CMD
 
-	output logic [C_ADDR_WIDTH+47:0] m_axis_s2mm_cmd_tdata,
+	output logic [C_ADDR_WIDTH+39:0] m_axis_s2mm_cmd_tdata,
 	output logic m_axis_s2mm_cmd_tvalid,
 	input logic m_axis_s2mm_cmd_tready
 );
