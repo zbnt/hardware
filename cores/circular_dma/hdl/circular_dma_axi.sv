@@ -39,12 +39,13 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 	output logic enable,
 	output logic srst,
-	input logic [3:0] status_flags,
+	output logic flush_fifo,
+	input logic [2:0] status_flags,
 	input logic fifo_empty,
 
-	input logic [1:0] irq,
-	output logic [1:0] clear_irq,
-	output logic [1:0] enable_irq,
+	input logic [2:0] irq,
+	output logic [2:0] clear_irq,
+	output logic [2:0] enable_irq,
 
 	output logic [C_ADDR_WIDTH-1:0] mem_base,
 	output logic [31:0] mem_size,
@@ -116,14 +117,19 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 		if(~rst_n | srst) begin
 			enable <= 1'b0;
 			srst <= srst & rst_n;
-			clear_irq <= 2'b0;
-			enable_irq <= 2'b0;
+			flush_fifo <= 1'b0;
+			clear_irq <= 3'b0;
+			enable_irq <= 3'b0;
 			timeout <= 32'd125000000;
 
 			mem_base <= '0;
 			mem_size <= 32'd0;
 		end else begin
-			clear_irq <= 2'b0;
+			clear_irq <= 3'b0;
+
+			if(fifo_empty) begin
+				flush_fifo <= 1'b0;
+			end
 
 			if(write_req) begin
 				if(write_addr[11:5] == 7'd0) begin
@@ -131,11 +137,12 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 						case(write_addr[4:2])
 							3'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
+								flush_fifo <= (s_axi_wdata[2] & write_mask[2]) | (flush_fifo & ~write_mask[2]);
 							end
 
 							3'd1: begin
-								clear_irq <= s_axi_wdata[1:0] & write_mask[1:0];
-								enable_irq <= (s_axi_wdata[17:16] & write_mask[17:16]) | (enable_irq & ~write_mask[17:16]);
+								clear_irq <= s_axi_wdata[2:0] & write_mask[2:0];
+								enable_irq <= (s_axi_wdata[18:16] & write_mask[18:16]) | (enable_irq & ~write_mask[18:16]);
 							end
 
 							3'd2: begin
@@ -162,8 +169,9 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 						case(write_addr[4:3])
 							2'd0: begin
 								enable <= (s_axi_wdata[0] & write_mask[0]) | (enable & ~write_mask[0]);
-								clear_irq <= s_axi_wdata[33:32] & write_mask[33:32];
-								enable_irq <= (s_axi_wdata[49:48] & write_mask[49:48]) | (enable_irq & ~write_mask[49:48]);
+								flush_fifo <= (s_axi_wdata[2] & write_mask[2]) | (flush_fifo & ~write_mask[2]);
+								clear_irq <= s_axi_wdata[34:32] & write_mask[34:32];
+								enable_irq <= (s_axi_wdata[50:48] & write_mask[50:48]) | (enable_irq & ~write_mask[50:48]);
 							end
 
 							2'd1: begin
@@ -213,8 +221,8 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
-						3'd0: read_value = {11'd0, fifo_empty, status_flags, 14'd0, srst, enable};
-						3'd1: read_value = {14'd0, enable_irq, 14'd0, irq};
+						3'd0: read_value = {12'd0, fifo_empty, status_flags, 13'd0, flush_fifo, srst, enable};
+						3'd1: read_value = {13'd0, enable_irq, 13'd0, irq};
 						3'd2: read_value = mem_base[31:0];
 						3'd3: read_value = (C_ADDR_WIDTH == 64) ? mem_base[63:32] : 32'd0;
 						3'd4: read_value = mem_size;
@@ -224,7 +232,7 @@ module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 3
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[4:3])
-						2'd0: read_value = {14'd0, enable_irq, 14'd0, irq, 11'd0, fifo_empty, status_flags, 14'd0, srst, enable};
+						2'd0: read_value = {13'd0, enable_irq, 13'd0, irq, 12'd0, fifo_empty, status_flags, 13'd0, flush_fifo, srst, enable};
 						2'd1: read_value = (C_ADDR_WIDTH == 64) ? mem_base : {32'd0, mem_base};
 						2'd2: read_value = {bytes_written, mem_size};
 						2'd3: read_value = {timeout, last_msg_end};

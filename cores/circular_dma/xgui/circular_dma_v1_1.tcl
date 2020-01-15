@@ -4,14 +4,23 @@ proc init_gui { IPINST } {
   #Adding Page
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
   set C_AXI_WIDTH [ipgui::add_param $IPINST -name "C_AXI_WIDTH" -parent ${Page_0} -layout horizontal]
-  set_property tooltip {Width of the AXI bus, in bits.} ${C_AXI_WIDTH}
+  set_property tooltip {Width of the S_AXI bus, in bits.} ${C_AXI_WIDTH}
   #Adding Group
   set DMA_Options [ipgui::add_group $IPINST -name "DMA Options" -parent ${Page_0}]
   set C_AXIS_WIDTH [ipgui::add_param $IPINST -name "C_AXIS_WIDTH" -parent ${DMA_Options} -widget comboBox]
-  set_property tooltip {Width of the AXIS interface, in bits.} ${C_AXIS_WIDTH}
+  set_property tooltip {Width of the S_AXIS and M_AXI interfaces, in bits.} ${C_AXIS_WIDTH}
   set C_ADDR_WIDTH [ipgui::add_param $IPINST -name "C_ADDR_WIDTH" -parent ${DMA_Options} -widget comboBox]
   set_property tooltip {Width of the memory addresses, in bits.} ${C_ADDR_WIDTH}
   ipgui::add_param $IPINST -name "C_MAX_BURST" -parent ${DMA_Options} -widget comboBox
+
+  #Adding Group
+  set M_AXI_Options [ipgui::add_group $IPINST -name "M_AXI Options" -parent ${Page_0} -display_name {M_AXI Options}]
+  set C_VALUE_AWPROT [ipgui::add_param $IPINST -name "C_VALUE_AWPROT" -parent ${M_AXI_Options}]
+  set_property tooltip {Value for the AWPROT signal in M_AXI} ${C_VALUE_AWPROT}
+  set C_VALUE_AWCACHE [ipgui::add_param $IPINST -name "C_VALUE_AWCACHE" -parent ${M_AXI_Options}]
+  set_property tooltip {Value for the AWCACHE signal in M_AXI} ${C_VALUE_AWCACHE}
+  set C_VALUE_AWUSER [ipgui::add_param $IPINST -name "C_VALUE_AWUSER" -parent ${M_AXI_Options}]
+  set_property tooltip {Value for the AWUSER signal in M_AXI} ${C_VALUE_AWUSER}
 
 
 
@@ -53,6 +62,33 @@ proc validate_PARAM_VALUE.C_MAX_BURST { PARAM_VALUE.C_MAX_BURST } {
 	return true
 }
 
+proc update_PARAM_VALUE.C_VALUE_AWCACHE { PARAM_VALUE.C_VALUE_AWCACHE } {
+	# Procedure called to update C_VALUE_AWCACHE when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_VALUE_AWCACHE { PARAM_VALUE.C_VALUE_AWCACHE } {
+	# Procedure called to validate C_VALUE_AWCACHE
+	return true
+}
+
+proc update_PARAM_VALUE.C_VALUE_AWPROT { PARAM_VALUE.C_VALUE_AWPROT } {
+	# Procedure called to update C_VALUE_AWPROT when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_VALUE_AWPROT { PARAM_VALUE.C_VALUE_AWPROT } {
+	# Procedure called to validate C_VALUE_AWPROT
+	return true
+}
+
+proc update_PARAM_VALUE.C_VALUE_AWUSER { PARAM_VALUE.C_VALUE_AWUSER } {
+	# Procedure called to update C_VALUE_AWUSER when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_VALUE_AWUSER { PARAM_VALUE.C_VALUE_AWUSER } {
+	# Procedure called to validate C_VALUE_AWUSER
+	return true
+}
+
 
 proc update_MODELPARAM_VALUE.C_AXI_WIDTH { MODELPARAM_VALUE.C_AXI_WIDTH PARAM_VALUE.C_AXI_WIDTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
@@ -72,5 +108,20 @@ proc update_MODELPARAM_VALUE.C_AXIS_WIDTH { MODELPARAM_VALUE.C_AXIS_WIDTH PARAM_
 proc update_MODELPARAM_VALUE.C_MAX_BURST { MODELPARAM_VALUE.C_MAX_BURST PARAM_VALUE.C_MAX_BURST } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_MAX_BURST}] ${MODELPARAM_VALUE.C_MAX_BURST}
+}
+
+proc update_MODELPARAM_VALUE.C_VALUE_AWPROT { MODELPARAM_VALUE.C_VALUE_AWPROT PARAM_VALUE.C_VALUE_AWPROT } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_VALUE_AWPROT}] ${MODELPARAM_VALUE.C_VALUE_AWPROT}
+}
+
+proc update_MODELPARAM_VALUE.C_VALUE_AWCACHE { MODELPARAM_VALUE.C_VALUE_AWCACHE PARAM_VALUE.C_VALUE_AWCACHE } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_VALUE_AWCACHE}] ${MODELPARAM_VALUE.C_VALUE_AWCACHE}
+}
+
+proc update_MODELPARAM_VALUE.C_VALUE_AWUSER { MODELPARAM_VALUE.C_VALUE_AWUSER PARAM_VALUE.C_VALUE_AWUSER } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_VALUE_AWUSER}] ${MODELPARAM_VALUE.C_VALUE_AWUSER}
 }
 

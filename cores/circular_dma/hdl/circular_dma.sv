@@ -17,7 +17,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 	input logic [31:0] fifo_occupancy,
 
 	output logic irq,
-	output logic dm_rst_n,
+	output logic fifo_rst_n,
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -45,41 +45,36 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
 
+	// M_AXI
+
+	output logic [C_ADDR_WIDTH-1:0] m_axi_awaddr,
+	output logic [7:0] m_axi_awlen,
+	output logic m_axi_awvalid,
+	input logic m_axi_awready,
+
+	output logic [C_AXIS_WIDTH-1:0] m_axi_wdata,
+	output logic m_axi_wlast,
+	output logic m_axi_wvalid,
+	input logic m_axi_wready,
+
+	input logic [1:0] m_axi_bresp,
+	input logic m_axi_bvalid,
+	output logic m_axi_bready,
+
 	// S_AXIS_S2MM
 
 	input logic [C_AXIS_WIDTH-1:0] s_axis_s2mm_tdata,
 	input logic s_axis_s2mm_tlast,
 	input logic s_axis_s2mm_tvalid,
-	output logic s_axis_s2mm_tready,
-
-	// S_AXIS_S2MM_STS
-
-	input logic [7:0] s_axis_s2mm_sts_tdata,
-	input logic [0:0] s_axis_s2mm_sts_tkeep,
-	input logic s_axis_s2mm_sts_tlast,
-	input logic s_axis_s2mm_sts_tvalid,
-	output logic s_axis_s2mm_sts_tready,
-
-	// M_AXIS_S2MM
-
-	output logic [C_AXIS_WIDTH-1:0] m_axis_s2mm_tdata,
-	output logic m_axis_s2mm_tlast,
-	output logic m_axis_s2mm_tvalid,
-	input logic m_axis_s2mm_tready,
-
-	// M_AXIS_S2MM_CMD
-
-	output logic [C_ADDR_WIDTH+39:0] m_axis_s2mm_cmd_tdata,
-	output logic m_axis_s2mm_cmd_tvalid,
-	input logic m_axis_s2mm_cmd_tready
+	output logic s_axis_s2mm_tready
 );
 	// axi4_lite registers
 
-	logic enable, srst, fifo_empty;
-	logic [1:0] bits_irq, clear_irq, enable_irq;
+	logic enable, srst, flush_fifo, fifo_empty;
+	logic [2:0] bits_irq, clear_irq, enable_irq;
 	logic [C_ADDR_WIDTH-1:0] mem_base;
 	logic [31:0] mem_size, bytes_written, last_msg_end, timeout;
-	logic [3:0] status_flags;
+	logic [2:0] status_flags;
 
 	circular_dma_axi #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U0
 	(
@@ -112,6 +107,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 
 		.enable(enable),
 		.srst(srst),
+		.flush_fifo(flush_fifo),
 		.status_flags(status_flags),
 		.fifo_empty(fifo_empty),
 
@@ -129,7 +125,10 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U1
 	(
 		.clk(clk),
-		.rst_n(dm_rst_n),
+		.rst_n(fifo_rst_n),
+
+		.flush_fifo(flush_fifo),
+		.fifo_occupancy(fifo_occupancy),
 
 		.enable(enable),
 		.clear_irq(clear_irq),
@@ -144,33 +143,28 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.last_msg_end(last_msg_end),
 		.timeout(timeout),
 
+		// M_AXI
+
+		.m_axi_awaddr(m_axi_awaddr),
+		.m_axi_awlen(m_axi_awlen),
+		.m_axi_awvalid(m_axi_awvalid),
+		.m_axi_awready(m_axi_awready),
+
+		.m_axi_wdata(m_axi_wdata),
+		.m_axi_wlast(m_axi_wlast),
+		.m_axi_wvalid(m_axi_wvalid),
+		.m_axi_wready(m_axi_wready),
+
+		.m_axi_bresp(m_axi_bresp),
+		.m_axi_bvalid(m_axi_bvalid),
+		.m_axi_bready(m_axi_bready),
+
 		// S_AXIS_S2MM
 
 		.s_axis_s2mm_tdata(s_axis_s2mm_tdata),
 		.s_axis_s2mm_tlast(s_axis_s2mm_tlast),
 		.s_axis_s2mm_tvalid(s_axis_s2mm_tvalid),
-		.s_axis_s2mm_tready(s_axis_s2mm_tready),
-
-		// S_AXIS_S2MM_STS
-
-		.s_axis_s2mm_sts_tdata(s_axis_s2mm_sts_tdata),
-		.s_axis_s2mm_sts_tkeep(s_axis_s2mm_sts_tkeep),
-		.s_axis_s2mm_sts_tlast(s_axis_s2mm_sts_tlast),
-		.s_axis_s2mm_sts_tvalid(s_axis_s2mm_sts_tvalid),
-		.s_axis_s2mm_sts_tready(s_axis_s2mm_sts_tready),
-
-		// M_AXIS_S2MM
-
-		.m_axis_s2mm_tdata(m_axis_s2mm_tdata),
-		.m_axis_s2mm_tlast(m_axis_s2mm_tlast),
-		.m_axis_s2mm_tvalid(m_axis_s2mm_tvalid),
-		.m_axis_s2mm_tready(m_axis_s2mm_tready),
-
-		// M_AXIS_S2MM_CMD
-
-		.m_axis_s2mm_cmd_tdata(m_axis_s2mm_cmd_tdata),
-		.m_axis_s2mm_cmd_tvalid(m_axis_s2mm_cmd_tvalid),
-		.m_axis_s2mm_cmd_tready(m_axis_s2mm_cmd_tready)
+		.s_axis_s2mm_tready(s_axis_s2mm_tready)
 	);
 
 	always_ff @(posedge clk) begin
@@ -178,7 +172,7 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 	end
 
 	always_comb begin
-		dm_rst_n = rst_n & ~srst;
+		fifo_rst_n = rst_n & ~srst;
 		irq = |bits_irq;
 	end
 endmodule
