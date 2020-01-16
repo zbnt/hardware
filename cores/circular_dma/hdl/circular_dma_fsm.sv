@@ -138,7 +138,6 @@ module circular_dma_fsm
 						fifo_empty <= (fifo_occupancy == 'd0);
 
 						if(~m_axi_bresp[1]) begin
-							counter_rst <= 1'b1;
 							last_msg_end <= last_msg_end_b;
 							bytes_written <= bytes_written + {{(24-$clog2(C_AXIS_WIDTH/8)){1'b0}}, m_axi_awlen + 8'd1, {($clog2(C_AXIS_WIDTH/8)){1'b0}}};
 
