@@ -121,7 +121,7 @@ module circular_dma_fsm
 						burst_count <= burst_count + 8'd1;
 
 						if(s_axis_s2mm_tlast) begin
-							last_msg_end_b <= bytes_written + {24'd0, burst_count} + 32'd1;
+							last_msg_end_b <= bytes_written + {{(24-$clog2(C_AXIS_WIDTH/8)){1'b0}}, burst_count + 8'd1, {($clog2(C_AXIS_WIDTH/8)){1'b0}}};
 						end
 
 						if(m_axi_wlast) begin
