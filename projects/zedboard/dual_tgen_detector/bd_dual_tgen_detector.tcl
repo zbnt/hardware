@@ -655,41 +655,51 @@ proc create_hier_cell_dma { parentCell nameHier } {
   # Create instance: fifo_0, and set properties
   set fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_0 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {1024} \
+   CONFIG.FIFO_DEPTH {8192} \
  ] $fifo_0
 
   # Create instance: fifo_1, and set properties
   set fifo_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_1 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {1024} \
+   CONFIG.FIFO_DEPTH {8192} \
  ] $fifo_1
 
   # Create instance: fifo_2, and set properties
   set fifo_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_2 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {1024} \
+   CONFIG.FIFO_DEPTH {64} \
+   CONFIG.FIFO_MEMORY_TYPE {distributed} \
  ] $fifo_2
 
   # Create instance: fifo_3, and set properties
   set fifo_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_3 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {1024} \
+   CONFIG.FIFO_DEPTH {64} \
+   CONFIG.FIFO_MEMORY_TYPE {distributed} \
  ] $fifo_3
 
   # Create instance: fifo_4, and set properties
   set fifo_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_4 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {8192} \
+   CONFIG.FIFO_DEPTH {64} \
+   CONFIG.FIFO_MEMORY_TYPE {distributed} \
  ] $fifo_4
 
   # Create instance: fifo_5, and set properties
   set fifo_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_5 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {8192} \
+   CONFIG.FIFO_DEPTH {64} \
+   CONFIG.FIFO_MEMORY_TYPE {distributed} \
  ] $fifo_5
 
   # Create instance: fifo_6, and set properties
-  set fifo_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_6 ]
+  set fifo_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_6 ]
+  set_property -dict [ list \
+   CONFIG.FIFO_DEPTH {1024} \
+ ] $fifo_6
+
+  # Create instance: fifo_7, and set properties
+  set fifo_7 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_7 ]
   set_property -dict [ list \
    CONFIG.Empty_Threshold_Assert_Value_axis {32766} \
    CONFIG.Empty_Threshold_Assert_Value_rach {14} \
@@ -716,17 +726,27 @@ proc create_hier_cell_dma { parentCell nameHier } {
    CONFIG.TUSER_WIDTH {0} \
    CONFIG.Use_Embedded_Registers_axis {true} \
    CONFIG.axis_type {FIFO} \
- ] $fifo_6
+ ] $fifo_7
 
-  # Create instance: switch, and set properties
-  set switch [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 switch ]
+  # Create instance: switch_main, and set properties
+  set switch_main [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 switch_main ]
   set_property -dict [ list \
    CONFIG.ARB_ALGORITHM {3} \
    CONFIG.ARB_ON_MAX_XFERS {0} \
    CONFIG.ARB_ON_TLAST {1} \
    CONFIG.HAS_TLAST {1} \
-   CONFIG.NUM_SI {6} \
- ] $switch
+   CONFIG.NUM_SI {3} \
+ ] $switch_main
+
+  # Create instance: switch_sc, and set properties
+  set switch_sc [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 switch_sc ]
+  set_property -dict [ list \
+   CONFIG.ARB_ALGORITHM {3} \
+   CONFIG.ARB_ON_MAX_XFERS {0} \
+   CONFIG.ARB_ON_TLAST {1} \
+   CONFIG.HAS_TLAST {1} \
+   CONFIG.NUM_SI {4} \
+ ] $switch_sc
 
   # Create interface connections
   connect_bd_intf_net -intf_net S00_AXIS_1 [get_bd_intf_pins S00_AXIS] [get_bd_intf_pins fifo_0/S_AXIS]
@@ -739,20 +759,22 @@ proc create_hier_cell_dma { parentCell nameHier } {
   connect_bd_intf_net -intf_net axi_protocol_convert_0_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins axi_converter/M_AXI]
   connect_bd_intf_net -intf_net axi_regslice_M_AXI [get_bd_intf_pins axi_converter/S_AXI] [get_bd_intf_pins axi_regslice/M_AXI]
   connect_bd_intf_net -intf_net dma_M_AXI [get_bd_intf_pins axi_regslice/S_AXI] [get_bd_intf_pins dma/M_AXI]
-  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins fifo_0/M_AXIS] [get_bd_intf_pins switch/S00_AXIS]
-  connect_bd_intf_net -intf_net fifo_1_M_AXIS [get_bd_intf_pins fifo_1/M_AXIS] [get_bd_intf_pins switch/S01_AXIS]
-  connect_bd_intf_net -intf_net fifo_2_M_AXIS [get_bd_intf_pins fifo_2/M_AXIS] [get_bd_intf_pins switch/S02_AXIS]
-  connect_bd_intf_net -intf_net fifo_3_M_AXIS [get_bd_intf_pins fifo_3/M_AXIS] [get_bd_intf_pins switch/S03_AXIS]
-  connect_bd_intf_net -intf_net fifo_4_M_AXIS1 [get_bd_intf_pins fifo_4/M_AXIS] [get_bd_intf_pins switch/S04_AXIS]
-  connect_bd_intf_net -intf_net fifo_5_M_AXIS [get_bd_intf_pins fifo_5/M_AXIS] [get_bd_intf_pins switch/S05_AXIS]
-  connect_bd_intf_net -intf_net fifo_generator_0_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_6/M_AXIS]
-  connect_bd_intf_net -intf_net switch_M00_AXIS [get_bd_intf_pins fifo_6/S_AXIS] [get_bd_intf_pins switch/M00_AXIS]
+  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins fifo_0/M_AXIS] [get_bd_intf_pins switch_main/S00_AXIS]
+  connect_bd_intf_net -intf_net fifo_1_M_AXIS [get_bd_intf_pins fifo_1/M_AXIS] [get_bd_intf_pins switch_main/S01_AXIS]
+  connect_bd_intf_net -intf_net fifo_2_M_AXIS [get_bd_intf_pins fifo_2/M_AXIS] [get_bd_intf_pins switch_sc/S00_AXIS]
+  connect_bd_intf_net -intf_net fifo_3_M_AXIS [get_bd_intf_pins fifo_3/M_AXIS] [get_bd_intf_pins switch_sc/S01_AXIS]
+  connect_bd_intf_net -intf_net fifo_4_M_AXIS [get_bd_intf_pins fifo_4/M_AXIS] [get_bd_intf_pins switch_sc/S02_AXIS]
+  connect_bd_intf_net -intf_net fifo_5_M_AXIS [get_bd_intf_pins fifo_5/M_AXIS] [get_bd_intf_pins switch_sc/S03_AXIS]
+  connect_bd_intf_net -intf_net fifo_6_M_AXIS [get_bd_intf_pins fifo_6/M_AXIS] [get_bd_intf_pins switch_main/S02_AXIS]
+  connect_bd_intf_net -intf_net fifo_generator_0_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_7/M_AXIS]
+  connect_bd_intf_net -intf_net switch_M00_AXIS [get_bd_intf_pins fifo_7/S_AXIS] [get_bd_intf_pins switch_main/M00_AXIS]
+  connect_bd_intf_net -intf_net switch_sc_M00_AXIS [get_bd_intf_pins fifo_6/S_AXIS] [get_bd_intf_pins switch_sc/M00_AXIS]
 
   # Create port connections
-  connect_bd_net -net dma_dm_rst_n [get_bd_pins dma/fifo_rst_n] [get_bd_pins fifo_0/s_axis_aresetn] [get_bd_pins fifo_1/s_axis_aresetn] [get_bd_pins fifo_2/s_axis_aresetn] [get_bd_pins fifo_3/s_axis_aresetn] [get_bd_pins fifo_4/s_axis_aresetn] [get_bd_pins fifo_5/s_axis_aresetn] [get_bd_pins fifo_6/s_aresetn] [get_bd_pins switch/aresetn]
+  connect_bd_net -net dma_dm_rst_n [get_bd_pins dma/fifo_rst_n] [get_bd_pins fifo_0/s_axis_aresetn] [get_bd_pins fifo_1/s_axis_aresetn] [get_bd_pins fifo_2/s_axis_aresetn] [get_bd_pins fifo_3/s_axis_aresetn] [get_bd_pins fifo_4/s_axis_aresetn] [get_bd_pins fifo_5/s_axis_aresetn] [get_bd_pins fifo_6/s_axis_aresetn] [get_bd_pins fifo_7/s_aresetn] [get_bd_pins switch_main/aresetn] [get_bd_pins switch_sc/aresetn]
   connect_bd_net -net dma_irq [get_bd_pins irq] [get_bd_pins dma/irq]
-  connect_bd_net -net ethfmc_clk_buf_IBUF_OUT [get_bd_pins clk] [get_bd_pins axi_converter/aclk] [get_bd_pins axi_regslice/aclk] [get_bd_pins dma/clk] [get_bd_pins fifo_0/s_axis_aclk] [get_bd_pins fifo_1/s_axis_aclk] [get_bd_pins fifo_2/s_axis_aclk] [get_bd_pins fifo_3/s_axis_aclk] [get_bd_pins fifo_4/s_axis_aclk] [get_bd_pins fifo_5/s_axis_aclk] [get_bd_pins fifo_6/s_aclk] [get_bd_pins switch/aclk]
-  connect_bd_net -net fifo_6_axis_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_6/axis_data_count]
+  connect_bd_net -net ethfmc_clk_buf_IBUF_OUT [get_bd_pins clk] [get_bd_pins axi_converter/aclk] [get_bd_pins axi_regslice/aclk] [get_bd_pins dma/clk] [get_bd_pins fifo_0/s_axis_aclk] [get_bd_pins fifo_1/s_axis_aclk] [get_bd_pins fifo_2/s_axis_aclk] [get_bd_pins fifo_3/s_axis_aclk] [get_bd_pins fifo_4/s_axis_aclk] [get_bd_pins fifo_5/s_axis_aclk] [get_bd_pins fifo_6/s_axis_aclk] [get_bd_pins fifo_7/s_aclk] [get_bd_pins switch_main/aclk] [get_bd_pins switch_sc/aclk]
+  connect_bd_net -net fifo_6_axis_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_7/axis_data_count]
   connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins axi_converter/aresetn] [get_bd_pins axi_regslice/aresetn] [get_bd_pins dma/rst_n]
 
   # Restore current instance
@@ -1301,15 +1323,15 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net axi_interconnect_0_M02_AXI [get_bd_intf_pins eth1/s_axi_stats] [get_bd_intf_pins ps_interconnect/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M07_AXI [get_bd_intf_pins ps_interconnect/M07_AXI] [get_bd_intf_pins simple_timer/S_AXI]
   connect_bd_intf_net -intf_net dma_M_AXI [get_bd_intf_pins dma/M_AXI] [get_bd_intf_pins ps_main/S_AXI_ACP]
-  connect_bd_intf_net -intf_net eth0_AXIS_STATS [get_bd_intf_pins dma/S00_AXIS] [get_bd_intf_pins eth0/axis_stats]
+  connect_bd_intf_net -intf_net eth0_axis_stats [get_bd_intf_pins dma/S04_AXIS] [get_bd_intf_pins eth0/axis_stats]
   connect_bd_intf_net -intf_net eth0_mac_rgmii [get_bd_intf_ports ethfmc_p0_rgmii] [get_bd_intf_pins eth0/rgmii]
-  connect_bd_intf_net -intf_net eth1_AXIS_STATS [get_bd_intf_pins dma/S01_AXIS] [get_bd_intf_pins eth1/axis_stats]
+  connect_bd_intf_net -intf_net eth1_axis_stats [get_bd_intf_pins dma/S05_AXIS] [get_bd_intf_pins eth1/axis_stats]
   connect_bd_intf_net -intf_net eth1_mac_rgmii [get_bd_intf_ports ethfmc_p1_rgmii] [get_bd_intf_pins eth1/rgmii]
   connect_bd_intf_net -intf_net eth2_rgmii [get_bd_intf_ports ethfmc_p2_rgmii] [get_bd_intf_pins mitm/rgmii_a]
   connect_bd_intf_net -intf_net eth2_rgmii_loop [get_bd_intf_ports ethfmc_p3_rgmii] [get_bd_intf_pins mitm/rgmii_b]
   connect_bd_intf_net -intf_net ethfmc_1 [get_bd_intf_ports ethfmc] [get_bd_intf_pins ethfmc_dcm/CLK_IN1_D]
-  connect_bd_intf_net -intf_net mitm_axis_detector_a [get_bd_intf_pins dma/S04_AXIS] [get_bd_intf_pins mitm/axis_detector_a]
-  connect_bd_intf_net -intf_net mitm_axis_detector_b [get_bd_intf_pins dma/S05_AXIS] [get_bd_intf_pins mitm/axis_detector_b]
+  connect_bd_intf_net -intf_net mitm_axis_detector_a [get_bd_intf_pins dma/S00_AXIS] [get_bd_intf_pins mitm/axis_detector_a]
+  connect_bd_intf_net -intf_net mitm_axis_detector_b [get_bd_intf_pins dma/S01_AXIS] [get_bd_intf_pins mitm/axis_detector_b]
   connect_bd_intf_net -intf_net mitm_axis_stats_a [get_bd_intf_pins dma/S02_AXIS] [get_bd_intf_pins mitm/axis_stats_a]
   connect_bd_intf_net -intf_net mitm_axis_stats_b [get_bd_intf_pins dma/S03_AXIS] [get_bd_intf_pins mitm/axis_stats_b]
   connect_bd_intf_net -intf_net ps_interconnect_M08_AXI [get_bd_intf_pins dma/S_AXI_LITE] [get_bd_intf_pins ps_interconnect/M08_AXI]
