@@ -4,13 +4,20 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 64, parameter C_MAX_BURST = 16)
+module circular_dma_fsm
+#(
+	parameter C_ADDR_WIDTH = 32,
+	parameter C_AXIS_WIDTH = 64,
+	parameter C_MAX_BURST = 16,
+	parameter C_AXIS_OCCUP_WIDTH = 16
+)
 (
 	input logic clk,
 	input logic rst_n,
 
 	input logic flush_fifo,
-	input logic [31:0] fifo_occupancy,
+	input logic [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
+	output logic fifo_empty,
 
 	input logic enable,
 	input logic [2:0] clear_irq,
@@ -66,6 +73,7 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 			status_flags <= 3'd1;
 			burst_count <= 8'd0;
 			counter_rst <= 1'b0;
+			fifo_empty <= 1'b0;
 
 			m_axi_awaddr <= '0;
 			m_axi_awlen <= '0;
@@ -77,9 +85,9 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 
 			case(state)
 				ST_WAIT_ENABLE: begin
-					if(enable && irq == 3'd0 && mem_size >= C_BURST_BYTES) begin
+					if(enable && irq == 3'd0 && mem_size >= C_BURST_BYTES && ~fifo_empty) begin
 						state <= ST_WRITE_ADDR;
-						mem_size_q <= mem_size;
+						mem_size_q <= mem_size - C_BURST_BYTES;
 						bytes_written <= 32'd0;
 						last_msg_end <= 32'd0;
 						status_flags <= 3'd1;
@@ -88,6 +96,8 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 
 						m_axi_awaddr <= mem_base;
 					end
+
+					fifo_empty <= (fifo_occupancy == 'd0);
 				end
 
 				ST_WRITE_ADDR: begin
@@ -125,13 +135,14 @@ module circular_dma_fsm #(parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 
 				ST_WAIT_RESP: begin
 					if(m_axi_bvalid) begin
 						m_axi_bready <= 1'b0;
+						fifo_empty <= (fifo_occupancy == 'd0);
 
 						if(~m_axi_bresp[1]) begin
 							counter_rst <= 1'b1;
 							last_msg_end <= last_msg_end_b;
 							bytes_written <= bytes_written + {{(24-$clog2(C_AXIS_WIDTH/8)){1'b0}}, m_axi_awlen + 8'd1, {($clog2(C_AXIS_WIDTH/8)){1'b0}}};
 
-							if(bytes_written == mem_size_q) begin
+							if(bytes_written == mem_size_q || (flush_fifo && fifo_occupancy == 'd0)) begin
 								state <= ST_WAIT_ENABLE;
 								irq[0] <= enable_irq[0];
 							end else begin

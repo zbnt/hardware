@@ -3,15 +3,21 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "Component_Name"
   #Adding Page
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
-  set C_AXI_WIDTH [ipgui::add_param $IPINST -name "C_AXI_WIDTH" -parent ${Page_0} -layout horizontal]
+  #Adding Group
+  set S_AXI_Options [ipgui::add_group $IPINST -name "S_AXI Options" -parent ${Page_0} -display_name {S_AXI Options}]
+  set C_AXI_WIDTH [ipgui::add_param $IPINST -name "C_AXI_WIDTH" -parent ${S_AXI_Options} -widget comboBox]
   set_property tooltip {Width of the S_AXI bus, in bits.} ${C_AXI_WIDTH}
+
   #Adding Group
   set DMA_Options [ipgui::add_group $IPINST -name "DMA Options" -parent ${Page_0}]
   set C_AXIS_WIDTH [ipgui::add_param $IPINST -name "C_AXIS_WIDTH" -parent ${DMA_Options} -widget comboBox]
   set_property tooltip {Width of the S_AXIS and M_AXI interfaces, in bits.} ${C_AXIS_WIDTH}
   set C_ADDR_WIDTH [ipgui::add_param $IPINST -name "C_ADDR_WIDTH" -parent ${DMA_Options} -widget comboBox]
   set_property tooltip {Width of the memory addresses, in bits.} ${C_ADDR_WIDTH}
-  ipgui::add_param $IPINST -name "C_MAX_BURST" -parent ${DMA_Options} -widget comboBox
+  set C_MAX_BURST [ipgui::add_param $IPINST -name "C_MAX_BURST" -parent ${DMA_Options} -widget comboBox]
+  set_property tooltip {Maximum number of transfers in one burst.} ${C_MAX_BURST}
+  set C_AXIS_OCCUP_WIDTH [ipgui::add_param $IPINST -name "C_AXIS_OCCUP_WIDTH" -parent ${DMA_Options}]
+  set_property tooltip {Width of the fifo_occupancy input.} ${C_AXIS_OCCUP_WIDTH}
 
   #Adding Group
   set M_AXI_Options [ipgui::add_group $IPINST -name "M_AXI Options" -parent ${Page_0} -display_name {M_AXI Options}]
@@ -32,6 +38,15 @@ proc update_PARAM_VALUE.C_ADDR_WIDTH { PARAM_VALUE.C_ADDR_WIDTH } {
 
 proc validate_PARAM_VALUE.C_ADDR_WIDTH { PARAM_VALUE.C_ADDR_WIDTH } {
 	# Procedure called to validate C_ADDR_WIDTH
+	return true
+}
+
+proc update_PARAM_VALUE.C_AXIS_OCCUP_WIDTH { PARAM_VALUE.C_AXIS_OCCUP_WIDTH } {
+	# Procedure called to update C_AXIS_OCCUP_WIDTH when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_AXIS_OCCUP_WIDTH { PARAM_VALUE.C_AXIS_OCCUP_WIDTH } {
+	# Procedure called to validate C_AXIS_OCCUP_WIDTH
 	return true
 }
 
@@ -123,5 +138,10 @@ proc update_MODELPARAM_VALUE.C_VALUE_AWCACHE { MODELPARAM_VALUE.C_VALUE_AWCACHE 
 proc update_MODELPARAM_VALUE.C_VALUE_AWUSER { MODELPARAM_VALUE.C_VALUE_AWUSER PARAM_VALUE.C_VALUE_AWUSER } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_VALUE_AWUSER}] ${MODELPARAM_VALUE.C_VALUE_AWUSER}
+}
+
+proc update_MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH { MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH PARAM_VALUE.C_AXIS_OCCUP_WIDTH } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_AXIS_OCCUP_WIDTH}] ${MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH}
 }
 

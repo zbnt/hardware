@@ -536,7 +536,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>4639c4e2</spirit:value>
+            <spirit:value>d71c5352</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -561,7 +561,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>4639c4e2</spirit:value>
+            <spirit:value>d71c5352</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -575,7 +575,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>84adb69d</spirit:value>
+            <spirit:value>9a2daa66</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -612,7 +612,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">31</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH&apos;)) - 1)">15</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -1308,6 +1308,11 @@
         <spirit:displayName>C Value Awuser</spirit:displayName>
         <spirit:value spirit:format="bitString" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_VALUE_AWUSER" spirit:bitStringLength="4">&quot;1111&quot;</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_AXIS_OCCUP_WIDTH</spirit:name>
+        <spirit:displayName>C Axis Occup Width</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH">16</spirit:value>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
@@ -1372,7 +1377,7 @@
       <spirit:file>
         <spirit:name>hdl/circular_dma_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_670157a3</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_5ccb2960</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1459,7 +1464,7 @@
       <spirit:file>
         <spirit:name>xgui/circular_dma_v1_1.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_84adb69d</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_9a2daa66</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1472,7 +1477,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>C_AXI_WIDTH</spirit:name>
-      <spirit:displayName>S_AXI Data Width</spirit:displayName>
+      <spirit:displayName>Data Width</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXI_WIDTH" spirit:choiceRef="choice_list_99ba8646">32</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
@@ -1482,7 +1487,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>C_AXIS_WIDTH</spirit:name>
-      <spirit:displayName>Width</spirit:displayName>
+      <spirit:displayName>Data Width</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXIS_WIDTH" spirit:choiceRef="choice_list_2a3233c0">64</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
@@ -1505,6 +1510,11 @@
       <spirit:displayName>AWUSER</spirit:displayName>
       <spirit:value spirit:format="bitString" spirit:resolve="user" spirit:id="PARAM_VALUE.C_VALUE_AWUSER" spirit:bitStringLength="4">&quot;1111&quot;</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_AXIS_OCCUP_WIDTH</spirit:name>
+      <spirit:displayName>FIFO Occupancy Width</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXIS_OCCUP_WIDTH" spirit:minimum="8" spirit:maximum="24" spirit:rangeType="long">16</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -1517,18 +1527,18 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Circular DMA</xilinx:displayName>
-      <xilinx:coreRevision>6</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-01-15T21:40:38Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>7</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-01-15T23:35:59Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="59245402"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="1425d607"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="509db1e2"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="d749b418"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="b74bf41f"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="b5b5f80e"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="d03b503f"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="6f357fe4"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="6e7025ef"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="9b0c0547"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="ed4fcdbe"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

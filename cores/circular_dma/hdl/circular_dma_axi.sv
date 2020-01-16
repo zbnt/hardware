@@ -4,7 +4,13 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module circular_dma_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 64, parameter C_MAX_BURST = 16)
+module circular_dma_axi
+#(
+	parameter C_AXI_WIDTH = 32,
+	parameter C_ADDR_WIDTH = 32,
+	parameter C_AXIS_WIDTH = 64,
+	parameter C_MAX_BURST = 16
+)
 (
 	input logic clk,
 	input logic rst_n,

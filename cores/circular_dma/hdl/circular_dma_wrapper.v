@@ -10,6 +10,7 @@ module circular_dma_w
 	parameter C_ADDR_WIDTH = 32,
 	parameter C_AXIS_WIDTH = 64,
 	parameter C_MAX_BURST = 16,
+	parameter C_AXIS_OCCUP_WIDTH = 16,
 	parameter C_VALUE_AWPROT = 3'd0,
 	parameter C_VALUE_AWCACHE = 4'b1111,
 	parameter C_VALUE_AWUSER = 4'b1111
@@ -17,7 +18,7 @@ module circular_dma_w
 (
 	input wire clk,
 	input wire rst_n,
-	input wire [31:0] fifo_occupancy,
+	input wire [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	output wire irq,
 	output wire fifo_rst_n,
@@ -84,7 +85,7 @@ module circular_dma_w
 	assign m_axi_awcache = C_VALUE_AWCACHE;
 	assign m_axi_awburst = 2'd1;
 
-	circular_dma #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U0
+	circular_dma #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST, C_AXIS_OCCUP_WIDTH) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),

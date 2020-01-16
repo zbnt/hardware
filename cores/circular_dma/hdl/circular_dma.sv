@@ -7,14 +7,21 @@
 /*!
 	circular_dma: Circular DMA
 
-	Circular DMA core, for use with AXI DataMover.
+	Circular DMA core, takes an AXI4-Stream input and converts it into AXI4-MM write operations.
 */
 
-module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, parameter C_AXIS_WIDTH = 64, parameter C_MAX_BURST = 16)
+module circular_dma
+#(
+	parameter C_AXI_WIDTH = 32,
+	parameter C_ADDR_WIDTH = 32,
+	parameter C_AXIS_WIDTH = 64,
+	parameter C_MAX_BURST = 16,
+	parameter C_AXIS_OCCUP_WIDTH = 16
+)
 (
 	input logic clk,
 	input logic rst_n,
-	input logic [31:0] fifo_occupancy,
+	input logic [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	output logic irq,
 	output logic fifo_rst_n,
@@ -122,13 +129,14 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.timeout(timeout)
 	);
 
-	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U1
+	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST, C_AXIS_OCCUP_WIDTH) U1
 	(
 		.clk(clk),
 		.rst_n(fifo_rst_n),
 
 		.flush_fifo(flush_fifo),
 		.fifo_occupancy(fifo_occupancy),
+		.fifo_empty(fifo_empty),
 
 		.enable(enable),
 		.clear_irq(clear_irq),
@@ -166,10 +174,6 @@ module circular_dma #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 32, p
 		.s_axis_s2mm_tvalid(s_axis_s2mm_tvalid),
 		.s_axis_s2mm_tready(s_axis_s2mm_tready)
 	);
-
-	always_ff @(posedge clk) begin
-		fifo_empty <= (fifo_occupancy == 32'd0);
-	end
 
 	always_comb begin
 		fifo_rst_n = rst_n & ~srst;
