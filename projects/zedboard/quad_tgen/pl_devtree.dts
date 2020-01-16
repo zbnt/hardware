@@ -25,13 +25,10 @@
 
 			udmabuf {
 				compatible = "ikwzm,u-dma-buf";
-				device-name = "zbnt_dmabuf_zedboard";
+				device-name = "zbnt_dma";
 				minor-number = <0>;
 				size = <0x00010000>;
-
-				sync-offset = <0>;
-				sync-size = <0x00010000>;
-				sync-direction = <2>;
+				dma-coherent;
 			};
 
 			dma@40400000 {
