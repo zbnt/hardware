@@ -130,9 +130,10 @@ xilinx.com:ip:axi_hwicap:3.0\
 xilinx.com:ip:util_idelay_ctrl:1.0\
 xilinx.com:ip:proc_sys_reset:5.0\
 oscar-rc.dev:zbnt_hw:simple_timer:1.1\
-xilinx.com:ip:axi_datamover:5.1\
+xilinx.com:ip:axi_register_slice:2.1\
 oscar-rc.dev:zbnt_hw:circular_dma:1.1\
 xilinx.com:ip:axis_data_fifo:2.0\
+xilinx.com:ip:fifo_generator:13.2\
 xilinx.com:ip:axis_switch:1.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1\
@@ -757,18 +758,12 @@ proc create_hier_cell_dma { parentCell nameHier } {
   create_bd_pin -dir O irq
   create_bd_pin -dir I rst_n
 
-  # Create instance: datamover, and set properties
-  set datamover [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 datamover ]
+  # Create instance: axi_regslice, and set properties
+  set axi_regslice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 axi_regslice ]
   set_property -dict [ list \
-   CONFIG.c_dummy {1} \
-   CONFIG.c_enable_mm2s {0} \
-   CONFIG.c_include_mm2s {Omit} \
-   CONFIG.c_include_mm2s_stsfifo {false} \
-   CONFIG.c_include_s2mm {Full} \
-   CONFIG.c_m_axi_s2mm_id_width {0} \
-   CONFIG.c_mm2s_include_sf {false} \
-   CONFIG.c_s2mm_btt_used {23} \
- ] $datamover
+   CONFIG.REG_AW {0} \
+   CONFIG.REG_B {0} \
+ ] $axi_regslice
 
   # Create instance: dma, and set properties
   set dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:circular_dma:1.1 dma ]
@@ -808,10 +803,38 @@ proc create_hier_cell_dma { parentCell nameHier } {
  ] $fifo_4
 
   # Create instance: fifo_5, and set properties
-  set fifo_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_5 ]
+  set fifo_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_5 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {32768} \
-   CONFIG.IS_ACLK_ASYNC {1} \
+   CONFIG.Clock_Type_AXI {Independent_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {32765} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {13} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1021} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {13} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1021} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {13} \
+   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Implementation_axis {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_rach {Independent_Clocks_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Independent_Clocks_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Independent_Clocks_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {32767} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {32768} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {true} \
+   CONFIG.synchronization_stages_axi {3} \
  ] $fifo_5
 
   # Create instance: switch, and set properties
@@ -831,24 +854,23 @@ proc create_hier_cell_dma { parentCell nameHier } {
   connect_bd_intf_net -intf_net S03_AXIS_1 [get_bd_intf_pins S03_AXIS] [get_bd_intf_pins fifo_3/S_AXIS]
   connect_bd_intf_net -intf_net S04_AXIS_1 [get_bd_intf_pins S04_AXIS] [get_bd_intf_pins fifo_4/S_AXIS]
   connect_bd_intf_net -intf_net S_AXI_LITE_1 [get_bd_intf_pins S_AXI_LITE] [get_bd_intf_pins dma/S_AXI]
-  connect_bd_intf_net -intf_net axis_switch_0_M00_AXIS [get_bd_intf_pins fifo_5/S_AXIS] [get_bd_intf_pins switch/M00_AXIS]
-  connect_bd_intf_net -intf_net datamover_M_AXIS_S2MM_STS [get_bd_intf_pins datamover/M_AXIS_S2MM_STS] [get_bd_intf_pins dma/S_AXIS_S2MM_STS]
-  connect_bd_intf_net -intf_net datamover_M_AXI_S2MM [get_bd_intf_pins M_AXI] [get_bd_intf_pins datamover/M_AXI_S2MM]
-  connect_bd_intf_net -intf_net dma_M_AXIS_S2MM [get_bd_intf_pins datamover/S_AXIS_S2MM] [get_bd_intf_pins dma/M_AXIS_S2MM]
-  connect_bd_intf_net -intf_net dma_M_AXIS_S2MM_CMD [get_bd_intf_pins datamover/S_AXIS_S2MM_CMD] [get_bd_intf_pins dma/M_AXIS_S2MM_CMD]
+  connect_bd_intf_net -intf_net axi_regslice_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins axi_regslice/M_AXI]
+  connect_bd_intf_net -intf_net dma_M_AXI [get_bd_intf_pins axi_regslice/S_AXI] [get_bd_intf_pins dma/M_AXI]
   connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins fifo_0/M_AXIS] [get_bd_intf_pins switch/S00_AXIS]
   connect_bd_intf_net -intf_net fifo_1_M_AXIS [get_bd_intf_pins fifo_1/M_AXIS] [get_bd_intf_pins switch/S01_AXIS]
   connect_bd_intf_net -intf_net fifo_2_M_AXIS [get_bd_intf_pins fifo_2/M_AXIS] [get_bd_intf_pins switch/S02_AXIS]
   connect_bd_intf_net -intf_net fifo_3_M_AXIS [get_bd_intf_pins fifo_3/M_AXIS] [get_bd_intf_pins switch/S03_AXIS]
   connect_bd_intf_net -intf_net fifo_4_M_AXIS [get_bd_intf_pins fifo_4/M_AXIS] [get_bd_intf_pins switch/S04_AXIS]
-  connect_bd_intf_net -intf_net fifo_6_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_5/M_AXIS]
+  connect_bd_intf_net -intf_net fifo_5_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_5/M_AXIS]
+  connect_bd_intf_net -intf_net switch_M00_AXIS [get_bd_intf_pins fifo_5/S_AXIS] [get_bd_intf_pins switch/M00_AXIS]
 
   # Create port connections
-  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins fifo_0/s_axis_aclk] [get_bd_pins fifo_1/s_axis_aclk] [get_bd_pins fifo_2/s_axis_aclk] [get_bd_pins fifo_3/s_axis_aclk] [get_bd_pins fifo_4/s_axis_aclk] [get_bd_pins fifo_5/s_axis_aclk] [get_bd_pins switch/aclk]
-  connect_bd_net -net clk_pcie_1 [get_bd_pins axi_pcie_clk] [get_bd_pins datamover/m_axi_s2mm_aclk] [get_bd_pins datamover/m_axis_s2mm_cmdsts_awclk] [get_bd_pins dma/clk] [get_bd_pins fifo_5/m_axis_aclk]
+  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins fifo_0/s_axis_aclk] [get_bd_pins fifo_1/s_axis_aclk] [get_bd_pins fifo_2/s_axis_aclk] [get_bd_pins fifo_3/s_axis_aclk] [get_bd_pins fifo_4/s_axis_aclk] [get_bd_pins fifo_5/s_aclk] [get_bd_pins switch/aclk]
+  connect_bd_net -net clk_pcie_1 [get_bd_pins axi_pcie_clk] [get_bd_pins axi_regslice/aclk] [get_bd_pins dma/clk] [get_bd_pins fifo_5/m_aclk]
   connect_bd_net -net dma_irq [get_bd_pins irq] [get_bd_pins dma/irq]
-  connect_bd_net -net rst_axi_pcie_n_1 [get_bd_pins axi_pcie_rst_n] [get_bd_pins datamover/m_axi_s2mm_aresetn] [get_bd_pins datamover/m_axis_s2mm_cmdsts_aresetn] [get_bd_pins dma/rst_n]
-  connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins fifo_0/s_axis_aresetn] [get_bd_pins fifo_1/s_axis_aresetn] [get_bd_pins fifo_2/s_axis_aresetn] [get_bd_pins fifo_3/s_axis_aresetn] [get_bd_pins fifo_4/s_axis_aresetn] [get_bd_pins fifo_5/s_axis_aresetn] [get_bd_pins switch/aresetn]
+  connect_bd_net -net fifo_5_axis_rd_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_5/axis_rd_data_count]
+  connect_bd_net -net rst_axi_pcie_n_1 [get_bd_pins axi_pcie_rst_n] [get_bd_pins axi_regslice/aresetn] [get_bd_pins dma/rst_n]
+  connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins fifo_0/s_axis_aresetn] [get_bd_pins fifo_1/s_axis_aresetn] [get_bd_pins fifo_2/s_axis_aresetn] [get_bd_pins fifo_3/s_axis_aresetn] [get_bd_pins fifo_4/s_axis_aresetn] [get_bd_pins fifo_5/s_aresetn] [get_bd_pins switch/aresetn]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1045,7 +1067,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net simple_timer_time_running [get_bd_pins eth0/time_running] [get_bd_pins eth1/time_running] [get_bd_pins latency/time_running] [get_bd_pins simple_timer/time_running]
 
   # Create address segments
-  create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces dma/datamover/Data_S2MM] [get_bd_addr_segs pcie/axi_pcie/S_AXI/BAR0] SEG_axi_pcie_BAR0
+  create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs pcie/axi_pcie/S_AXI/BAR0] SEG_axi_pcie_BAR0
   create_bd_addr_seg -range 0x00010000 -offset 0x00020000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs pcie/axi_pcie/S_AXI_CTL/CTL0] SEG_axi_pcie_CTL0
   create_bd_addr_seg -range 0x00010000 -offset 0x00030000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
   create_bd_addr_seg -range 0x00010000 -offset 0x00070000 [get_bd_addr_spaces pcie/axi_pcie/M_AXI] [get_bd_addr_segs latency/eth2/stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
