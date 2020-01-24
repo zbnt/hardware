@@ -70,7 +70,7 @@ module circular_dma_fsm
 			bytes_written <= 32'd0;
 			last_msg_end_b <= 32'd0;
 			last_msg_end <= 32'd0;
-			status_flags <= 3'd1;
+			status_flags <= 3'd0;
 			burst_count <= 8'd0;
 			counter_rst <= 1'b0;
 			fifo_empty <= 1'b0;
@@ -106,8 +106,14 @@ module circular_dma_fsm
 							m_axi_awlen <= C_MAX_BURST[7:0] - 8'd1;
 							m_axi_awvalid <= 1'b1;
 						end else if(flush_fifo) begin
-							m_axi_awlen <= fifo_occupancy[7:0] - 8'd1;
-							m_axi_awvalid <= 1'b1;
+							if(fifo_occupancy != 'd0) begin
+								m_axi_awlen <= fifo_occupancy[7:0] - 8'd1;
+								m_axi_awvalid <= 1'b1;
+							end else begin
+								state <= ST_WAIT_ENABLE;
+								irq[0] <= enable_irq[0];
+								status_flags[0] <= 1'b0;
+							end
 						end
 					end else if(m_axi_awready) begin
 						state <= ST_DATA_BURST;
@@ -144,6 +150,7 @@ module circular_dma_fsm
 							if(bytes_written == mem_size_q || (flush_fifo && fifo_occupancy == 'd0)) begin
 								state <= ST_WAIT_ENABLE;
 								irq[0] <= enable_irq[0];
+								status_flags[0] <= 1'b0;
 							end else begin
 								state <= ST_WRITE_ADDR;
 
