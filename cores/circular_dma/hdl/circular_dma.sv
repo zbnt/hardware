@@ -132,7 +132,7 @@ module circular_dma
 	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST, C_AXIS_OCCUP_WIDTH) U1
 	(
 		.clk(clk),
-		.rst_n(fifo_rst_n),
+		.rst_n(rst_n),
 
 		.flush_fifo(flush_fifo),
 		.fifo_occupancy(fifo_occupancy),
