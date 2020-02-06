@@ -4,14 +4,32 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOOP_FIFO_SIZE = 16384, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
+module eth_frame_detector_w
+#(
+	parameter C_AXI_WIDTH = 32,
+
+	parameter C_AXIS_LOG_ENABLE = 1,
+	parameter C_AXIS_LOG_WIDTH = 64,
+
+	parameter C_ENABLE_COMPARE = 1,
+	parameter C_ENABLE_EDIT = 1,
+	parameter C_ENABLE_CHECKSUM = 1,
+
+	parameter C_NUM_SCRIPTS = 4,
+	parameter C_MAX_SCRIPT_SIZE = 2048,
+	parameter C_LOOP_FIFO_SIZE = 2048,
+	parameter C_EXTRACT_FIFO_SIZE = 2048,
+
+	parameter C_SHARED_RX_CLK = 0,
+	parameter C_SHARED_TX_CLK = 0
+)
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
 	input wire s_axi_clk,
 	input wire s_axi_resetn,
 
-	input wire [15:0] s_axi_awaddr,
+	input wire [$clog2(4*4*C_NUM_SCRIPTS*C_MAX_SCRIPT_SIZE)-1:0] s_axi_awaddr,
 	input wire [2:0] s_axi_awprot,
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
@@ -25,7 +43,7 @@ module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOOP_FIFO_
 	output wire s_axi_bvalid,
 	input wire s_axi_bready,
 
-	input wire [15:0] s_axi_araddr,
+	input wire [$clog2(4*4*C_NUM_SCRIPTS*C_MAX_SCRIPT_SIZE)-1:0] s_axi_araddr,
 	input wire [2:0] s_axi_arprot,
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
@@ -92,7 +110,26 @@ module eth_frame_detector_w #(parameter C_AXI_WIDTH = 32, parameter C_LOOP_FIFO_
 	input wire [63:0] current_time,
 	input wire time_running
 );
-	eth_frame_detector #(C_AXI_WIDTH, C_LOOP_FIFO_SIZE, C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U0
+	eth_frame_detector
+	#(
+		C_AXI_WIDTH,
+
+		C_AXIS_LOG_ENABLE,
+		C_AXIS_LOG_WIDTH,
+
+		C_ENABLE_COMPARE,
+		C_ENABLE_EDIT,
+		C_ENABLE_CHECKSUM,
+
+		C_NUM_SCRIPTS,
+		C_MAX_SCRIPT_SIZE,
+		C_LOOP_FIFO_SIZE,
+		C_EXTRACT_FIFO_SIZE,
+
+		C_SHARED_RX_CLK,
+		C_SHARED_TX_CLK
+	)
+	U0
 	(
 		// S_AXI
 

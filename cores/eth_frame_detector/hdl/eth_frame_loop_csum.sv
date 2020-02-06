@@ -4,54 +4,68 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module transport_checksum
+module eth_frame_loop_csum
 (
 	input logic clk,
 	input logic rst_n,
 
-	output logic [15:0] checksum,
-	output logic [15:0] checksum_orig,
-	output logic [15:0] checksum_pos,
-	output logic checksum_done,
-
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
+	input logic [1:0] s_axis_tuser,   // {DROP_FRAME, FCS_INVALID}
 	input logic s_axis_tlast,
-	input logic s_axis_tvalid
-);
-	logic [15:0] count;
+	input logic s_axis_tvalid,
 
-	logic [7:0] last_byte;
-	logic [15:0] checksum_next;
+	// M_AXIS
+
+	output logic [7:0] m_axis_tdata,
+	output logic [32:0] m_axis_tuser, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	output logic m_axis_tlast,
+	output logic m_axis_tvalid
+);
+	logic [15:0] checksum, checksum_next, checksum_pos;
 	logic [16:0] checksum_sum;
 
-	logic frame_end, header_valid, ignore_tlast;
+	logic header_valid;
+	logic ignore_tlast;
+	logic [15:0] count;
 	logic [15:0] checksum_data_begin, checksum_data_end;
 
 	enum logic [1:0] {ETH_UNKNOWN, IPV4, IPV6} eth_proto;
 
 	always_ff @(posedge clk) begin
-		if(~rst_n | frame_end) begin
+		if(~rst_n) begin
+			m_axis_tuser[1:0] <= 2'd0;
+			m_axis_tlast <= 1'b0;
+			m_axis_tvalid <= 1'b0;
+		end else begin
+			m_axis_tuser[1:0] <= s_axis_tuser[1:0];
+			m_axis_tlast <= s_axis_tlast;
+			m_axis_tvalid <= s_axis_tvalid;
+		end
+	end
+
+	always_comb begin
+		m_axis_tuser[32:2] = {checksum, checksum_pos[14:0]};
+	end
+
+	always_ff @(posedge clk) begin
+		if(~rst_n | m_axis_tlast) begin
 			count <= 16'd0;
 
-			last_byte <= 8'd0;
 			checksum <= 16'd0;
 			checksum_pos <= 16'd0;
-			checksum_orig <= 16'd0;
-			checksum_done <= 1'b0;
 
-			frame_end <= 1'b0;
 			header_valid <= 1'b0;
 			ignore_tlast <= 1'b0;
 			checksum_data_begin <= 16'd0;
 			checksum_data_end <= 16'd0;
 
+			m_axis_tdata <= 8'd0;
+
 			eth_proto <= ETH_UNKNOWN;
 		end else if(s_axis_tvalid) begin
 			count <= count + 16'd1;
-			last_byte <= s_axis_tdata;
-			frame_end <= s_axis_tlast;
 
 			if(s_axis_tlast || count == checksum_data_end && checksum_data_end != 16'd0) begin
 				if(header_valid) begin
@@ -60,16 +74,13 @@ module transport_checksum
 					checksum <= 16'd0;
 				end
 
-				checksum_done <= ~ignore_tlast;
 				ignore_tlast <= 1'b1;
-			end else begin
-				checksum_done <= 1'b0;
 			end
 
 			if(count == 16'd13) begin
-				if(last_byte == 8'h08 && s_axis_tdata == 16'h00) begin
+				if(m_axis_tdata == 8'h08 && s_axis_tdata == 16'h00) begin
 					eth_proto <= IPV4;
-				end else if(last_byte == 8'h86 && s_axis_tdata == 16'hDD) begin
+				end else if(m_axis_tdata == 8'h86 && s_axis_tdata == 16'hDD) begin
 					eth_proto <= IPV6;
 				end else begin
 					checksum_data_end <= 16'd14;
@@ -77,7 +88,7 @@ module transport_checksum
 			end
 
 			if(eth_proto == IPV4 && count == 16'd22 || eth_proto == IPV6 && count == 16'd19) begin
-				last_byte <= 8'd0;
+				m_axis_tdata <= 8'd0;
 			end
 
 			case(eth_proto)
@@ -95,7 +106,7 @@ module transport_checksum
 
 					// offset of last IPv4 data byte
 					if(count == 16'd17) begin
-						checksum_data_end <= {last_byte, s_axis_tdata} + 16'd13;
+						checksum_data_end <= {m_axis_tdata, s_axis_tdata} + 16'd13;
 					end
 
 					// detect protocol, set TCP/UDP/ICMP header offset
@@ -123,8 +134,6 @@ module transport_checksum
 					if(count >= checksum_data_begin && count[0] && header_valid) begin
 						if(count != checksum_pos) begin
 							checksum <= checksum_next;
-						end else begin
-							checksum_orig <= {s_axis_tdata, last_byte};
 						end
 					end
 				end
@@ -137,7 +146,7 @@ module transport_checksum
 
 					// offset of last IPv6 data byte
 					if(count == 16'd19) begin
-						checksum_data_end <= {last_byte, s_axis_tdata} + 16'd53;
+						checksum_data_end <= {m_axis_tdata, s_axis_tdata} + 16'd53;
 					end
 
 					// detect protocol, set TCP/UDP/ICMPv6 header offset
@@ -166,8 +175,6 @@ module transport_checksum
 					if(count >= 16'd23 && count[0] && header_valid) begin
 						if(count != checksum_pos) begin
 							checksum <= checksum_next;
-						end else begin
-							checksum_orig <= {s_axis_tdata, last_byte};
 						end
 					end
 				end
@@ -180,7 +187,7 @@ module transport_checksum
 			// add padding 0 if needed
 			checksum_sum = {1'b0, checksum} + {9'd0, s_axis_tdata};
 		end else begin
-			checksum_sum = {1'b0, checksum} + {1'b0, s_axis_tdata, last_byte};
+			checksum_sum = {1'b0, checksum} + {1'b0, s_axis_tdata, m_axis_tdata};
 		end
 
 		if(s_axis_tlast || count == checksum_data_end && checksum_data_end != 16'd0) begin
