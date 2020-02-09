@@ -4,30 +4,43 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module mem_streamer_w #(parameter addr_width = 6, parameter data_width = 8, parameter byte_count = 4)
+module mem_streamer_w
+#(
+	parameter C_MEM_SIZE = 4,
+	parameter C_DATA_WIDTH = 8,
+	parameter C_DELAY_TIME = 12
+)
 (
 	// Clock and reset
 
 	input wire clk,
-	input wire rst,
+	input wire rst_n,
 
 	// MEM : Memory interface (DRAM/BRAM)
 
-	output wire [addr_width-1:0] mem_addr,
-	input wire [data_width-1:0] mem_rdata,
+	output wire mem_clk,
+	output wire mem_rst,
+	output wire mem_en,
+	output wire mem_we,
+	output wire [$clog2(C_MEM_SIZE)-1:0] mem_addr,
+	input wire [C_DATA_WIDTH-1:0] mem_rdata,
 
 	// M_AXIS : AXI4-Stream master interface
 
-	output wire [data_width-1:0] m_axis_tdata,
-	output wire [(data_width/8)-1:0] m_axis_tkeep,
+	output wire [C_DATA_WIDTH-1:0] m_axis_tdata,
 	output wire m_axis_tlast,
 	output wire m_axis_tvalid,
 	input wire m_axis_tready
 );
-	mem_streamer #(addr_width, data_width, byte_count) U0
+	assign mem_clk = clk;
+	assign mem_rst = ~rst_n;
+	assign mem_en = 1'b1;
+	assign mem_we = 1'b0;
+
+	mem_streamer #(C_MEM_SIZE, C_DATA_WIDTH, C_DELAY_TIME) U0
 	(
 		.clk(clk),
-		.rst(rst),
+		.rst_n(rst_n),
 
 		// MEM
 
@@ -37,7 +50,6 @@ module mem_streamer_w #(parameter addr_width = 6, parameter data_width = 8, para
 		// M_AXIS
 
 		.m_axis_tdata(m_axis_tdata),
-		.m_axis_tkeep(m_axis_tkeep),
 		.m_axis_tlast(m_axis_tlast),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
