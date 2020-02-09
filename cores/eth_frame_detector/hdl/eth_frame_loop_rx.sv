@@ -65,7 +65,7 @@ module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 
 			axis_tlast_q <= s_axis_tlast;
 			axis_tvalid_q <= s_axis_tvalid;
 
-			m_axis_tdata <= s_axis_tdata;
+			m_axis_tdata <= axis_tdata_q;
 			m_axis_tuser <= (script_end ? {32'd0, axis_tuser_q} : {script_data_b, axis_tuser_q});
 			m_axis_tlast <= axis_tlast_q;
 			m_axis_tvalid <= axis_tvalid_q;
@@ -109,7 +109,6 @@ module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 
 			if(C_NUM_SCRIPTS == 1) begin
 				script_we = mem_wenable;
 				script_req = mem_req;
-
 			end else begin
 				script_we = mem_wenable && (mem_addr[$clog2(4*C_NUM_SCRIPTS*C_MAX_SCRIPT_SIZE)-1:$clog2(4*C_MAX_SCRIPT_SIZE)] == i);
 				script_req = mem_req && (mem_addr[$clog2(4*C_NUM_SCRIPTS*C_MAX_SCRIPT_SIZE)-1:$clog2(4*C_MAX_SCRIPT_SIZE)] == i);

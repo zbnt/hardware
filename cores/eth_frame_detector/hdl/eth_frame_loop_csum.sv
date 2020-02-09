@@ -66,6 +66,7 @@ module eth_frame_loop_csum
 			eth_proto <= ETH_UNKNOWN;
 		end else if(s_axis_tvalid) begin
 			count <= count + 16'd1;
+			m_axis_tdata <= s_axis_tdata;
 
 			if(s_axis_tlast || count == checksum_data_end && checksum_data_end != 16'd0) begin
 				if(header_valid) begin

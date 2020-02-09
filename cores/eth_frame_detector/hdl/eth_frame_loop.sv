@@ -325,7 +325,7 @@ module eth_frame_loop
 		(
 			.clk(s_axis_clk),
 			.rst_n(rst_n_s),
-			.srst(srst),
+			.srst(srst_s),
 			.enable(log_en_s),
 
 			.clk_log(clk),

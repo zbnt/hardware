@@ -48,8 +48,14 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		end else begin
 			state <= state_next;
 
-			if(s_axis_tvalid) begin
-				in_frame <= ~s_axis_tlast;
+			if(state != ST_WRITE_FRAME) begin
+				if(s_axis_tvalid) begin
+					in_frame <= ~s_axis_tlast;
+				end
+			end else begin
+				if(s_axis_tvalid & s_axis_tlast) begin
+					in_frame <= 1'b0;
+				end
 			end
 		end
 	end
@@ -66,19 +72,21 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 
 		case(state)
 			ST_WAIT_FIFO: begin
-				if(s_axis_frame_tready & s_axis_ctl_tready & ~in_frame) begin
+				if(s_axis_frame_tready & s_axis_ctl_tready) begin
 					state_next = ST_WRITE_FRAME;
 				end
 			end
 
 			ST_WRITE_FRAME: begin
-				s_axis_frame_tvalid = s_axis_tvalid;
+				if(~in_frame) begin
+					s_axis_frame_tvalid = s_axis_tvalid;
 
-				if(s_axis_tvalid) begin
-					if(~s_axis_frame_tready) begin
-						state_next = ST_OVERFLOW_A;
-					end else if(s_axis_tlast) begin
-						state_next = ST_WAIT_FIFO;
+					if(s_axis_tvalid) begin
+						if(~s_axis_frame_tready) begin
+							state_next = ST_OVERFLOW_A;
+						end else if(s_axis_tlast) begin
+							state_next = ST_WRITE_CTL;
+						end
 					end
 				end
 			end
