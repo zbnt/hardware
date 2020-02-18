@@ -18,7 +18,7 @@ module eth_frame_loop_tx
 
 	// S_AXIS_CTL
 
-	input logic [39:0] s_axis_ctl_tdata, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	input logic [55:0] s_axis_ctl_tdata, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
 	input logic s_axis_ctl_tvalid,
 	output logic s_axis_ctl_tready,
 
@@ -32,8 +32,8 @@ module eth_frame_loop_tx
 );
 	enum logic [1:0] {ST_WAIT_CTL, ST_TX_FRAME, ST_DROP_FRAME} state;
 
-	logic [15:0] checksum, count;
-	logic [14:0] checksum_pos;
+	logic [15:0] checksum_tr, checksum_ip, count;
+	logic [14:0] checksum_tr_pos;
 	logic corrupt_fcs;
 
 	always_ff @(posedge clk) begin
@@ -41,8 +41,9 @@ module eth_frame_loop_tx
 			state <= ST_WAIT_CTL;
 
 			count <= 16'd0;
-			checksum <= 16'd0;
-			checksum_pos <= 15'd0;
+			checksum_ip <= 16'd0;
+			checksum_tr <= 16'd0;
+			checksum_tr_pos <= 15'd0;
 			corrupt_fcs <= 1'b0;
 
 			s_axis_ctl_tready <= 1'b0;
@@ -59,8 +60,9 @@ module eth_frame_loop_tx
 						end
 
 						count <= 16'd0;
-						checksum <= s_axis_ctl_tdata[32:17];
-						checksum_pos <= s_axis_ctl_tdata[16:2];
+						checksum_ip <= s_axis_ctl_tdata[48:33];
+						checksum_tr <= s_axis_ctl_tdata[32:17];
+						checksum_tr_pos <= s_axis_ctl_tdata[16:2];
 						corrupt_fcs <= s_axis_ctl_tdata[0];
 
 						s_axis_ctl_tready <= 1'b0;
@@ -98,11 +100,17 @@ module eth_frame_loop_tx
 		s_axis_frame_tready = 1'b0;
 
 		if(state == ST_TX_FRAME) begin
-			if(checksum != 16'd0 && count[15:1] == checksum_pos) begin
-				if(count[0]) begin
-					m_axis_tdata = checksum[15:8];
+			if(checksum_ip != 16'd0 && count[15:1] == 15'd12) begin
+				if(~count[0]) begin
+					m_axis_tdata = checksum_ip[15:8];
 				end else begin
-					m_axis_tdata = checksum[7:0];
+					m_axis_tdata = checksum_ip[7:0];
+				end
+			end else if(checksum_tr != 16'd0 && count[15:1] == checksum_tr_pos) begin
+				if(~count[0]) begin
+					m_axis_tdata = checksum_tr[15:8];
+				end else begin
+					m_axis_tdata = checksum_tr[7:0];
 				end
 			end else begin
 				m_axis_tdata = s_axis_frame_tdata;
