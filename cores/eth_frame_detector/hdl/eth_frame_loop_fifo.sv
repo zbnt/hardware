@@ -10,11 +10,12 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 	input logic rst_n,
 
 	input logic clk_tx,
+	input logic rst_tx_n,
 
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic [32:0] s_axis_tuser, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	input logic [48:0] s_axis_tuser, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
@@ -27,7 +28,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 
 	// M_AXIS_CTL
 
-	output logic [39:0] m_axis_ctl_tdata, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	output logic [55:0] m_axis_ctl_tdata, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
 	output logic m_axis_ctl_tvalid,
 	input logic m_axis_ctl_tready
 );
@@ -36,7 +37,10 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 	logic [7:0] s_axis_frame_tdata;
 	logic s_axis_frame_tlast, s_axis_frame_tvalid, s_axis_frame_tready;
 
-	logic [32:0] s_axis_ctl_tdata;
+	logic [7:0] axis_frame_b2d_tdata;
+	logic axis_frame_b2d_tlast, axis_frame_b2d_tvalid, axis_frame_b2d_tready;
+
+	logic [48:0] s_axis_ctl_tdata;
 	logic s_axis_ctl_tvalid, s_axis_ctl_tready;
 
 	logic in_frame;
@@ -126,6 +130,54 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 	xpm_fifo_axis
 	#(
 		.CDC_SYNC_STAGES(2),
+		.CLOCKING_MODE("common_clock"),
+		.ECC_MODE("no_ecc"),
+		.FIFO_DEPTH(128),
+		.FIFO_MEMORY_TYPE("distributed"),
+		.PACKET_FIFO("false"),
+		.PROG_EMPTY_THRESH(10),
+		.PROG_FULL_THRESH(10),
+		.RD_DATA_COUNT_WIDTH(1),
+		.RELATED_CLOCKS(0),
+		.TDATA_WIDTH(8),
+		.TDEST_WIDTH(1),
+		.TID_WIDTH(1),
+		.TUSER_WIDTH(1),
+		.USE_ADV_FEATURES("1000"),
+		.WR_DATA_COUNT_WIDTH(1)
+	)
+	U0
+	(
+		.m_aclk(clk_tx),
+		.s_aclk(clk_tx),
+		.s_aresetn(rst_tx_n),
+
+		.prog_full_axis(),
+		.prog_empty_axis(),
+
+		.s_axis_tdata(axis_frame_b2d_tdata),
+		.s_axis_tlast(axis_frame_b2d_tlast),
+		.s_axis_tvalid(axis_frame_b2d_tvalid),
+		.s_axis_tready(axis_frame_b2d_tready),
+
+		.m_axis_tdata(m_axis_frame_tdata),
+		.m_axis_tlast(m_axis_frame_tlast),
+		.m_axis_tvalid(m_axis_frame_tvalid),
+		.m_axis_tready(m_axis_frame_tready),
+
+		.s_axis_tuser(1'b0),
+		.s_axis_tdest(1'b0),
+		.s_axis_tid(1'b0),
+		.s_axis_tkeep(1'b1),
+		.s_axis_tstrb(1'b1),
+
+		.injectdbiterr_axis(1'b0),
+		.injectsbiterr_axis(1'b0)
+	);
+
+	xpm_fifo_axis
+	#(
+		.CDC_SYNC_STAGES(2),
 		.CLOCKING_MODE("independent_clock"),
 		.ECC_MODE("no_ecc"),
 		.FIFO_DEPTH(C_LOOP_FIFO_SIZE),
@@ -142,7 +194,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.USE_ADV_FEATURES("1000"),
 		.WR_DATA_COUNT_WIDTH(1)
 	)
-	U0
+	U1
 	(
 		.m_aclk(clk_tx),
 		.s_aclk(clk),
@@ -156,10 +208,10 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.s_axis_tvalid(s_axis_frame_tvalid),
 		.s_axis_tready(s_axis_frame_tready),
 
-		.m_axis_tdata(m_axis_frame_tdata),
-		.m_axis_tlast(m_axis_frame_tlast),
-		.m_axis_tvalid(m_axis_frame_tvalid),
-		.m_axis_tready(m_axis_frame_tready),
+		.m_axis_tdata(axis_frame_b2d_tdata),
+		.m_axis_tlast(axis_frame_b2d_tlast),
+		.m_axis_tvalid(axis_frame_b2d_tvalid),
+		.m_axis_tready(axis_frame_b2d_tready),
 
 		.s_axis_tuser(1'b0),
 		.s_axis_tdest(1'b0),
@@ -183,14 +235,14 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.PROG_FULL_THRESH(10),
 		.RD_DATA_COUNT_WIDTH(1),
 		.RELATED_CLOCKS(0),
-		.TDATA_WIDTH(40),
+		.TDATA_WIDTH(56),
 		.TDEST_WIDTH(1),
 		.TID_WIDTH(1),
 		.TUSER_WIDTH(1),
 		.USE_ADV_FEATURES("1000"),
 		.WR_DATA_COUNT_WIDTH(1)
 	)
-	U1
+	U2
 	(
 		.m_aclk(clk_tx),
 		.s_aclk(clk),
