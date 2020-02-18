@@ -184,7 +184,7 @@ module eth_frame_loop
 	end
 
 	logic [7:0] axis_edit2csum_tdata;
-	logic [1:0] axis_edit2csum_tuser;
+	logic [9:0] axis_edit2csum_tuser;
 	logic axis_edit2csum_tlast, axis_edit2csum_tvalid;
 
 	if(C_ENABLE_EDIT && C_NUM_SCRIPTS != 0) begin
@@ -210,14 +210,14 @@ module eth_frame_loop
 	end else begin
 		always_comb begin
 			axis_edit2csum_tdata = axis_cmp2edit_tdata;
-			axis_edit2csum_tuser = {1'b0, axis_cmp2edit_tuser[0]};
+			axis_edit2csum_tuser = {9'd0, axis_cmp2edit_tuser[0]};
 			axis_edit2csum_tlast = axis_cmp2edit_tlast;
 			axis_edit2csum_tvalid = axis_cmp2edit_tvalid;
 		end
 	end
 
 	logic [7:0] axis_csum2fifo_tdata;
-	logic [32:0] axis_csum2fifo_tuser;
+	logic [48:0] axis_csum2fifo_tuser;
 	logic axis_csum2fifo_tlast, axis_csum2fifo_tvalid;
 
 	if(C_ENABLE_CHECKSUM && C_NUM_SCRIPTS != 0) begin
@@ -243,7 +243,7 @@ module eth_frame_loop
 	end else begin
 		always_comb begin
 			axis_csum2fifo_tdata = axis_edit2csum_tdata;
-			axis_csum2fifo_tuser = {31'd0, axis_edit2csum_tuser[1:0]};
+			axis_csum2fifo_tuser = {47'd0, axis_edit2csum_tuser[1:0]};
 			axis_csum2fifo_tlast = axis_edit2csum_tlast;
 			axis_csum2fifo_tvalid = axis_edit2csum_tvalid;
 		end
@@ -252,7 +252,7 @@ module eth_frame_loop
 	logic [7:0] axis_txd_tdata;
 	logic axis_txd_tlast, axis_txd_tvalid, axis_txd_tready;
 
-	logic [39:0] axis_txc_tdata;
+	logic [55:0] axis_txc_tdata;
 	logic axis_txc_tvalid, axis_txc_tready;
 
 	eth_frame_loop_fifo #(C_LOOP_FIFO_SIZE) U6
@@ -261,6 +261,7 @@ module eth_frame_loop
 		.rst_n(rst_n_s),
 
 		.clk_tx(m_axis_clk),
+		.rst_tx_n(rst_n_m),
 
 		// S_AXIS
 
