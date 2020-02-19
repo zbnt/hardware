@@ -15,7 +15,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic [48:0] s_axis_tuser, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	input logic [47:0] s_axis_tuser, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
@@ -28,7 +28,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 
 	// M_AXIS_CTL
 
-	output logic [55:0] m_axis_ctl_tdata, // {CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	output logic [47:0] m_axis_ctl_tdata, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
 	output logic m_axis_ctl_tvalid,
 	input logic m_axis_ctl_tready
 );
@@ -40,7 +40,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 	logic [7:0] axis_frame_b2d_tdata;
 	logic axis_frame_b2d_tlast, axis_frame_b2d_tvalid, axis_frame_b2d_tready;
 
-	logic [48:0] s_axis_ctl_tdata;
+	logic [47:0] s_axis_ctl_tdata;
 	logic s_axis_ctl_tvalid, s_axis_ctl_tready;
 
 	logic in_frame;
@@ -235,7 +235,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.PROG_FULL_THRESH(10),
 		.RD_DATA_COUNT_WIDTH(1),
 		.RELATED_CLOCKS(0),
-		.TDATA_WIDTH(56),
+		.TDATA_WIDTH(48),
 		.TDEST_WIDTH(1),
 		.TID_WIDTH(1),
 		.TUSER_WIDTH(1),
@@ -251,7 +251,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.prog_full_axis(),
 		.prog_empty_axis(),
 
-		.s_axis_tdata({7'd0, s_axis_ctl_tdata}),
+		.s_axis_tdata(s_axis_ctl_tdata),
 		.s_axis_tvalid(s_axis_ctl_tvalid),
 		.s_axis_tready(s_axis_ctl_tready),
 
