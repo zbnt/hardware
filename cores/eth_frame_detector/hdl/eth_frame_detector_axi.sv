@@ -4,7 +4,22 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WIDTH = 16, parameter C_AXIS_LOG_ENABLE = 1, parameter C_NUM_SCRIPTS = 4)
+module eth_frame_detector_axi
+#(
+	parameter C_AXI_WIDTH = 32,
+	parameter C_ADDR_WIDTH = 16,
+
+	parameter C_AXIS_LOG_ENABLE = 1,
+
+	parameter C_ENABLE_COMPARE = 1,
+	parameter C_ENABLE_EDIT = 1,
+	parameter C_ENABLE_CHECKSUM = 1,
+	parameter C_NUM_SCRIPTS = 4,
+	parameter C_MAX_SCRIPT_SIZE = 2048,
+	parameter C_LOOP_FIFO_A_SIZE = 2048,
+	parameter C_LOOP_FIFO_B_SIZE = 128,
+	parameter C_EXTRACT_FIFO_SIZE = 2048
+)
 (
 	input logic clk,
 	input logic rst_n,
@@ -186,25 +201,34 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WID
 
 			case(s_axi_araddr[C_ADDR_WIDTH-1:C_ADDR_WIDTH-2])
 				2'd0: begin
-					if(s_axi_araddr <= 16'd23) begin
+					if(s_axi_araddr <= 'd47) begin
 						// Register address
 						read_ready = 1'b1;
 						read_response = 1'b1;
 
 						if(C_AXI_WIDTH == 32) begin
-							case(s_axi_araddr[4:2])
-								3'd0: read_value = {log_id, 13'd0, log_en, srst, enable};
-								3'd1: read_value = (C_NUM_SCRIPTS == 16) ? script_en : {{(32-2*C_NUM_SCRIPTS){1'b0}}, script_en};
-								3'd2: read_value = overflow_count_a[31:0];
-								3'd3: read_value = overflow_count_a[63:32];
-								3'd4: read_value = overflow_count_b[31:0];
-								3'd5: read_value = overflow_count_b[63:32];
+							case(s_axi_araddr[5:2])
+								4'h0: read_value = {log_id, 13'd0, log_en, srst, enable};
+								4'h1: read_value = (C_NUM_SCRIPTS == 16) ? script_en : {{(32-2*C_NUM_SCRIPTS){1'b0}}, script_en};
+								4'h2: read_value = {29'd0, C_ENABLE_CHECKSUM[0], C_ENABLE_EDIT[0], C_ENABLE_COMPARE[0]};
+								4'h3: read_value = C_NUM_SCRIPTS;
+								4'h4: read_value = C_MAX_SCRIPT_SIZE;
+								4'h5: read_value = {'d1, {(C_ADDR_WIDTH-2){1'b0}}};
+								4'h6: read_value = C_LOOP_FIFO_A_SIZE + C_LOOP_FIFO_B_SIZE;
+								4'h7: read_value = C_EXTRACT_FIFO_SIZE;
+								4'h8: read_value = overflow_count_a[31:0];
+								4'h9: read_value = overflow_count_a[63:32];
+								4'hA: read_value = overflow_count_b[31:0];
+								4'hB: read_value = overflow_count_b[63:32];
 							endcase
 						end else if(C_AXI_WIDTH == 64) begin
-							case(s_axi_araddr[4:3])
-								2'd0: read_value = {(C_NUM_SCRIPTS == 16) ? script_en : {{(32-2*C_NUM_SCRIPTS){1'b0}}, script_en}, log_id, 13'd0, log_en, srst, enable};
-								2'd1: read_value = overflow_count_a;
-								2'd2: read_value = overflow_count_b;
+							case(s_axi_araddr[5:3])
+								3'h0: read_value = {(C_NUM_SCRIPTS == 16) ? script_en : {{(32-2*C_NUM_SCRIPTS){1'b0}}, script_en}, log_id, 13'd0, log_en, srst, enable};
+								3'h1: read_value = {C_NUM_SCRIPTS, 29'd0, C_ENABLE_CHECKSUM[0], C_ENABLE_EDIT[0], C_ENABLE_COMPARE[0]};
+								3'h2: read_value = {'d1, {(C_ADDR_WIDTH-2){1'b0}}, C_MAX_SCRIPT_SIZE};
+								3'h3: read_value = {C_EXTRACT_FIFO_SIZE, C_LOOP_FIFO_A_SIZE + C_LOOP_FIFO_B_SIZE};
+								3'h4: read_value = overflow_count_a;
+								3'h5: read_value = overflow_count_b;
 							endcase
 						end
 					end
@@ -236,7 +260,7 @@ module eth_frame_detector_axi #(parameter C_AXI_WIDTH = 32, parameter C_ADDR_WID
 
 			case(write_addr[C_ADDR_WIDTH-1:C_ADDR_WIDTH-2])
 				2'd0: begin
-					if(write_addr <= 16'd23) begin
+					if(write_addr <= 'd47) begin
 						// Register address
 						write_ready = 1'b1;
 						write_response = 1'b1;

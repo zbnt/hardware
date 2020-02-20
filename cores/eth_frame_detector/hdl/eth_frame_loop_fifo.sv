@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
+module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LOOP_FIFO_B_SIZE = 128)
 (
 	input logic clk,
 	input logic rst_n,
@@ -132,7 +132,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.CDC_SYNC_STAGES(2),
 		.CLOCKING_MODE("common_clock"),
 		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(128),
+		.FIFO_DEPTH(C_LOOP_FIFO_B_SIZE),
 		.FIFO_MEMORY_TYPE("distributed"),
 		.PACKET_FIFO("false"),
 		.PROG_EMPTY_THRESH(10),
@@ -180,7 +180,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.CDC_SYNC_STAGES(2),
 		.CLOCKING_MODE("independent_clock"),
 		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(C_LOOP_FIFO_SIZE),
+		.FIFO_DEPTH(C_LOOP_FIFO_A_SIZE),
 		.FIFO_MEMORY_TYPE("block"),
 		.PACKET_FIFO("false"),
 		.PROG_EMPTY_THRESH(10),
@@ -228,7 +228,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_SIZE = 2048)
 		.CDC_SYNC_STAGES(2),
 		.CLOCKING_MODE("independent_clock"),
 		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(C_LOOP_FIFO_SIZE / 32),
+		.FIFO_DEPTH(C_LOOP_FIFO_A_SIZE / 32),
 		.FIFO_MEMORY_TYPE("block"),
 		.PACKET_FIFO("false"),
 		.PROG_EMPTY_THRESH(10),

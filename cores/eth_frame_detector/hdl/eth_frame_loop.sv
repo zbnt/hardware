@@ -17,7 +17,8 @@ module eth_frame_loop
 	parameter C_ENABLE_CHECKSUM = 1,
 	parameter C_NUM_SCRIPTS = 4,
 	parameter C_MAX_SCRIPT_SIZE = 2048,
-	parameter C_LOOP_FIFO_SIZE = 2048,
+	parameter C_LOOP_FIFO_A_SIZE = 2048,
+	parameter C_LOOP_FIFO_B_SIZE = 128,
 	parameter C_EXTRACT_FIFO_SIZE = 2048,
 
 	parameter C_SHARED_RX_CLK = 0,
@@ -255,7 +256,7 @@ module eth_frame_loop
 	logic [47:0] axis_txc_tdata;
 	logic axis_txc_tvalid, axis_txc_tready;
 
-	eth_frame_loop_fifo #(C_LOOP_FIFO_SIZE) U6
+	eth_frame_loop_fifo #(C_LOOP_FIFO_A_SIZE, C_LOOP_FIFO_B_SIZE) U6
 	(
 		.clk(s_axis_clk),
 		.rst_n(rst_n_s),

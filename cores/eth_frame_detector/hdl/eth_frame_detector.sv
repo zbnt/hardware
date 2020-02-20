@@ -26,7 +26,8 @@ module eth_frame_detector
 
 	parameter C_NUM_SCRIPTS = 4,
 	parameter C_MAX_SCRIPT_SIZE = 2048,
-	parameter C_LOOP_FIFO_SIZE = 2048,
+	parameter C_LOOP_FIFO_A_SIZE = 2048,
+	parameter C_LOOP_FIFO_B_SIZE = 128,
 	parameter C_EXTRACT_FIFO_SIZE = 2048,
 
 	parameter C_SHARED_RX_CLK = 0,
@@ -146,7 +147,21 @@ module eth_frame_detector
 
 	// Registers
 
-	eth_frame_detector_axi #(C_AXI_WIDTH, $clog2(4*4*C_NUM_SCRIPTS*C_MAX_SCRIPT_SIZE), C_AXIS_LOG_ENABLE, C_NUM_SCRIPTS) U0
+	eth_frame_detector_axi
+	#(
+		C_AXI_WIDTH,
+		$clog2(4*4*C_NUM_SCRIPTS*C_MAX_SCRIPT_SIZE),
+		C_AXIS_LOG_ENABLE,
+		C_ENABLE_COMPARE,
+		C_ENABLE_EDIT,
+		C_ENABLE_CHECKSUM,
+		C_NUM_SCRIPTS,
+		C_MAX_SCRIPT_SIZE,
+		C_LOOP_FIFO_A_SIZE,
+		C_LOOP_FIFO_B_SIZE,
+		C_EXTRACT_FIFO_SIZE
+	)
+	U0
 	(
 		.clk(s_axi_clk),
 		.rst_n(s_axi_resetn),
@@ -220,7 +235,8 @@ module eth_frame_detector
 		C_ENABLE_CHECKSUM,
 		C_NUM_SCRIPTS,
 		C_MAX_SCRIPT_SIZE,
-		C_LOOP_FIFO_SIZE,
+		C_LOOP_FIFO_A_SIZE,
+		C_LOOP_FIFO_B_SIZE,
 		C_EXTRACT_FIFO_SIZE,
 		C_SHARED_RX_CLK,
 		C_SHARED_TX_CLK
@@ -285,7 +301,8 @@ module eth_frame_detector
 		C_ENABLE_CHECKSUM,
 		C_NUM_SCRIPTS,
 		C_MAX_SCRIPT_SIZE,
-		C_LOOP_FIFO_SIZE,
+		C_LOOP_FIFO_A_SIZE,
+		C_LOOP_FIFO_B_SIZE,
 		C_EXTRACT_FIFO_SIZE,
 		C_SHARED_RX_CLK,
 		C_SHARED_TX_CLK

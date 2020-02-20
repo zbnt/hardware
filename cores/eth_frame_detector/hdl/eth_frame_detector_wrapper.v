@@ -17,7 +17,8 @@ module eth_frame_detector_w
 
 	parameter C_NUM_SCRIPTS = 4,
 	parameter C_MAX_SCRIPT_SIZE = 2048,
-	parameter C_LOOP_FIFO_SIZE = 2048,
+	parameter C_LOOP_FIFO_A_SIZE = 2048,
+	parameter C_LOOP_FIFO_B_SIZE = 128,
 	parameter C_EXTRACT_FIFO_SIZE = 2048,
 
 	parameter C_SHARED_RX_CLK = 0,
@@ -123,7 +124,8 @@ module eth_frame_detector_w
 
 		C_NUM_SCRIPTS,
 		C_MAX_SCRIPT_SIZE,
-		C_LOOP_FIFO_SIZE,
+		C_LOOP_FIFO_A_SIZE,
+		C_LOOP_FIFO_B_SIZE,
 		C_EXTRACT_FIFO_SIZE,
 
 		C_SHARED_RX_CLK,
