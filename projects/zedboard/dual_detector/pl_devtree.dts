@@ -33,7 +33,7 @@
 
 			dma@40400000 {
 				compatible = "generic-uio";
-				reg = <0x40400000 0x10000>;
+				reg = <0x40400000 0x1000>;
 
 				interrupt-names = "s2mm_introut";
 				interrupt-parent = <&intc>;
@@ -42,42 +42,42 @@
 
 			zbnt_timer@43c00000 {
 				compatible = "generic-uio";
-				reg = <0x43c00000 0x10000>;
-			};
-
-			zbnt_sc@43c10000 {
-				compatible = "generic-uio";
-				reg = <0x43c10000 0x10000>;
-				zbnt,ports = <0>;
+				reg = <0x43c00000 0x1000>;
 			};
 
 			zbnt_sc@43c20000 {
 				compatible = "generic-uio";
-				reg = <0x43c20000 0x10000>;
-				zbnt,ports = <1>;
-			};
-
-			zbnt_sc@43c30000 {
-				compatible = "generic-uio";
-				reg = <0x43c30000 0x10000>;
-				zbnt,ports = <2>;
+				reg = <0x43c20000 0x1000>;
+				zbnt,ports = <0>;
 			};
 
 			zbnt_sc@43c40000 {
 				compatible = "generic-uio";
-				reg = <0x43c40000 0x10000>;
+				reg = <0x43c40000 0x1000>;
+				zbnt,ports = <1>;
+			};
+
+			zbnt_sc@43c60000 {
+				compatible = "generic-uio";
+				reg = <0x43c60000 0x1000>;
+				zbnt,ports = <2>;
+			};
+
+			zbnt_sc@43c80000 {
+				compatible = "generic-uio";
+				reg = <0x43c80000 0x1000>;
 				zbnt,ports = <3>;
 			};
 
-			zbnt_fd@43c50000 {
+			zbnt_fd@43ca0000 {
 				compatible = "generic-uio";
-				reg = <0x43c50000 0x10000>;
+				reg = <0x43ca0000 0x20000>;
 				zbnt,ports = <0 1>;
 			};
 
-			zbnt_fd@43c60000 {
+			zbnt_fd@43cc0000 {
 				compatible = "generic-uio";
-				reg = <0x43c60000 0x10000>;
+				reg = <0x43cc0000 0x20000>;
 				zbnt,ports = <2 3>;
 			};
 		};

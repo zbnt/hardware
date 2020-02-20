@@ -398,6 +398,11 @@ proc create_hier_cell_mitm { parentCell nameHier } {
 
   # Create instance: detector, and set properties
   set detector [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1 detector ]
+  set_property -dict [ list \
+   CONFIG.C_LOOP_FIFO_A_SIZE {8192} \
+   CONFIG.C_LOOP_FIFO_B_SIZE {1024} \
+   CONFIG.C_NUM_SCRIPTS {4} \
+ ] $detector
 
   # Create instance: eth2
   create_hier_cell_eth2 $hier_obj eth2
@@ -695,7 +700,8 @@ proc create_hier_cell_dma { parentCell nameHier } {
   # Create instance: fifo_6, and set properties
   set fifo_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_6 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {1024} \
+   CONFIG.FIFO_DEPTH {128} \
+   CONFIG.FIFO_MEMORY_TYPE {distributed} \
  ] $fifo_6
 
   # Create instance: fifo_7, and set properties
@@ -888,19 +894,20 @@ proc create_root_design { parentCell } {
   set ps_interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ps_interconnect ]
   set_property -dict [ list \
    CONFIG.ENABLE_ADVANCED_OPTIONS {0} \
-   CONFIG.M00_HAS_REGSLICE {3} \
-   CONFIG.M01_HAS_REGSLICE {3} \
-   CONFIG.M02_HAS_REGSLICE {3} \
-   CONFIG.M03_HAS_REGSLICE {3} \
-   CONFIG.M04_HAS_REGSLICE {3} \
-   CONFIG.M05_HAS_REGSLICE {3} \
+   CONFIG.M00_HAS_REGSLICE {4} \
+   CONFIG.M01_HAS_REGSLICE {4} \
+   CONFIG.M02_HAS_REGSLICE {4} \
+   CONFIG.M03_HAS_REGSLICE {4} \
+   CONFIG.M04_HAS_REGSLICE {4} \
+   CONFIG.M05_HAS_REGSLICE {4} \
    CONFIG.M06_HAS_DATA_FIFO {0} \
-   CONFIG.M06_HAS_REGSLICE {3} \
-   CONFIG.M07_HAS_REGSLICE {3} \
+   CONFIG.M06_HAS_REGSLICE {4} \
+   CONFIG.M07_HAS_REGSLICE {4} \
+   CONFIG.M08_HAS_REGSLICE {4} \
    CONFIG.NUM_MI {9} \
-   CONFIG.S00_HAS_DATA_FIFO {2} \
+   CONFIG.S00_HAS_DATA_FIFO {0} \
    CONFIG.S00_HAS_REGSLICE {0} \
-   CONFIG.STRATEGY {2} \
+   CONFIG.STRATEGY {0} \
  ] $ps_interconnect
 
   # Create instance: ps_main, and set properties
@@ -1357,16 +1364,19 @@ proc create_root_design { parentCell } {
   connect_bd_net -net xlconstant_0_dout [get_bd_pins eth0/rst_n] [get_bd_pins eth1/rst_n] [get_bd_pins mitm/rst_n] [get_bd_pins ps_interconnect/M00_ARESETN] [get_bd_pins ps_interconnect/M01_ARESETN] [get_bd_pins ps_interconnect/M02_ARESETN] [get_bd_pins ps_interconnect/M03_ARESETN] [get_bd_pins ps_interconnect/M04_ARESETN] [get_bd_pins ps_interconnect/M05_ARESETN] [get_bd_pins ps_interconnect/M06_ARESETN] [get_bd_pins ps_interconnect/M07_ARESETN] [get_bd_pins ps_interconnect/M08_ARESETN] [get_bd_pins ps_interconnect/S00_ARESETN] [get_bd_pins ps_reset/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
 
   # Create address segments
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C70000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/detector/S_AXI/S_AXI_ADDR] SEG_detector_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x40400000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C30000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth2/stats/S_AXI/S_AXI_ADDR] SEG_eth2_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C40000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth3/stats/S_AXI/S_AXI_ADDR] SEG_eth3_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C00000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C10000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C20000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C50000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00010000 -offset 0x43C60000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00020000 -offset 0x43CE0000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/detector/S_AXI/S_AXI_ADDR] SEG_detector_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x40400000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x43C00000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x43C20000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x43C40000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00001000 -offset 0x43C60000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth2/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR2
+  create_bd_addr_seg -range 0x00001000 -offset 0x43C80000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs mitm/eth3/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR3
+  create_bd_addr_seg -range 0x00002000 -offset 0x43CA0000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00002000 -offset 0x43CC0000 [get_bd_addr_spaces ps_main/Data] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR4
   create_bd_addr_seg -range 0x20000000 -offset 0x00000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs ps_main/S_AXI_ACP/ACP_DDR_LOWOCM] SEG_ps_main_ACP_DDR_LOWOCM
+  create_bd_addr_seg -range 0x00400000 -offset 0xE0000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs ps_main/S_AXI_ACP/ACP_IOP] SEG_ps_main_ACP_IOP
+  create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs ps_main/S_AXI_ACP/ACP_M_AXI_GP0] SEG_ps_main_ACP_M_AXI_GP0
+  create_bd_addr_seg -range 0x01000000 -offset 0xFC000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs ps_main/S_AXI_ACP/ACP_QSPI_LINEAR] SEG_ps_main_ACP_QSPI_LINEAR
 
 
   # Restore current instance
