@@ -48,10 +48,12 @@ proc init_gui { IPINST } {
   #Adding Group
   set FIFO_Sizes [ipgui::add_group $IPINST -name "FIFO Sizes" -parent ${FIFOs} -display_name {Sizes}]
   set_property tooltip {Sizes} ${FIFO_Sizes}
-  set C_LOOP_FIFO_SIZE [ipgui::add_param $IPINST -name "C_LOOP_FIFO_SIZE" -parent ${FIFO_Sizes} -widget comboBox]
-  set_property tooltip {Maximum number of bytes that can be stored in the transmission FIFO. Frames larger than this value will be dropped.} ${C_LOOP_FIFO_SIZE}
+  set C_LOOP_FIFO_A_SIZE [ipgui::add_param $IPINST -name "C_LOOP_FIFO_A_SIZE" -parent ${FIFO_Sizes} -widget comboBox]
+  set_property tooltip {Maximum number of bytes that can be stored in the primary transmission FIFO.} ${C_LOOP_FIFO_A_SIZE}
+  set C_LOOP_FIFO_B_SIZE [ipgui::add_param $IPINST -name "C_LOOP_FIFO_B_SIZE" -parent ${FIFO_Sizes} -widget comboBox]
+  set_property tooltip {Maximum number of bytes that can be stored in the secondary transmission FIFO.} ${C_LOOP_FIFO_B_SIZE}
   set C_EXTRACT_FIFO_SIZE [ipgui::add_param $IPINST -name "C_EXTRACT_FIFO_SIZE" -parent ${FIFO_Sizes} -widget comboBox]
-  set_property tooltip {Maximum number of bytes that can be stored in the extraction FIFO. Frames larger than this value will be dropped.} ${C_EXTRACT_FIFO_SIZE}
+  set_property tooltip {Maximum number of bytes that can be stored in the extraction FIFO.} ${C_EXTRACT_FIFO_SIZE}
 
 
 
@@ -129,12 +131,21 @@ proc validate_PARAM_VALUE.C_EXTRACT_FIFO_SIZE { PARAM_VALUE.C_EXTRACT_FIFO_SIZE 
 	return true
 }
 
-proc update_PARAM_VALUE.C_LOOP_FIFO_SIZE { PARAM_VALUE.C_LOOP_FIFO_SIZE } {
-	# Procedure called to update C_LOOP_FIFO_SIZE when any of the dependent parameters in the arguments change
+proc update_PARAM_VALUE.C_LOOP_FIFO_A_SIZE { PARAM_VALUE.C_LOOP_FIFO_A_SIZE } {
+	# Procedure called to update C_LOOP_FIFO_A_SIZE when any of the dependent parameters in the arguments change
 }
 
-proc validate_PARAM_VALUE.C_LOOP_FIFO_SIZE { PARAM_VALUE.C_LOOP_FIFO_SIZE } {
-	# Procedure called to validate C_LOOP_FIFO_SIZE
+proc validate_PARAM_VALUE.C_LOOP_FIFO_A_SIZE { PARAM_VALUE.C_LOOP_FIFO_A_SIZE } {
+	# Procedure called to validate C_LOOP_FIFO_A_SIZE
+	return true
+}
+
+proc update_PARAM_VALUE.C_LOOP_FIFO_B_SIZE { PARAM_VALUE.C_LOOP_FIFO_B_SIZE } {
+	# Procedure called to update C_LOOP_FIFO_B_SIZE when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_LOOP_FIFO_B_SIZE { PARAM_VALUE.C_LOOP_FIFO_B_SIZE } {
+	# Procedure called to validate C_LOOP_FIFO_B_SIZE
 	return true
 }
 
@@ -178,11 +189,6 @@ proc validate_PARAM_VALUE.C_SHARED_TX_CLK { PARAM_VALUE.C_SHARED_TX_CLK } {
 proc update_MODELPARAM_VALUE.C_AXI_WIDTH { MODELPARAM_VALUE.C_AXI_WIDTH PARAM_VALUE.C_AXI_WIDTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_AXI_WIDTH}] ${MODELPARAM_VALUE.C_AXI_WIDTH}
-}
-
-proc update_MODELPARAM_VALUE.C_LOOP_FIFO_SIZE { MODELPARAM_VALUE.C_LOOP_FIFO_SIZE PARAM_VALUE.C_LOOP_FIFO_SIZE } {
-	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.C_LOOP_FIFO_SIZE}] ${MODELPARAM_VALUE.C_LOOP_FIFO_SIZE}
 }
 
 proc update_MODELPARAM_VALUE.C_AXIS_LOG_ENABLE { MODELPARAM_VALUE.C_AXIS_LOG_ENABLE PARAM_VALUE.C_AXIS_LOG_ENABLE } {
@@ -233,5 +239,15 @@ proc update_MODELPARAM_VALUE.C_SHARED_RX_CLK { MODELPARAM_VALUE.C_SHARED_RX_CLK 
 proc update_MODELPARAM_VALUE.C_SHARED_TX_CLK { MODELPARAM_VALUE.C_SHARED_TX_CLK PARAM_VALUE.C_SHARED_TX_CLK } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_SHARED_TX_CLK}] ${MODELPARAM_VALUE.C_SHARED_TX_CLK}
+}
+
+proc update_MODELPARAM_VALUE.C_LOOP_FIFO_A_SIZE { MODELPARAM_VALUE.C_LOOP_FIFO_A_SIZE PARAM_VALUE.C_LOOP_FIFO_A_SIZE } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_LOOP_FIFO_A_SIZE}] ${MODELPARAM_VALUE.C_LOOP_FIFO_A_SIZE}
+}
+
+proc update_MODELPARAM_VALUE.C_LOOP_FIFO_B_SIZE { MODELPARAM_VALUE.C_LOOP_FIFO_B_SIZE PARAM_VALUE.C_LOOP_FIFO_B_SIZE } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_LOOP_FIFO_B_SIZE}] ${MODELPARAM_VALUE.C_LOOP_FIFO_B_SIZE}
 }
 
