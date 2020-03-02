@@ -26,7 +26,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 
 	// S_AXIS_CTL
 
-	input logic [C_NUM_SCRIPTS+79:0] s_axis_ctl_tdata,
+	input logic [C_NUM_SCRIPTS+79:0] s_axis_ctl_tdata, // {C_NUM_SCRIPTS * {MATCHED}, SIZE, TIMESTAMP}
 	input logic s_axis_ctl_tvalid,
 	output logic s_axis_ctl_tready
 );
@@ -56,21 +56,21 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 					s_axis_ctl_tready <= 1'b1;
 
 					if(s_axis_ctl_tvalid & s_axis_ctl_tready) begin
-						frame_size <= s_axis_ctl_tdata[C_NUM_SCRIPTS+79:C_NUM_SCRIPTS+64];
+						frame_size <= s_axis_ctl_tdata[79:64];
 
-						if(s_axis_ctl_tdata[C_NUM_SCRIPTS+63:64] != '0) begin
+						if(s_axis_ctl_tdata[C_NUM_SCRIPTS+79:80] != '0) begin
 							state <= ST_TX_HEADER;
 							s_axis_ctl_tready <= 1'b0;
 
 							tx_count <= '0;
 							tx_buffer[31:0] <= 32'h02425AFF;
 							tx_buffer[47:32] <= log_id;
-							tx_buffer[63:48] <= C_TX_BUFFER_ADJUSTED_WIDTH[15:0] - 16'd8 + s_axis_ctl_tdata[C_NUM_SCRIPTS+79:C_NUM_SCRIPTS+64];
+							tx_buffer[63:48] <= C_TX_BUFFER_ADJUSTED_WIDTH[15:0] - 16'd8 + s_axis_ctl_tdata[79:64];
 							tx_buffer[127:64] <= s_axis_ctl_tdata[63:0];
 							tx_buffer[135:128] <= C_DIRECTION_ID[7:0];
 							tx_buffer[143:136] <= C_AXIS_LOG_WIDTH[10:3];
-							tx_buffer[C_NUM_SCRIPTS+143:144] <= s_axis_ctl_tdata[C_NUM_SCRIPTS+63:64];
-						end else if(s_axis_ctl_tdata[C_NUM_SCRIPTS+79:C_NUM_SCRIPTS+64] != 16'd0) begin
+							tx_buffer[C_NUM_SCRIPTS+143:144] <= s_axis_ctl_tdata[C_NUM_SCRIPTS+79:80];
+						end else if(s_axis_ctl_tdata[79:64] != 16'd0) begin
 							state <= ST_DROP_FRAME;
 							s_axis_ctl_tready <= 1'b0;
 						end

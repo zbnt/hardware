@@ -30,7 +30,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 	// M_AXIS_CTL
 
-	output logic [C_NUM_SCRIPTS_CEIL+79:0] m_axis_ctl_tdata,
+	output logic [C_NUM_SCRIPTS_CEIL+79:0] m_axis_ctl_tdata, // {C_NUM_SCRIPTS * {MATCHED}, SIZE, TIMESTAMP}
 	output logic m_axis_ctl_tvalid,
 	input logic m_axis_ctl_tready
 );
