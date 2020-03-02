@@ -107,6 +107,8 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 			case(state)
 				ST_WAIT_FIFO: begin
+					count <= 16'd0;
+
 					if(s_axis_frame_tready & s_axis_ctl_tready & ~in_frame & enable) begin
 						state <= ST_WRITE_FRAME;
 					end
@@ -123,10 +125,10 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 										s_axis_ctl_tvalid <= 1'b1;
 									end
 
-									s_axis_frame_tdata <= {byte_sr[C_AXIS_LOG_WIDTH-17:0], s_axis_tdata};
+									s_axis_frame_tdata <= {s_axis_tdata, byte_sr};
 								end else begin
 									state <= ST_OVERFLOW;
-									s_axis_frame_tdata <= {byte_sr[C_AXIS_LOG_WIDTH-17:0], s_axis_tdata};
+									s_axis_frame_tdata <= {s_axis_tdata, byte_sr};
 									s_axis_ctl_tdata <= {'0, count + 16'd1, current_time};
 
 									if(s_axis_tlast) begin
@@ -136,6 +138,8 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 								byte_sr <= '0;
 								s_axis_frame_tvalid <= 1'b1;
+							end else begin
+								byte_sr <= {s_axis_tdata, byte_sr[C_AXIS_LOG_WIDTH-9:8]};
 							end
 
 							count <= count + 16'd1;

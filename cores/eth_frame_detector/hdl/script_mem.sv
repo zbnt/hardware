@@ -101,6 +101,7 @@ module script_mem #(parameter C_AXI_WIDTH = 32, parameter C_MAX_SCRIPT_SIZE = 20
 
 		.addrb(dpra[$clog2(C_MAX_SCRIPT_SIZE)-1:$clog2(C_AXI_WIDTH/32)]),
 		.doutb(qdpo_full),
+		.web(1'b0),
 
 		.ena(1'b1),
 		.enb(1'b1),

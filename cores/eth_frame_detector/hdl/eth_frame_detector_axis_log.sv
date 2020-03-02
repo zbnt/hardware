@@ -129,7 +129,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 
 			ST_TX_FRAME: begin
 				m_axis_log_tdata = s_axis_frame_tdata;
-				m_axis_log_tlast = (frame_size <= C_AXIS_LOG_WIDTH);
+				m_axis_log_tlast = (frame_size <= C_AXIS_LOG_WIDTH[18:3]);
 				m_axis_log_tvalid = s_axis_frame_tvalid;
 				s_axis_frame_tready = m_axis_log_tready;
 			end
