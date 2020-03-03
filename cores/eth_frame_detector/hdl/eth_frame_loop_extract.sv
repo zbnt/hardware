@@ -147,6 +147,12 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 							state <= ST_WRITE_CTL;
 							s_axis_ctl_tdata <= {'0, script_match, count, current_time};
 							s_axis_ctl_tvalid <= 1'b1;
+
+							if(count[$clog2(C_AXIS_LOG_WIDTH/8)-1:0] != '0) begin
+								s_axis_frame_tdata <= {byte_sr, 8'd0};
+								s_axis_frame_tvalid <= 1'b1;
+								byte_sr <= '0;
+							end
 						end
 					end else if(~in_frame & ~enable) begin
 						state <= ST_WAIT_FIFO;

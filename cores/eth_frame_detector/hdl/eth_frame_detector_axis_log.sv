@@ -30,8 +30,8 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 	input logic s_axis_ctl_tvalid,
 	output logic s_axis_ctl_tready
 );
-	localparam C_TX_BUFFER_WIDTH = 160;
-	localparam C_TX_BUFFER_ADJUSTED_WIDTH = ((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 1)/C_AXIS_LOG_WIDTH) * (C_AXIS_LOG_WIDTH/8);
+	localparam C_TX_BUFFER_WIDTH = 176;
+	localparam C_TX_HEADER_SIZE = ((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 1)/C_AXIS_LOG_WIDTH) * (C_AXIS_LOG_WIDTH/8) - 8;
 	localparam C_TX_MAX_COUNT = ((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 1)/C_AXIS_LOG_WIDTH) - 1;
 	localparam C_TX_COUNT_WIDTH = $clog2(C_TX_MAX_COUNT + 1);
 
@@ -39,7 +39,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 
 	logic [C_TX_BUFFER_WIDTH-1:0] tx_buffer;
 	logic [C_TX_COUNT_WIDTH-1:0] tx_count;
-	logic [15:0] frame_size;
+	logic [15:0] frame_size, frame_size_ceil;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -65,11 +65,12 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 							tx_count <= '0;
 							tx_buffer[31:0] <= 32'h02425AFF;
 							tx_buffer[47:32] <= log_id;
-							tx_buffer[63:48] <= C_TX_BUFFER_ADJUSTED_WIDTH[15:0] - 16'd8 + s_axis_ctl_tdata[79:64];
+							tx_buffer[63:48] <= C_TX_HEADER_SIZE[15:0] + frame_size_ceil;
 							tx_buffer[127:64] <= s_axis_ctl_tdata[63:0];
 							tx_buffer[135:128] <= C_DIRECTION_ID[7:0];
 							tx_buffer[143:136] <= C_AXIS_LOG_WIDTH[10:3];
-							tx_buffer[C_NUM_SCRIPTS+143:144] <= s_axis_ctl_tdata[C_NUM_SCRIPTS+79:80];
+							tx_buffer[159:144] <= s_axis_ctl_tdata[79:64];
+							tx_buffer[C_NUM_SCRIPTS+159:160] <= s_axis_ctl_tdata[C_NUM_SCRIPTS+79:80];
 						end else if(s_axis_ctl_tdata[79:64] != 16'd0) begin
 							state <= ST_DROP_FRAME;
 							s_axis_ctl_tready <= 1'b0;
@@ -119,6 +120,14 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 	end
 
 	always_comb begin
+		frame_size_ceil[$clog2(C_AXIS_LOG_WIDTH/8)-1:0] = '0;
+
+		if(s_axis_ctl_tdata[$clog2(C_AXIS_LOG_WIDTH/8)+63:64] != '0) begin
+			frame_size_ceil[15:$clog2(C_AXIS_LOG_WIDTH/8)] = s_axis_ctl_tdata[79:64+$clog2(C_AXIS_LOG_WIDTH/8)] + 'd1;
+		end else begin
+			frame_size_ceil[15:$clog2(C_AXIS_LOG_WIDTH/8)] = s_axis_ctl_tdata[79:64+$clog2(C_AXIS_LOG_WIDTH/8)];
+		end
+
 		case(state)
 			ST_TX_HEADER: begin
 				m_axis_log_tdata = (C_AXIS_LOG_WIDTH <= C_TX_BUFFER_WIDTH) ? tx_buffer[C_AXIS_LOG_WIDTH-1:0] : {'0, tx_buffer};
