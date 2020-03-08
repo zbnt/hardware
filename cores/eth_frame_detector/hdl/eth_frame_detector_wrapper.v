@@ -22,7 +22,9 @@ module eth_frame_detector_w
 	parameter C_EXTRACT_FIFO_SIZE = 2048,
 
 	parameter C_SHARED_RX_CLK = 0,
-	parameter C_SHARED_TX_CLK = 0
+	parameter C_SHARED_TX_CLK = 0,
+
+	parameter C_DEBUG_OUTPUTS = 0
 )
 (
 	// S_AXI : AXI4-Lite slave interface (from PS)
@@ -105,6 +107,50 @@ module eth_frame_detector_w
 	output wire m_axis_log_b_tlast,
 	output wire m_axis_log_b_tvalid,
 	input wire m_axis_log_b_tready,
+
+	// DBG_A
+
+	output wire [7:0] dbg_a_rx2cmp_tdata,
+	output wire [32*C_NUM_SCRIPTS:0] dbg_a_rx2cmp_tuser,
+	output wire dbg_a_rx2cmp_tlast,
+	output wire dbg_a_rx2cmp_tvalid,
+
+	output wire [7:0] dbg_a_cmp2edit_tdata,
+	output wire [17*C_NUM_SCRIPTS:0] dbg_a_cmp2edit_tuser,
+	output wire dbg_a_cmp2edit_tlast,
+	output wire dbg_a_cmp2edit_tvalid,
+
+	output wire [7:0] dbg_a_edit2csum_tdata,
+	output wire [9:0] dbg_a_edit2csum_tuser,
+	output wire dbg_a_edit2csum_tlast,
+	output wire dbg_a_edit2csum_tvalid,
+
+	output wire [7:0] dbg_a_csum2fifo_tdata,
+	output wire [47:0] dbg_a_csum2fifo_tuser,
+	output wire dbg_a_csum2fifo_tlast,
+	output wire dbg_a_csum2fifo_tvalid,
+
+	// DBG_B
+
+	output wire [7:0] dbg_b_rx2cmp_tdata,
+	output wire [32*C_NUM_SCRIPTS:0] dbg_b_rx2cmp_tuser,
+	output wire dbg_b_rx2cmp_tlast,
+	output wire dbg_b_rx2cmp_tvalid,
+
+	output wire [7:0] dbg_b_cmp2edit_tdata,
+	output wire [17*C_NUM_SCRIPTS:0] dbg_b_cmp2edit_tuser,
+	output wire dbg_b_cmp2edit_tlast,
+	output wire dbg_b_cmp2edit_tvalid,
+
+	output wire [7:0] dbg_b_edit2csum_tdata,
+	output wire [9:0] dbg_b_edit2csum_tuser,
+	output wire dbg_b_edit2csum_tlast,
+	output wire dbg_b_edit2csum_tvalid,
+
+	output wire [7:0] dbg_b_csum2fifo_tdata,
+	output wire [47:0] dbg_b_csum2fifo_tuser,
+	output wire dbg_b_csum2fifo_tlast,
+	output wire dbg_b_csum2fifo_tvalid,
 
 	// Timer
 
@@ -213,6 +259,50 @@ module eth_frame_detector_w
 		.m_axis_log_b_tlast(m_axis_log_b_tlast),
 		.m_axis_log_b_tvalid(m_axis_log_b_tvalid),
 		.m_axis_log_b_tready(m_axis_log_b_tready),
+
+		// DBG_A
+
+		.dbg_a_rx2cmp_tdata(dbg_a_rx2cmp_tdata),
+		.dbg_a_rx2cmp_tuser(dbg_a_rx2cmp_tuser),
+		.dbg_a_rx2cmp_tlast(dbg_a_rx2cmp_tlast),
+		.dbg_a_rx2cmp_tvalid(dbg_a_rx2cmp_tvalid),
+
+		.dbg_a_cmp2edit_tdata(dbg_a_cmp2edit_tdata),
+		.dbg_a_cmp2edit_tuser(dbg_a_cmp2edit_tuser),
+		.dbg_a_cmp2edit_tlast(dbg_a_cmp2edit_tlast),
+		.dbg_a_cmp2edit_tvalid(dbg_a_cmp2edit_tvalid),
+
+		.dbg_a_edit2csum_tdata(dbg_a_edit2csum_tdata),
+		.dbg_a_edit2csum_tuser(dbg_a_edit2csum_tuser),
+		.dbg_a_edit2csum_tlast(dbg_a_edit2csum_tlast),
+		.dbg_a_edit2csum_tvalid(dbg_a_edit2csum_tvalid),
+
+		.dbg_a_csum2fifo_tdata(dbg_a_csum2fifo_tdata),
+		.dbg_a_csum2fifo_tuser(dbg_a_csum2fifo_tuser),
+		.dbg_a_csum2fifo_tlast(dbg_a_csum2fifo_tlast),
+		.dbg_a_csum2fifo_tvalid(dbg_a_csum2fifo_tvalid),
+
+		// DBG_B
+
+		.dbg_b_rx2cmp_tdata(dbg_b_rx2cmp_tdata),
+		.dbg_b_rx2cmp_tuser(dbg_b_rx2cmp_tuser),
+		.dbg_b_rx2cmp_tlast(dbg_b_rx2cmp_tlast),
+		.dbg_b_rx2cmp_tvalid(dbg_b_rx2cmp_tvalid),
+
+		.dbg_b_cmp2edit_tdata(dbg_b_cmp2edit_tdata),
+		.dbg_b_cmp2edit_tuser(dbg_b_cmp2edit_tuser),
+		.dbg_b_cmp2edit_tlast(dbg_b_cmp2edit_tlast),
+		.dbg_b_cmp2edit_tvalid(dbg_b_cmp2edit_tvalid),
+
+		.dbg_b_edit2csum_tdata(dbg_b_edit2csum_tdata),
+		.dbg_b_edit2csum_tuser(dbg_b_edit2csum_tuser),
+		.dbg_b_edit2csum_tlast(dbg_b_edit2csum_tlast),
+		.dbg_b_edit2csum_tvalid(dbg_b_edit2csum_tvalid),
+
+		.dbg_b_csum2fifo_tdata(dbg_b_csum2fifo_tdata),
+		.dbg_b_csum2fifo_tuser(dbg_b_csum2fifo_tuser),
+		.dbg_b_csum2fifo_tlast(dbg_b_csum2fifo_tlast),
+		.dbg_b_csum2fifo_tvalid(dbg_b_csum2fifo_tvalid),
 
 		// Timer
 

@@ -69,7 +69,29 @@ module eth_frame_loop
 	input logic [7:0] s_axis_tdata,
 	input logic s_axis_tuser,
 	input logic s_axis_tlast,
-	input logic s_axis_tvalid
+	input logic s_axis_tvalid,
+
+	// DBG
+
+	output logic [7:0] axis_rx2cmp_tdata,
+	output logic [32*C_NUM_SCRIPTS:0] axis_rx2cmp_tuser,
+	output logic axis_rx2cmp_tlast,
+	output logic axis_rx2cmp_tvalid,
+
+	output logic [7:0] axis_cmp2edit_tdata,
+	output logic [17*C_NUM_SCRIPTS:0] axis_cmp2edit_tuser,
+	output logic axis_cmp2edit_tlast,
+	output logic axis_cmp2edit_tvalid,
+
+	output logic [7:0] axis_edit2csum_tdata,
+	output logic [9:0] axis_edit2csum_tuser,
+	output logic axis_edit2csum_tlast,
+	output logic axis_edit2csum_tvalid,
+
+	output logic [7:0] axis_csum2fifo_tdata,
+	output logic [47:0] axis_csum2fifo_tuser,
+	output logic axis_csum2fifo_tlast,
+	output logic axis_csum2fifo_tvalid
 );
 	// CDC
 
@@ -108,10 +130,6 @@ module eth_frame_loop
 
 	// Loop
 
-	logic [7:0] axis_rx2cmp_tdata;
-	logic [32*C_NUM_SCRIPTS:0] axis_rx2cmp_tuser;
-	logic axis_rx2cmp_tlast, axis_rx2cmp_tvalid;
-
 	eth_frame_loop_rx #(C_NUM_SCRIPTS, C_AXI_WIDTH, C_MAX_SCRIPT_SIZE) U2
 	(
 		.clk(s_axis_clk),
@@ -142,10 +160,6 @@ module eth_frame_loop
 		.m_axis_tlast(axis_rx2cmp_tlast),
 		.m_axis_tvalid(axis_rx2cmp_tvalid)
 	);
-
-	logic [7:0] axis_cmp2edit_tdata;
-	logic [17*C_NUM_SCRIPTS:0] axis_cmp2edit_tuser;
-	logic axis_cmp2edit_tlast, axis_cmp2edit_tvalid;
 
 	if(C_ENABLE_COMPARE && C_NUM_SCRIPTS != 0) begin
 		eth_frame_loop_compare #(C_NUM_SCRIPTS) U3
@@ -184,10 +198,6 @@ module eth_frame_loop
 		end
 	end
 
-	logic [7:0] axis_edit2csum_tdata;
-	logic [9:0] axis_edit2csum_tuser;
-	logic axis_edit2csum_tlast, axis_edit2csum_tvalid;
-
 	if(C_ENABLE_EDIT && C_NUM_SCRIPTS != 0) begin
 		eth_frame_loop_edit #(C_NUM_SCRIPTS) U4
 		(
@@ -216,10 +226,6 @@ module eth_frame_loop
 			axis_edit2csum_tvalid = axis_cmp2edit_tvalid;
 		end
 	end
-
-	logic [7:0] axis_csum2fifo_tdata;
-	logic [47:0] axis_csum2fifo_tuser;
-	logic axis_csum2fifo_tlast, axis_csum2fifo_tvalid;
 
 	if(C_ENABLE_CHECKSUM && C_NUM_SCRIPTS != 0) begin
 		eth_frame_loop_csum U5

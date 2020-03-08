@@ -115,6 +115,50 @@ module eth_frame_detector
 	output logic m_axis_log_b_tvalid,
 	input logic m_axis_log_b_tready,
 
+	// DBG_A
+
+	output logic [7:0] dbg_a_rx2cmp_tdata,
+	output logic [32*C_NUM_SCRIPTS:0] dbg_a_rx2cmp_tuser,
+	output logic dbg_a_rx2cmp_tlast,
+	output logic dbg_a_rx2cmp_tvalid,
+
+	output logic [7:0] dbg_a_cmp2edit_tdata,
+	output logic [17*C_NUM_SCRIPTS:0] dbg_a_cmp2edit_tuser,
+	output logic dbg_a_cmp2edit_tlast,
+	output logic dbg_a_cmp2edit_tvalid,
+
+	output logic [7:0] dbg_a_edit2csum_tdata,
+	output logic [9:0] dbg_a_edit2csum_tuser,
+	output logic dbg_a_edit2csum_tlast,
+	output logic dbg_a_edit2csum_tvalid,
+
+	output logic [7:0] dbg_a_csum2fifo_tdata,
+	output logic [47:0] dbg_a_csum2fifo_tuser,
+	output logic dbg_a_csum2fifo_tlast,
+	output logic dbg_a_csum2fifo_tvalid,
+
+	// DBG_B
+
+	output logic [7:0] dbg_b_rx2cmp_tdata,
+	output logic [32*C_NUM_SCRIPTS:0] dbg_b_rx2cmp_tuser,
+	output logic dbg_b_rx2cmp_tlast,
+	output logic dbg_b_rx2cmp_tvalid,
+
+	output logic [7:0] dbg_b_cmp2edit_tdata,
+	output logic [17*C_NUM_SCRIPTS:0] dbg_b_cmp2edit_tuser,
+	output logic dbg_b_cmp2edit_tlast,
+	output logic dbg_b_cmp2edit_tvalid,
+
+	output logic [7:0] dbg_b_edit2csum_tdata,
+	output logic [9:0] dbg_b_edit2csum_tuser,
+	output logic dbg_b_edit2csum_tlast,
+	output logic dbg_b_edit2csum_tvalid,
+
+	output logic [7:0] dbg_b_csum2fifo_tdata,
+	output logic [47:0] dbg_b_csum2fifo_tuser,
+	output logic dbg_b_csum2fifo_tlast,
+	output logic dbg_b_csum2fifo_tvalid,
+
 	// Timer
 
 	input logic [63:0] current_time,
@@ -287,7 +331,29 @@ module eth_frame_detector
 		.s_axis_tdata(s_axis_a_tdata),
 		.s_axis_tuser(s_axis_a_tuser),
 		.s_axis_tlast(s_axis_a_tlast),
-		.s_axis_tvalid(s_axis_a_tvalid)
+		.s_axis_tvalid(s_axis_a_tvalid),
+
+		// DBG_A
+
+		.axis_rx2cmp_tdata(dbg_a_rx2cmp_tdata),
+		.axis_rx2cmp_tuser(dbg_a_rx2cmp_tuser),
+		.axis_rx2cmp_tlast(dbg_a_rx2cmp_tlast),
+		.axis_rx2cmp_tvalid(dbg_a_rx2cmp_tvalid),
+
+		.axis_cmp2edit_tdata(dbg_a_cmp2edit_tdata),
+		.axis_cmp2edit_tuser(dbg_a_cmp2edit_tuser),
+		.axis_cmp2edit_tlast(dbg_a_cmp2edit_tlast),
+		.axis_cmp2edit_tvalid(dbg_a_cmp2edit_tvalid),
+
+		.axis_edit2csum_tdata(dbg_a_edit2csum_tdata),
+		.axis_edit2csum_tuser(dbg_a_edit2csum_tuser),
+		.axis_edit2csum_tlast(dbg_a_edit2csum_tlast),
+		.axis_edit2csum_tvalid(dbg_a_edit2csum_tvalid),
+
+		.axis_csum2fifo_tdata(dbg_a_csum2fifo_tdata),
+		.axis_csum2fifo_tuser(dbg_a_csum2fifo_tuser),
+		.axis_csum2fifo_tlast(dbg_a_csum2fifo_tlast),
+		.axis_csum2fifo_tvalid(dbg_a_csum2fifo_tvalid)
 	);
 
 	eth_frame_loop
@@ -353,6 +419,28 @@ module eth_frame_detector
 		.s_axis_tdata(s_axis_b_tdata),
 		.s_axis_tuser(s_axis_b_tuser),
 		.s_axis_tlast(s_axis_b_tlast),
-		.s_axis_tvalid(s_axis_b_tvalid)
+		.s_axis_tvalid(s_axis_b_tvalid),
+
+		// DBG_B
+
+		.axis_rx2cmp_tdata(dbg_b_rx2cmp_tdata),
+		.axis_rx2cmp_tuser(dbg_b_rx2cmp_tuser),
+		.axis_rx2cmp_tlast(dbg_b_rx2cmp_tlast),
+		.axis_rx2cmp_tvalid(dbg_b_rx2cmp_tvalid),
+
+		.axis_cmp2edit_tdata(dbg_b_cmp2edit_tdata),
+		.axis_cmp2edit_tuser(dbg_b_cmp2edit_tuser),
+		.axis_cmp2edit_tlast(dbg_b_cmp2edit_tlast),
+		.axis_cmp2edit_tvalid(dbg_b_cmp2edit_tvalid),
+
+		.axis_edit2csum_tdata(dbg_b_edit2csum_tdata),
+		.axis_edit2csum_tuser(dbg_b_edit2csum_tuser),
+		.axis_edit2csum_tlast(dbg_b_edit2csum_tlast),
+		.axis_edit2csum_tvalid(dbg_b_edit2csum_tvalid),
+
+		.axis_csum2fifo_tdata(dbg_b_csum2fifo_tdata),
+		.axis_csum2fifo_tuser(dbg_b_csum2fifo_tuser),
+		.axis_csum2fifo_tlast(dbg_b_csum2fifo_tlast),
+		.axis_csum2fifo_tvalid(dbg_b_csum2fifo_tvalid)
 	);
 endmodule

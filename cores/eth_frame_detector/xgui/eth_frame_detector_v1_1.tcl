@@ -16,6 +16,10 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "C_SHARED_RX_CLK" -parent ${Clocking}
   ipgui::add_param $IPINST -name "C_SHARED_TX_CLK" -parent ${Clocking}
 
+  #Adding Group
+  set Debug [ipgui::add_group $IPINST -name "Debug" -parent ${Page_0}]
+  ipgui::add_param $IPINST -name "C_DEBUG_OUTPUTS" -parent ${Debug}
+
 
   #Adding Page
   set Features [ipgui::add_page $IPINST -name "Features"]
@@ -92,6 +96,15 @@ proc update_PARAM_VALUE.C_AXI_WIDTH { PARAM_VALUE.C_AXI_WIDTH } {
 
 proc validate_PARAM_VALUE.C_AXI_WIDTH { PARAM_VALUE.C_AXI_WIDTH } {
 	# Procedure called to validate C_AXI_WIDTH
+	return true
+}
+
+proc update_PARAM_VALUE.C_DEBUG_OUTPUTS { PARAM_VALUE.C_DEBUG_OUTPUTS } {
+	# Procedure called to update C_DEBUG_OUTPUTS when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_DEBUG_OUTPUTS { PARAM_VALUE.C_DEBUG_OUTPUTS } {
+	# Procedure called to validate C_DEBUG_OUTPUTS
 	return true
 }
 
@@ -249,5 +262,10 @@ proc update_MODELPARAM_VALUE.C_LOOP_FIFO_A_SIZE { MODELPARAM_VALUE.C_LOOP_FIFO_A
 proc update_MODELPARAM_VALUE.C_LOOP_FIFO_B_SIZE { MODELPARAM_VALUE.C_LOOP_FIFO_B_SIZE PARAM_VALUE.C_LOOP_FIFO_B_SIZE } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_LOOP_FIFO_B_SIZE}] ${MODELPARAM_VALUE.C_LOOP_FIFO_B_SIZE}
+}
+
+proc update_MODELPARAM_VALUE.C_DEBUG_OUTPUTS { MODELPARAM_VALUE.C_DEBUG_OUTPUTS PARAM_VALUE.C_DEBUG_OUTPUTS } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_DEBUG_OUTPUTS}] ${MODELPARAM_VALUE.C_DEBUG_OUTPUTS}
 }
 
