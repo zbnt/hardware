@@ -48,18 +48,19 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	logic m_axis_tlast_next;
 	logic m_axis_tvalid_next;
 
-	logic [7:0] lfsr_val;
+	logic [7:0] prng_val;
+	logic prng_enable;
 
 	logic [axi_width-1:0] pqueue, pqueue_next;
 	logic [axi_width-1:0] fqueue, fqueue_next;
 
-	lfsr #(8, 4, 7, 5, 4, 3) U0
+	pcg8 U0
 	(
 		.clk(clk),
 		.rst(rst | lfsr_seed_req),
-		.enable(m_axis_tready),
-		.value_in(lfsr_seed_val),
-		.value_out(lfsr_val)
+		.enable(prng_enable),
+		.seed(prng_seed),
+		.value(prng_val)
 	);
 
 	always_ff @(posedge clk) begin
@@ -98,6 +99,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		m_axis_tvalid_next = 1'b0;
 		m_axis_tkeep = 1'b1;
 
+		prng_enable = 1'b0;
+
 		pqueue_next = pqueue;
 		fqueue_next = fqueue;
 
@@ -121,8 +124,9 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 						fsize_next = frame_size;
 						count_next = 32'd2;
 
-						m_axis_tdata_next = mem_pattern_rdata[0] ? lfsr_val[7:0] : mem_frame_rdata[7:0];
+						m_axis_tdata_next = mem_pattern_rdata[0] ? prng_val[7:0] : mem_frame_rdata[7:0];
 						m_axis_tvalid_next = 1'b1;
+						prng_enable = mem_pattern_rdata[0];
 					end
 				end
 
@@ -132,7 +136,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 					m_axis_tvalid_next = 1'b1;
 
 					if(m_axis_tready) begin
-						m_axis_tdata_next = pqueue[0] ? lfsr_val : fqueue[7:0];
+						m_axis_tdata_next = pqueue[0] ? prng_val : fqueue[7:0];
+						prng_enable = pqueue[0];
 
 						if(count == fsize) begin
 							state_next = ST_FRAME_DELAY;
