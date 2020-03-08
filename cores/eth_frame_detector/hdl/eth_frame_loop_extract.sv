@@ -167,7 +167,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 				ST_OVERFLOW: begin
 					if(s_axis_frame_tready & s_axis_frame_tvalid) begin
-						state <= ST_WAIT_FIFO;
+						state <= ST_WRITE_CTL;
 						s_axis_ctl_tvalid <= 1'b1;
 					end
 				end

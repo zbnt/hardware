@@ -100,7 +100,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 					if(m_axis_log_tvalid & m_axis_log_tready) begin
 						frame_size <= frame_size - C_AXIS_LOG_WIDTH[18:3];
 
-						if(m_axis_log_tlast) begin
+						if(frame_size <= C_AXIS_LOG_WIDTH[18:3]) begin
 							state <= ST_WAIT_CTL;
 						end
 					end
@@ -110,7 +110,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 					if(s_axis_frame_tvalid) begin
 						frame_size <= frame_size - C_AXIS_LOG_WIDTH[18:3];
 
-						if(m_axis_log_tlast) begin
+						if(frame_size <= C_AXIS_LOG_WIDTH[18:3]) begin
 							state <= ST_WAIT_CTL;
 						end
 					end
