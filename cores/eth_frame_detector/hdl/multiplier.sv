@@ -16,14 +16,14 @@ module multiplier #(parameter C_LATENCY = 8)
 	output logic [63:0] res
 );
 	logic [63:0] a_q, b_q;
-	logic [63:0] ab_q[0:2], ab;
-	logic [41:0] p[0:11];
-	logic [31:0] p_q[0:5];
-	logic [15:0] p_q2[0:2];
+	logic [63:0] ab_q[0:1], ab;
+	logic [31:0] p[0:9], p_q[0:2];
 
 	logic a_sign, b_sign, is_signed_q;
 
 	always_ff @(posedge clk) begin
+		// Stage 1: Prepare operands
+
 		if(rst) begin
 			a_q <= 64'd0;
 			b_q <= 64'd0;
@@ -41,92 +41,50 @@ module multiplier #(parameter C_LATENCY = 8)
 			end
 		end
 
-		for(int i = 0; i < 6; ++i) begin
-			p_q[i] <= p[i + 6][31:0];
-		end
+		// Stage 2: Execute multiplication
 
-		for(int i = 0; i < 3; ++i) begin
-			p_q2[i] <= p_q[i + 3][15:0];
-		end
+		p[0] <= a_q[15:0]  * b_q[15:0];
+		p[1] <= a_q[31:16] * b_q[15:0];
+		p[2] <= a_q[47:32] * b_q[15:0];
+		p[3] <= a_q[63:48] * b_q[15:0];
 
-		ab_q[0] <= {22'd0, p[0]}
-		         + {22'd0, p[1]}
-		         + {22'd0, p[2]}
-		         + {6'd0, p[3], 16'd0}
-		         + {6'd0, p[4], 16'd0}
-		         + {6'd0, p[5], 16'd0};
+		p[4] <= a_q[15:0]  * b_q[31:16];
+		p[5] <= a_q[31:16] * b_q[31:16];
+		p[6] <= a_q[47:32] * b_q[31:16];
+
+		p[7] <= a_q[15:0]  * b_q[47:32];
+		p[8] <= a_q[31:16] * b_q[47:32];
+
+		p[9] <= a_q[15:0]  * b_q[63:48];
+
+		// Stage 3: Addition
+
+		ab_q[0] <= {p[2], p[0]}
+		         + {p[3][15:0], p[1], 16'd0}
+		         + {p[6][15:0], p[4], 16'd0}
+		         + {p[5], 32'd0};
+
+		p_q[0] <= p[7];
+		p_q[1] <= p[8];
+		p_q[2] <= p[9];
+
+		// Stage 4: Addition again
 
 		ab_q[1] <= ab_q[0]
 		         + {p_q[0], 32'd0}
-		         + {p_q[1], 32'd0}
-		         + {p_q[2], 32'd0};
+		         + {p_q[1][15:0], 48'd0}
+		         + {p_q[2][15:0], 48'd0};
 
-		ab_q[2] <= ab_q[1]
-		         + {p_q2[0], 48'd0}
-		         + {p_q2[1], 48'd0}
-		         + {p_q2[2], 48'd0};
+		// Stage 5: Output
 
 		if(is_signed_q & (a_sign ^ b_sign)) begin
-			ab <= -ab_q[2];
+			ab <= -ab_q[1];
 		end else begin
-			ab <= ab_q[2];
+			ab <= ab_q[1];
 		end
 	end
 
-	for(genvar i = 0; i < 4; ++i) begin
-		MULT_MACRO
-		#(
-			.LATENCY(3),
-			.WIDTH_A(25),
-			.WIDTH_B(17)
-		)
-		U0
-		(
-			.CLK(clk),
-			.RST(rst),
-			.CE(1'b1),
-
-			.A({1'b0, a_q[23:0]}),
-			.B({1'b0, b_q[16*i+15:16*i]}),
-			.P(p[3*i])
-		);
-
-		MULT_MACRO
-		#(
-			.LATENCY(3),
-			.WIDTH_A(25),
-			.WIDTH_B(17)
-		)
-		U1
-		(
-			.CLK(clk),
-			.RST(rst),
-			.CE(1'b1),
-
-			.A({1'b0, a_q[47:24]}),
-			.B({1'b0, b_q[16*i+15:16*i]}),
-			.P(p[3*i + 1])
-		);
-
-		MULT_MACRO
-		#(
-			.LATENCY(3),
-			.WIDTH_A(25),
-			.WIDTH_B(17)
-		)
-		U2
-		(
-			.CLK(clk),
-			.RST(rst),
-			.CE(1'b1),
-
-			.A({9'b0, a_q[63:48]}),
-			.B({1'b0, b_q[16*i+15:16*i]}),
-			.P(p[3*i + 2])
-		);
-	end
-
-	reg_slice #(3, 7) U3
+	reg_slice #(3, 4) U0
 	(
 		.clk(clk),
 		.rst(rst),
@@ -134,8 +92,8 @@ module multiplier #(parameter C_LATENCY = 8)
 		.data_out({b_sign, a_sign, is_signed_q})
 	);
 
-	if(C_LATENCY > 8) begin
-		reg_slice #(64, C_LATENCY - 8) U4
+	if(C_LATENCY > 5) begin
+		reg_slice #(64, C_LATENCY - 5) U1
 		(
 			.clk(clk),
 			.rst(rst),

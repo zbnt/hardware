@@ -233,7 +233,7 @@ module alu
 		res_valid = mask_s4[0];
 	end
 
-	multiplier #(8) U0
+	multiplier #(5) U0
 	(
 		.clk(clk),
 		.rst(~rst_n),
@@ -245,7 +245,7 @@ module alu
 		.res(result_mult)
 	);
 
-	reg_slice #(8, 8) U1
+	reg_slice #(8, 5) U1
 	(
 		.clk(clk),
 		.rst(~rst_n),
@@ -253,7 +253,7 @@ module alu
 		.data_out(opcode_s3)
 	);
 
-	reg_slice #(64, 6) U2
+	reg_slice #(64, 3) U2
 	(
 		.clk(clk),
 		.rst(~rst_n),

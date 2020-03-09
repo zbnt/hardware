@@ -51,8 +51,8 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 
 		for(int i = C_NUM_SCRIPTS - 1; i >= 0; --i) begin
 			if(s_axis_tuser[17*i+1]) begin
-				if(~s_axis_tuser[17*i+3] & ~s_axis_tuser[17*i+4] & ~s_axis_tuser[17*i+5]) begin
-					for(int j = 0; j < 7; ++j) begin
+				if(s_axis_tuser[17*i+3] | ~s_axis_tuser[17*i+4] | ~s_axis_tuser[17*i+5] | ~s_axis_tuser[17*i+6] | ~s_axis_tuser[17*i+7]) begin
+					for(int j = 0; j < 8; ++j) begin
 						if(j != 0) begin
 							opcode[j] = s_axis_tuser[17*i + 2 + j];
 						end
@@ -138,6 +138,8 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 							end
 						end
 					endcase
+				end else begin
+					axis_s2_tuser[0][5:4] <= axis_s1_tuser[5:4];
 				end
 
 				if(axis_s1_tlast) begin
@@ -355,7 +357,7 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 		.res_valid(op_res_valid)
 	);
 
-	reg_slice #(10, 10) U1
+	reg_slice #(10, 7) U1
 	(
 		.clk(clk),
 		.rst(~rst_n),
@@ -363,7 +365,7 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 		.data_out({axis_s4_tvalid, axis_s4_tlast, axis_s4_tdata})
 	);
 
-	reg_slice #(2, 9) U2
+	reg_slice #(2, 6) U2
 	(
 		.clk(clk),
 		.rst(~rst_n),
