@@ -51,7 +51,7 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 
 		for(int i = C_NUM_SCRIPTS - 1; i >= 0; --i) begin
 			if(s_axis_tuser[17*i+1]) begin
-				if(s_axis_tuser[17*i+3] | ~s_axis_tuser[17*i+4] | ~s_axis_tuser[17*i+5] | ~s_axis_tuser[17*i+6] | ~s_axis_tuser[17*i+7]) begin
+				if(s_axis_tuser[17*i+3] | s_axis_tuser[17*i+4] | s_axis_tuser[17*i+5] | s_axis_tuser[17*i+6] | s_axis_tuser[17*i+7]) begin
 					for(int j = 0; j < 8; ++j) begin
 						if(j != 0) begin
 							opcode[j] = s_axis_tuser[17*i + 2 + j];
