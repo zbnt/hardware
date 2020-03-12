@@ -20,6 +20,7 @@ set_property -dict {PACKAGE_PIN N2 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports
 set_property -dict {PACKAGE_PIN P1 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports eth96_p0_rxn]
 set_property -dict {PACKAGE_PIN M5 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p0_txp]
 set_property -dict {PACKAGE_PIN M4 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p0_txn]
+set_property -dict {PACKAGE_PIN A6 IOSTANDARD LVCMOS18} [get_ports eth96_p0_rst_n]
 
 # ETH1
 
@@ -27,6 +28,7 @@ set_property -dict {PACKAGE_PIN N5 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports
 set_property -dict {PACKAGE_PIN N4 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports eth96_p1_rxn]
 set_property -dict {PACKAGE_PIN L2 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p1_txp]
 set_property -dict {PACKAGE_PIN L1 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p1_txn]
+set_property -dict {PACKAGE_PIN C7 IOSTANDARD LVCMOS18} [get_ports eth96_p1_rst_n]
 
 # ETH2
 
@@ -34,6 +36,7 @@ set_property -dict {PACKAGE_PIN G1 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports
 set_property -dict {PACKAGE_PIN F1 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports eth96_p2_rxn]
 set_property -dict {PACKAGE_PIN D3 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p2_txp]
 set_property -dict {PACKAGE_PIN C3 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p2_txn]
+set_property -dict {PACKAGE_PIN A7 IOSTANDARD LVCMOS18} [get_ports eth96_p2_rst_n]
 
 # ETH3
 
@@ -41,6 +44,7 @@ set_property -dict {PACKAGE_PIN T3 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports
 set_property -dict {PACKAGE_PIN T2 IOSTANDARD DIFF_SSTL12 ODT RTT_48} [get_ports eth96_p3_rxn]
 set_property -dict {PACKAGE_PIN J5 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p3_txp]
 set_property -dict {PACKAGE_PIN H5 IOSTANDARD DIFF_SSTL12} [get_ports eth96_p3_txn]
+set_property -dict {PACKAGE_PIN B6 IOSTANDARD LVCMOS18} [get_ports eth96_p3_rst_n]
 
 # Unused lanes
 
