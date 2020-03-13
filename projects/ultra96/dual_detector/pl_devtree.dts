@@ -1,0 +1,107 @@
+/*
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		target = <&fpga_full>;
+
+		__overlay__ {
+			firmware-name = "zbnt/ultra96/dual_detector.bin";
+		};
+	};
+
+	fragment@1 {
+		target = <&amba>;
+
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			udmabuf {
+				compatible = "ikwzm,u-dma-buf";
+				device-name = "zbnt_dma";
+				minor-number = <0>;
+				size = <0x00010000>;
+				dma-coherent;
+			};
+
+			axi_mdio@a0000000 {
+				compatible = "generic-uio";
+				reg = <0xa0000000 0x1000>;
+
+				zbnt,ports = <0 1 2 3>;
+				zbnt,phy-addr = <0x1 0x3 0xc 0xf>;
+
+				zbnt,init-seq = <
+					/* Enable 625MHz clock */
+					0xf 0xd3 0x4000
+
+					/* Disable SGMII auto-negotiation */
+					0xf 0x14 0x2947
+
+					/* Set LED modes */
+					0x1 0x18 0x615b
+					0x3 0x18 0x615b
+					0xc 0x18 0x615b
+					0xf 0x18 0x615b
+				>;
+			};
+
+			dma@a0010000 {
+				compatible = "generic-uio";
+				reg = <0xa0010000 0x1000>;
+
+				interrupt-names = "irq";
+				interrupt-parent = <&gic>;
+				interrupts = <0 89 4>;
+			};
+
+			zbnt_timer@a0020000 {
+				compatible = "generic-uio";
+				reg = <0xa0020000 0x1000>;
+			};
+
+			zbnt_sc@a0030000 {
+				compatible = "generic-uio";
+				reg = <0xa0030000 0x1000>;
+				zbnt,ports = <0>;
+			};
+
+			zbnt_sc@a0040000 {
+				compatible = "generic-uio";
+				reg = <0xa0040000 0x1000>;
+				zbnt,ports = <1>;
+			};
+
+			zbnt_sc@a0050000 {
+				compatible = "generic-uio";
+				reg = <0xa0050000 0x1000>;
+				zbnt,ports = <2>;
+			};
+
+			zbnt_sc@a0060000 {
+				compatible = "generic-uio";
+				reg = <0xa0060000 0x1000>;
+				zbnt,ports = <3>;
+			};
+
+			zbnt_fd@a0070000 {
+				compatible = "generic-uio";
+				reg = <0xa0070000 0x10000>;
+				zbnt,ports = <0 1>;
+			};
+
+			zbnt_fd@a0080000 {
+				compatible = "generic-uio";
+				reg = <0xa0080000 0x10000>;
+				zbnt,ports = <2 3>;
+			};
+		};
+	};
+};
