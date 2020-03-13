@@ -34,4 +34,4 @@ close $bif_file
 exec bootgen -image bd_dual_tgen_detector.bif -arch zynqmp -process_bitstream bin -w on
 
 file mkdir ../../../../hw
-file copy -force bd_quad_tgen_wrapper.bit.bin ../../../../hw/dual_tgen_detector.bin
+file copy -force bd_dual_tgen_detector_wrapper.bit.bin ../../../../hw/dual_tgen_detector.bin
