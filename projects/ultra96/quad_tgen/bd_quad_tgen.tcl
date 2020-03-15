@@ -1021,6 +1021,12 @@ proc create_root_design { parentCell } {
    CONFIG.CONST_VAL {0} \
  ] $constant_0
 
+  # Create instance: constant_1, and set properties
+  set constant_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 constant_1 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {1} \
+ ] $constant_1
+
   # Create instance: dma
   create_hier_cell_dma [current_bd_instance .] dma
 
@@ -1345,7 +1351,7 @@ proc create_root_design { parentCell } {
    CONFIG.PSU__CRL_APB__PL0_REF_CTRL__FREQMHZ {125} \
    CONFIG.PSU__CRL_APB__PL0_REF_CTRL__SRCSEL {RPLL} \
    CONFIG.PSU__CRL_APB__PL1_REF_CTRL__ACT_FREQMHZ {2.000000} \
-   CONFIG.PSU__CRL_APB__PL1_REF_CTRL__DIVISOR0 {15} \
+   CONFIG.PSU__CRL_APB__PL1_REF_CTRL__DIVISOR0 {4} \
    CONFIG.PSU__CRL_APB__PL1_REF_CTRL__DIVISOR1 {1} \
    CONFIG.PSU__CRL_APB__PL1_REF_CTRL__FREQMHZ {100} \
    CONFIG.PSU__CRL_APB__PL1_REF_CTRL__SRCSEL {RPLL} \
@@ -1752,7 +1758,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_ethlite_phy_mdio_o [get_bd_pins axi_ethlite/phy_mdio_o] [get_bd_pins mdio_iobuf/signal_o]
   connect_bd_net -net axi_ethlite_phy_mdio_t [get_bd_pins axi_ethlite/phy_mdio_t] [get_bd_pins mdio_iobuf/signal_t]
   connect_bd_net -net constant_1_dout [get_bd_pins dma/rst_n] [get_bd_pins eth0/rst_n] [get_bd_pins eth1/rst_n] [get_bd_pins eth2/rst_n] [get_bd_pins eth3/rst_n] [get_bd_pins reset/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
-  connect_bd_net -net constant_1_dout1 [get_bd_pins axi_ethlite/phy_rx_clk] [get_bd_pins axi_ethlite/phy_tx_clk] [get_bd_pins constant_0/dout] [get_bd_pins ps_reset_125M/ext_reset_in]
+  connect_bd_net -net constant_1_dout1 [get_bd_pins axi_ethlite/phy_rx_clk] [get_bd_pins axi_ethlite/phy_tx_clk] [get_bd_pins constant_0/dout]
+  connect_bd_net -net constant_1_dout2 [get_bd_pins constant_1/dout] [get_bd_pins ps_reset_125M/ext_reset_in]
   connect_bd_net -net dma_irq [get_bd_pins dma/irq] [get_bd_pins ps_main/pl_ps_irq0]
   connect_bd_net -net ethfmc_clk_buf_IBUF_OUT [get_bd_pins dma/clk] [get_bd_pins eth0/gtx_clk] [get_bd_pins eth1/gtx_clk] [get_bd_pins eth2/gtx_clk] [get_bd_pins eth3/gtx_clk] [get_bd_pins gmii_to_sgmii/clk_125M] [get_bd_pins ps_interconnect/M00_ACLK] [get_bd_pins ps_interconnect/M01_ACLK] [get_bd_pins ps_interconnect/M02_ACLK] [get_bd_pins ps_interconnect/M03_ACLK] [get_bd_pins ps_interconnect/M04_ACLK] [get_bd_pins ps_interconnect/M05_ACLK] [get_bd_pins ps_interconnect/M06_ACLK] [get_bd_pins ps_interconnect/M07_ACLK] [get_bd_pins ps_interconnect/M08_ACLK] [get_bd_pins ps_interconnect/M09_ACLK] [get_bd_pins ps_main/saxiacp_fpd_aclk] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
   connect_bd_net -net gmii_to_sgmii_rst_out [get_bd_pins gmii_to_sgmii/rst_out] [get_bd_pins reset/ext_reset_in]
