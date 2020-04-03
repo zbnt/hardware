@@ -25,45 +25,90 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 );
 	// Stage 1: Select instruction
 
+	logic [7:0] s_axis_tdata_q;
+	logic s_axis_tuser_q, s_axis_tlast_q, s_axis_tvalid_q;
+
+	logic [14:0] instr_bits[0:C_NUM_SCRIPTS-1];
+	logic [2:0] instr_size[0:C_NUM_SCRIPTS-1];
+	logic [C_NUM_SCRIPTS-1:0] instr_valid;
+
+	always_ff @(posedge clk) begin
+		if(~rst_n) begin
+			s_axis_tdata_q <= 8'd0;
+			s_axis_tuser_q <= 1'b0;
+			s_axis_tlast_q <= 1'b0;
+			s_axis_tvalid_q <= 1'b0;
+		end else begin
+			s_axis_tdata_q <= s_axis_tdata;
+			s_axis_tuser_q <= s_axis_tuser[0];
+			s_axis_tlast_q <= s_axis_tlast;
+			s_axis_tvalid_q <= s_axis_tvalid;
+		end
+	end
+
+	for(genvar i = 0; i < C_NUM_SCRIPTS; ++i) begin
+		always_ff @(posedge clk) begin
+			if(~rst_n | ~s_axis_tvalid) begin
+				instr_valid[i] <= 1'b0;
+				instr_size[i] <= 3'd0;
+				instr_bits[i] <= 15'd0;
+			end else begin
+				instr_bits[i] <= s_axis_tuser[17*i+17:17*i+3];
+
+				if(instr_size[i] == 3'd0) begin
+					if(s_axis_tuser[17*i+1] && s_axis_tuser[17*i+7:17*i+3] != 'd0) begin
+						instr_valid[i] <= 1'b1;
+
+						case(s_axis_tuser[17*i+9:17*i+8])
+							2'd0: instr_size[i] <= 3'd0;
+							2'd1: instr_size[i] <= 3'd1;
+							2'd2: instr_size[i] <= 3'd3;
+							2'd3: instr_size[i] <= 3'd7;
+						endcase
+					end else begin
+						instr_valid[i] <= 1'b0;
+					end
+				end else begin
+					instr_size[i] <= instr_size[i] - 3'd1;
+				end
+			end
+		end
+	end
+
 	logic [7:0] axis_s1_tdata;
 	logic [15:0] axis_s1_tuser;
 	logic axis_s1_tlast, axis_s1_tvalid;
 
-	logic [7:0] opcode, param;
+	logic in_instr;
+	logic [$clog2(C_NUM_SCRIPTS)-1:0] in_instr_idx;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			axis_s1_tdata <= 8'd0;
-			axis_s1_tuser <= 17'd0;
+			axis_s1_tuser <= 16'd0;
 			axis_s1_tlast <= 1'b0;
 			axis_s1_tvalid <= 1'b0;
+
+			in_instr <= 1'b0;
+			in_instr_idx <= 'd0;
 		end else begin
-			axis_s1_tdata <= s_axis_tdata;
-			axis_s1_tuser <= {param, opcode[7:1], s_axis_tuser[0]};
-			axis_s1_tlast <= s_axis_tlast;
-			axis_s1_tvalid <= s_axis_tvalid;
-		end
-	end
+			axis_s1_tdata <= s_axis_tdata_q;
+			axis_s1_tuser[0] <= s_axis_tuser_q;
+			axis_s1_tlast <= s_axis_tlast_q;
+			axis_s1_tvalid <= s_axis_tvalid_q;
 
-	always_comb begin
-		opcode = 8'd0;
-		param = 8'd0;
+			if(~in_instr | ~instr_valid[in_instr_idx]) begin
+				axis_s1_tuser[15:1] <= 15'd0;
 
-		for(int i = C_NUM_SCRIPTS - 1; i >= 0; --i) begin
-			if(s_axis_tuser[17*i+1]) begin
-				if(s_axis_tuser[17*i+3] | s_axis_tuser[17*i+4] | s_axis_tuser[17*i+5] | s_axis_tuser[17*i+6] | s_axis_tuser[17*i+7]) begin
-					for(int j = 0; j < 8; ++j) begin
-						if(j != 0) begin
-							opcode[j] = s_axis_tuser[17*i + 2 + j];
-						end
-
-						param[j] = s_axis_tuser[17*i + 10 + j];
+				for(int i = C_NUM_SCRIPTS - 1; i >= 0; --i) begin
+					if(instr_valid[i]) begin
+						in_instr <= 1'b1;
+						in_instr_idx <= i;
+						axis_s1_tuser[15:1] <= instr_bits[i];
 					end
 				end
-
-				if(s_axis_tuser[17*i+2]) begin
-					opcode[0] = 1'b1;
-				end
+			end else begin
+				axis_s1_tuser[15:1] <= instr_bits[in_instr_idx];
 			end
 		end
 	end
@@ -74,12 +119,8 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 	logic [15:0] axis_s2_tuser[0:7];
 	logic [7:0] axis_s2_tlast, axis_s2_tvalid;
 
-	logic [2:0] size_limit;
-
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
-			size_limit <= 3'd7;
-
 			for(int i = 0; i < 8; ++i) begin
 				axis_s2_tdata[i] <= 8'd0;
 				axis_s2_tuser[i] <= 16'd0;
@@ -92,7 +133,7 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 
 			if(axis_s1_tvalid) begin
 				axis_s2_tdata[0] <= axis_s1_tdata;
-				axis_s2_tuser[0] <= {axis_s1_tuser[15:8], 7'd0, axis_s1_tuser[0]};
+				axis_s2_tuser[0] <= axis_s1_tuser;
 			end else begin
 				axis_s2_tdata[0] <= 8'd0;
 				axis_s2_tuser[0] <= 16'd0;
@@ -103,48 +144,6 @@ module eth_frame_loop_edit #(parameter C_NUM_SCRIPTS = 4)
 				axis_s2_tuser[i] <= axis_s2_tuser[i-1];
 				axis_s2_tlast[i] <= axis_s2_tlast[i-1];
 				axis_s2_tvalid[i] <= axis_s2_tvalid[i-1];
-			end
-
-			if(axis_s1_tvalid) begin
-				if(size_limit != 3'd7) begin
-					size_limit <= size_limit + 3'd1;
-				end
-
-				if(axis_s1_tuser[3:1] != 3'd0) begin
-					case(axis_s1_tuser[7:6])
-						2'd0: begin
-							size_limit <= 3'd0;
-							axis_s2_tuser[0][7:1] <= axis_s1_tuser[7:1];
-						end
-
-						2'd1: begin
-							if(size_limit >= 3'd1) begin
-								size_limit <= 3'd0;
-								axis_s2_tuser[1][7:1] <= axis_s1_tuser[7:1];
-							end
-						end
-
-						2'd2: begin
-							if(size_limit >= 3'd3) begin
-								size_limit <= 3'd0;
-								axis_s2_tuser[3][7:1] <= axis_s1_tuser[7:1];
-							end
-						end
-
-						2'd3: begin
-							if(size_limit >= 3'd7) begin
-								size_limit <= 3'd0;
-								axis_s2_tuser[7][7:1] <= axis_s1_tuser[7:1];
-							end
-						end
-					endcase
-				end else begin
-					axis_s2_tuser[0][5:4] <= axis_s1_tuser[5:4];
-				end
-
-				if(axis_s1_tlast) begin
-					size_limit <= 3'd7;
-				end
 			end
 		end
 	end
