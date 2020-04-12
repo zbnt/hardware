@@ -48,7 +48,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>57469e56</spirit:value>
+            <spirit:value>e0d8b21d</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -152,7 +152,7 @@
       <spirit:file>
         <spirit:name>xgui/util_iobuf_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_57469e56</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_e0d8b21d</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -198,12 +198,12 @@
         <xilinx:taxonomy>/BaseIP</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>IOBUF</xilinx:displayName>
-      <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-10-26T02:26:58Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>3</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-04-12T02:30:57Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="578e23d2"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c2746cbb"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="465d8238"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="787c5a3f"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="e107c502"/>
