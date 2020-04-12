@@ -1,0 +1,2 @@
+# This file is automatically written.  Do not modify.
+proc gen_USERPARAMETER_C_ENABLE_CLK_ENABLEMENT {C_FAMILY_TYPE } {expr {$C_FAMILY_TYPE} == 0}
