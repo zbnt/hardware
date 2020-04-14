@@ -109,6 +109,8 @@ module bpi_flash
 						state <= ST_READ_FLASH;
 
 						req_addr <= s_axi_araddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)];
+						req_addr[$clog2(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] <= '0;
+
 						req_strb <= '1;
 						req_op <= 1'b0;
 						req_valid <= 1'b1;
@@ -116,8 +118,10 @@ module bpi_flash
 						if(write_strb_valid == '1 && write_strb != '0) begin
 							state <= ST_WRITE_FLASH;
 
-							req_wdata <= s_axi_wdata;
 							req_addr <= write_addr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)];
+							req_addr[$clog2(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] <= '0;
+
+							req_wdata <= s_axi_wdata;
 							req_strb <= write_strb;
 							req_op <= 1'b1;
 							req_valid <= write_strb[0];

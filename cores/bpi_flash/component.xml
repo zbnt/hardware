@@ -336,7 +336,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>26406300</spirit:value>
+            <spirit:value>2abb3d5d</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -361,7 +361,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>26406300</spirit:value>
+            <spirit:value>2abb3d5d</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -967,7 +967,7 @@
       <spirit:file>
         <spirit:name>hdl/bpi_flash_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_6711292c</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_4d346231</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1117,14 +1117,14 @@
         <xilinx:taxonomy>/Embedded_Processing/Memory_and_Memory_Controller</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>BPI Flash</xilinx:displayName>
-      <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-04-14T20:05:31Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>2</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-04-14T21:11:42Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="3fa32f7d"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="877129ed"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="0769499b"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="fe91b146"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="fa6ed5fa"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="0d5fce9c"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="9b596613"/>

@@ -63,9 +63,6 @@ module bpi_flash_w
 );
 	wire [C_MEM_WIDTH-1:0] bpi_dq;
 
-	assign bpi_dq = C_INTERNAL_IOBUF ? bpi_dq_io : bpi_dq_i;
-	assign bpi_dq_io = ~bpi_dq_t ? bpi_dq_o : 1'bz;
-
 	bpi_flash
 	#(
 		C_AXI_WIDTH,
@@ -121,4 +118,19 @@ module bpi_flash_w
 		.bpi_oe_n(bpi_oe_n),
 		.bpi_we_n(bpi_we_n)
 	);
+
+	if(C_INTERNAL_IOBUF) begin
+		for(genvar i = 0; i < C_MEM_WIDTH; i = i + 1) begin
+			IOBUF
+			(
+				.O(bpi_dq[i]),
+				.IO(bpi_dq_io[i]),
+				.I(bpi_dq_o[i]),
+				.T(bpi_dq_t[i])
+			);
+		end
+	end else begin
+		assign bpi_dq = bpi_dq_i;
+		assign bpi_dq_io = 1'b0;
+	end
 endmodule
