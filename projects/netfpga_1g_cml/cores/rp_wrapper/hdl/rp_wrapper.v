@@ -14,7 +14,6 @@ module rp_wrapper
 	// ETH0
 
 	input wire clk_rx0,
-	input wire [1:0] speed0,
 
 	output wire [7:0] m_axis_eth0_tdata,
 	output wire m_axis_eth0_tuser,
@@ -30,7 +29,6 @@ module rp_wrapper
 	// ETH1
 
 	input wire clk_rx1,
-	input wire [1:0] speed1,
 
 	output wire [7:0] m_axis_eth1_tdata,
 	output wire m_axis_eth1_tuser,
@@ -46,7 +44,6 @@ module rp_wrapper
 	// ETH2
 
 	input wire clk_rx2,
-	input wire [1:0] speed2,
 
 	output wire [7:0] m_axis_eth2_tdata,
 	output wire m_axis_eth2_tuser,
@@ -62,7 +59,6 @@ module rp_wrapper
 	// ETH3
 
 	input wire clk_rx3,
-	input wire [1:0] speed3,
 
 	output wire [7:0] m_axis_eth3_tdata,
 	output wire m_axis_eth3_tuser,

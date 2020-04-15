@@ -641,10 +641,6 @@ proc create_hier_cell_macs { parentCell nameHier } {
   create_bd_pin -dir I -type clk gtx_clk
   create_bd_pin -dir I -type clk gtx_clk90
   create_bd_pin -dir I -type rst gtx_rst_n
-  create_bd_pin -dir O -from 1 -to 0 speed0
-  create_bd_pin -dir O -from 1 -to 0 speed1
-  create_bd_pin -dir O -from 1 -to 0 speed2
-  create_bd_pin -dir O -from 1 -to 0 speed3
 
   # Create instance: decoupler, and set properties
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
@@ -725,13 +721,9 @@ proc create_hier_cell_macs { parentCell nameHier } {
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac_eth0/gtx_clk90] [get_bd_pins mac_eth1/gtx_clk90] [get_bd_pins mac_eth2/gtx_clk90] [get_bd_pins mac_eth3/gtx_clk90]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
   connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx0] [get_bd_pins mac_eth0/rx_clk]
-  connect_bd_net -net mac_eth0_speed [get_bd_pins speed0] [get_bd_pins mac_eth0/speed]
   connect_bd_net -net mac_eth1_rx_clk [get_bd_pins clk_rx1] [get_bd_pins mac_eth1/rx_clk]
-  connect_bd_net -net mac_eth1_speed [get_bd_pins speed1] [get_bd_pins mac_eth1/speed]
   connect_bd_net -net mac_eth2_rx_clk [get_bd_pins clk_rx2] [get_bd_pins mac_eth2/rx_clk]
-  connect_bd_net -net mac_eth2_speed [get_bd_pins speed2] [get_bd_pins mac_eth2/speed]
   connect_bd_net -net mac_eth3_rx_clk [get_bd_pins clk_rx3] [get_bd_pins mac_eth3/rx_clk]
-  connect_bd_net -net mac_eth3_speed [get_bd_pins speed3] [get_bd_pins mac_eth3/speed]
   connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins mac_eth0/gtx_rst_n] [get_bd_pins mac_eth1/gtx_rst_n] [get_bd_pins mac_eth2/gtx_rst_n] [get_bd_pins mac_eth3/gtx_rst_n]
 
   # Restore current instance
@@ -1319,10 +1311,6 @@ proc create_root_design { parentCell } {
   connect_bd_net -net macs_clk_rx1 [get_bd_pins macs/clk_rx1] [get_bd_pins rp_wrapper/clk_rx1]
   connect_bd_net -net macs_clk_rx2 [get_bd_pins macs/clk_rx2] [get_bd_pins rp_wrapper/clk_rx2]
   connect_bd_net -net macs_clk_rx3 [get_bd_pins macs/clk_rx3] [get_bd_pins rp_wrapper/clk_rx3]
-  connect_bd_net -net macs_speed0 [get_bd_pins macs/speed0] [get_bd_pins rp_wrapper/speed0]
-  connect_bd_net -net macs_speed1 [get_bd_pins macs/speed1] [get_bd_pins rp_wrapper/speed1]
-  connect_bd_net -net macs_speed2 [get_bd_pins macs/speed2] [get_bd_pins rp_wrapper/speed2]
-  connect_bd_net -net macs_speed3 [get_bd_pins macs/speed3] [get_bd_pins rp_wrapper/speed3]
   connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_ports led_2] [get_bd_pins interconnect/rst_n] [get_bd_pins pcie/m_axi_aresetn]
   connect_bd_net -net pr_controller_vsm_vs_rm_decouple [get_bd_pins interconnect/decouple] [get_bd_pins macs/decouple] [get_bd_pins pcie/decouple] [get_bd_pins pr_ctrl/decouple]
   connect_bd_net -net pr_ctrl_rp_active_st [get_bd_ports led_3] [get_bd_pins pr_ctrl/rp_active_st]
