@@ -109,19 +109,6 @@ module rp_wrapper
 
 	// M_AXI_PCIE
 
-	output wire [31:0] m_axi_pcie_araddr,
-	output wire [1:0] m_axi_pcie_arburst,
-	output wire [7:0] m_axi_pcie_arlen,
-	output wire [2:0] m_axi_pcie_arsize,
-	output wire m_axi_pcie_arvalid,
-	input wire m_axi_pcie_arready,
-
-	input wire [127:0] m_axi_pcie_rdata,
-	input wire [1:0] m_axi_pcie_rresp,
-	input wire m_axi_pcie_rlast,
-	input wire m_axi_pcie_rvalid,
-	output wire m_axi_pcie_rready,
-
 	output wire [31:0] m_axi_pcie_awaddr,
 	output wire [1:0] m_axi_pcie_awburst,
 	output wire [7:0] m_axi_pcie_awlen,
