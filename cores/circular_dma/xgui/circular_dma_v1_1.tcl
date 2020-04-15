@@ -28,6 +28,10 @@ proc init_gui { IPINST } {
   set C_VALUE_AWUSER [ipgui::add_param $IPINST -name "C_VALUE_AWUSER" -parent ${M_AXI_Options}]
   set_property tooltip {Value for the AWUSER signal in M_AXI} ${C_VALUE_AWUSER}
 
+  #Adding Group
+  set Other_options [ipgui::add_group $IPINST -name "Other options" -parent ${Page_0}]
+  ipgui::add_param $IPINST -name "C_ENABLE_SHUTDOWN" -parent ${Other_options}
+
 
 
 }
@@ -65,6 +69,15 @@ proc update_PARAM_VALUE.C_AXI_WIDTH { PARAM_VALUE.C_AXI_WIDTH } {
 
 proc validate_PARAM_VALUE.C_AXI_WIDTH { PARAM_VALUE.C_AXI_WIDTH } {
 	# Procedure called to validate C_AXI_WIDTH
+	return true
+}
+
+proc update_PARAM_VALUE.C_ENABLE_SHUTDOWN { PARAM_VALUE.C_ENABLE_SHUTDOWN } {
+	# Procedure called to update C_ENABLE_SHUTDOWN when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_ENABLE_SHUTDOWN { PARAM_VALUE.C_ENABLE_SHUTDOWN } {
+	# Procedure called to validate C_ENABLE_SHUTDOWN
 	return true
 }
 
@@ -143,5 +156,10 @@ proc update_MODELPARAM_VALUE.C_VALUE_AWUSER { MODELPARAM_VALUE.C_VALUE_AWUSER PA
 proc update_MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH { MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH PARAM_VALUE.C_AXIS_OCCUP_WIDTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_AXIS_OCCUP_WIDTH}] ${MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH}
+}
+
+proc update_MODELPARAM_VALUE.C_ENABLE_SHUTDOWN { MODELPARAM_VALUE.C_ENABLE_SHUTDOWN PARAM_VALUE.C_ENABLE_SHUTDOWN } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_ENABLE_SHUTDOWN}] ${MODELPARAM_VALUE.C_ENABLE_SHUTDOWN}
 }
 

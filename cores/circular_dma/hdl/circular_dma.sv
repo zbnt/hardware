@@ -26,6 +26,9 @@ module circular_dma
 	output logic irq,
 	output logic fifo_rst_n,
 
+	input logic shutdown_req,
+	output logic shutdown_ack,
+
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
 	input logic [11:0] s_axi_awaddr,
@@ -134,6 +137,9 @@ module circular_dma
 		.clk(clk),
 		.rst_n(rst_n),
 
+		.shutdown_req(shutdown_req),
+		.shutdown_ack(shutdown_ack),
+
 		.flush_fifo(flush_fifo),
 		.fifo_occupancy(fifo_occupancy),
 		.fifo_empty(fifo_empty),
@@ -141,7 +147,6 @@ module circular_dma
 		.enable(enable),
 		.clear_irq(clear_irq),
 		.enable_irq(enable_irq),
-
 		.irq(bits_irq),
 		.status_flags(status_flags),
 
@@ -175,8 +180,11 @@ module circular_dma
 		.s_axis_s2mm_tready(s_axis_s2mm_tready)
 	);
 
+	always_ff @(posedge clk) begin
+		irq <= rst_n & (|bits_irq) & ~shutdown_req;
+	end
+
 	always_comb begin
 		fifo_rst_n = rst_n & ~srst;
-		irq = |bits_irq;
 	end
 endmodule
