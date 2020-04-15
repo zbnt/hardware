@@ -26,4 +26,7 @@ if { [get_property needs_refresh [get_runs synth_1]] || [get_property status [ge
 # Write dcp
 
 open_run synth_1 -name synth_1
-write_checkpoint ../hw/static.dcp
+
+file mkdir ../hw
+file mkdir ../hw/dcp
+write_checkpoint -force ../hw/dcp/static.dcp
