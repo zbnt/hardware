@@ -1,3 +1,6 @@
-cores/*/xgui/* linguist-detectable=false
-projects/*/*/bd_*.tcl linguist-detectable=false
+*.xdc linguist-language=Tcl -linguist-detectable
+cores/*/xgui/* -linguist-detectable
+projects/*/*/bd_*.tcl -linguist-detectable
 
+cores/eth_mac_1g/hdl/* -linguist_detectable
+cores/eth_mac_1g/hdl/eth_mac_1g_wrapper.v linguist-detectable
