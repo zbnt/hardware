@@ -21,13 +21,31 @@ set_property -dict { PACKAGE_PIN W19   IOSTANDARD LVCMOS18 } [get_ports { led_3 
 
 # PCIe
 
-set_property -dict { PACKAGE_PIN L17   IOSTANDARD LVCMOS33  PULLUP TRUE } [get_ports pcie_perstn]
+create_clock -add -name pcie_clk_p -period 10.0 -waveform {0 5} [get_ports pcie_clk_p]
+set_property -dict { PACKAGE_PIN H6 } [get_ports { pcie_clk_p }]
+set_property -dict { PACKAGE_PIN H5 } [get_ports { pcie_clk_n }]
 
-set_property LOC IBUFDS_GTE2_X0Y0 [get_cells -hier -filter { NAME =~ */pcie_refclk_ibufds/*/*IBUFDS_GTE2_I }]
-set_property LOC GTXE2_CHANNEL_X0Y3 [get_cells -hier -filter { NAME =~ */pipe_lane[0].gt_wrapper_i/gtx_channel.gtxe2_channel_i }]
-set_property LOC GTXE2_CHANNEL_X0Y2 [get_cells -hier -filter { NAME =~ */pipe_lane[1].gt_wrapper_i/gtx_channel.gtxe2_channel_i }]
-set_property LOC GTXE2_CHANNEL_X0Y1 [get_cells -hier -filter { NAME =~ */pipe_lane[2].gt_wrapper_i/gtx_channel.gtxe2_channel_i }]
-set_property LOC GTXE2_CHANNEL_X0Y0 [get_cells -hier -filter { NAME =~ */pipe_lane[3].gt_wrapper_i/gtx_channel.gtxe2_channel_i }]
+set_property -dict { PACKAGE_PIN H2 } [get_ports { pcie_txp[0] }]
+set_property -dict { PACKAGE_PIN H1 } [get_ports { pcie_txn[0] }]
+set_property -dict { PACKAGE_PIN J4 } [get_ports { pcie_rxp[0] }]
+set_property -dict { PACKAGE_PIN J3 } [get_ports { pcie_rxn[0] }]
+
+set_property -dict { PACKAGE_PIN K2 } [get_ports { pcie_txp[1] }]
+set_property -dict { PACKAGE_PIN K1 } [get_ports { pcie_txn[1] }]
+set_property -dict { PACKAGE_PIN L4 } [get_ports { pcie_rxp[1] }]
+set_property -dict { PACKAGE_PIN L3 } [get_ports { pcie_rxn[1] }]
+
+set_property -dict { PACKAGE_PIN M2 } [get_ports { pcie_txp[2] }]
+set_property -dict { PACKAGE_PIN M1 } [get_ports { pcie_txn[2] }]
+set_property -dict { PACKAGE_PIN N4 } [get_ports { pcie_rxp[2] }]
+set_property -dict { PACKAGE_PIN N3 } [get_ports { pcie_rxn[2] }]
+
+set_property -dict { PACKAGE_PIN P2 } [get_ports { pcie_txp[3] }]
+set_property -dict { PACKAGE_PIN P1 } [get_ports { pcie_txn[3] }]
+set_property -dict { PACKAGE_PIN R4 } [get_ports { pcie_rxp[3] }]
+set_property -dict { PACKAGE_PIN R3 } [get_ports { pcie_rxn[3] }]
+
+set_property -dict { PACKAGE_PIN L17   IOSTANDARD LVCMOS33  PULLUP TRUE } [get_ports pcie_perstn]
 
 # BPI Flash
 
