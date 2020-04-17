@@ -1,4 +1,5 @@
 .directory
+hd_visual
 
 /projects/*/*/vivado
 /projects/*/hw/*
