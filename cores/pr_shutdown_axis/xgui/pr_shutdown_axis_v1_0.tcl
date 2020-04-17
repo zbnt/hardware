@@ -26,6 +26,12 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "C_AXIS_TDEST_WIDTH" -parent ${Widths}
   ipgui::add_param $IPINST -name "C_AXIS_TID_WIDTH" -parent ${Widths}
 
+  #Adding Group
+  set CDC [ipgui::add_group $IPINST -name "CDC" -parent ${Page_0}]
+  set_property tooltip {CDC} ${CDC}
+  set C_CDC_STAGES [ipgui::add_param $IPINST -name "C_CDC_STAGES" -parent ${CDC}]
+  set_property tooltip {Number of CDC stages} ${C_CDC_STAGES}
+
 
 
 }
@@ -156,6 +162,15 @@ proc validate_PARAM_VALUE.C_AXIS_TDATA_WIDTH { PARAM_VALUE.C_AXIS_TDATA_WIDTH } 
 	return true
 }
 
+proc update_PARAM_VALUE.C_CDC_STAGES { PARAM_VALUE.C_CDC_STAGES } {
+	# Procedure called to update C_CDC_STAGES when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_CDC_STAGES { PARAM_VALUE.C_CDC_STAGES } {
+	# Procedure called to validate C_CDC_STAGES
+	return true
+}
+
 
 proc update_MODELPARAM_VALUE.C_AXIS_TDATA_WIDTH { MODELPARAM_VALUE.C_AXIS_TDATA_WIDTH PARAM_VALUE.C_AXIS_TDATA_WIDTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
@@ -210,5 +225,10 @@ proc update_MODELPARAM_VALUE.C_AXIS_HAS_TDEST { MODELPARAM_VALUE.C_AXIS_HAS_TDES
 proc update_MODELPARAM_VALUE.C_AXIS_HAS_TUSER { MODELPARAM_VALUE.C_AXIS_HAS_TUSER PARAM_VALUE.C_AXIS_HAS_TUSER } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_AXIS_HAS_TUSER}] ${MODELPARAM_VALUE.C_AXIS_HAS_TUSER}
+}
+
+proc update_MODELPARAM_VALUE.C_CDC_STAGES { MODELPARAM_VALUE.C_CDC_STAGES PARAM_VALUE.C_CDC_STAGES } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_CDC_STAGES}] ${MODELPARAM_VALUE.C_CDC_STAGES}
 }
 

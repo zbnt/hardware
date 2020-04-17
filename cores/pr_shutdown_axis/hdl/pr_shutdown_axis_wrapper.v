@@ -6,6 +6,8 @@
 
 module pr_shutdown_axis_w
 #(
+	parameter C_CDC_STAGES = 0,
+
 	parameter C_AXIS_TDATA_WIDTH = 32,
 	parameter C_AXIS_TUSER_WIDTH = 1,
 	parameter C_AXIS_TDEST_WIDTH = 1,
@@ -23,6 +25,7 @@ module pr_shutdown_axis_w
 	input wire clk,
 	input wire rst_n,
 
+	input wire shutdown_clk,
 	input wire shutdown_req,
 	output wire shutdown_ack,
 
@@ -50,6 +53,8 @@ module pr_shutdown_axis_w
 	output wire m_axis_tvalid,
 	input wire m_axis_tready
 );
+	wire rst_n_cdc, req, ack;
+
 	pr_shutdown_axis
 	#(
 		C_AXIS_TDATA_WIDTH,
@@ -68,10 +73,10 @@ module pr_shutdown_axis_w
 	U0
 	(
 		.clk(clk),
-		.rst_n(rst_n),
+		.rst_n(rst_n_cdc),
 
-		.shutdown_req(shutdown_req),
-		.shutdown_ack(shutdown_ack),
+		.shutdown_req(req),
+		.shutdown_ack(ack),
 
 		// S_AXIS
 
@@ -97,4 +102,50 @@ module pr_shutdown_axis_w
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
 	);
+
+	if(C_CDC_STAGES != 0) begin
+		xpm_cdc_sync_rst
+		#(
+			.DEST_SYNC_FF(C_CDC_STAGES)
+		)
+		U1
+		(
+			.src_rst(rst_n),
+
+			.dest_clk(clk),
+			.dest_rst(rst_n_cdc)
+		);
+
+		xpm_cdc_array_single
+		#(
+			.DEST_SYNC_FF(C_CDC_STAGES),
+			.WIDTH(1)
+		)
+		U2
+		(
+			.src_clk(shutdown_clk),
+			.src_in(shutdown_req),
+
+			.dest_clk(clk),
+			.dest_out(req)
+		);
+
+		xpm_cdc_array_single
+		#(
+			.DEST_SYNC_FF(C_CDC_STAGES),
+			.WIDTH(1)
+		)
+		U3
+		(
+			.src_clk(clk),
+			.src_in(ack),
+
+			.dest_clk(shutdown_clk),
+			.dest_out(shutdown_ack)
+		);
+	end else begin
+		assign rst_n_cdc = rst_n;
+		assign req = shutdown_req;
+		assign shutdown_ack = ack;
+	end
 endmodule
