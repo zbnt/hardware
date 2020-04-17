@@ -9,7 +9,7 @@ if { [info exists ::env(NUM_JOBS) ] } {
 	set jobs [exec nproc]
 }
 
-# Create project and generate bitstream, if needed
+# Create project and run synthesis, if needed
 
 if { ![file exists vivado/zbnt_hw_static.xpr ] } {
 	source create_project.tcl

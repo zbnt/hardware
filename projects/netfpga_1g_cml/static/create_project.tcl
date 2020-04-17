@@ -25,5 +25,4 @@ set_property -name "steps.synth_design.args.keep_equivalent_registers" -value "1
 set_property -name "steps.synth_design.args.resource_sharing" -value "off" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.no_lc" -value "1" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.shreg_min_size" -value "5" -objects [get_runs synth_1]
-set_property -name "steps.synth_design.args.more options" -value "-mode out_of_context" -objects [get_runs synth_1]
 current_run -synthesis [get_runs synth_1]

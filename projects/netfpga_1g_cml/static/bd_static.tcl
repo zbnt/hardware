@@ -130,13 +130,14 @@ xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_ds_buf:2.1\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:mig_7series:4.2\
+xilinx.com:ip:axis_register_slice:1.1\
+xilinx.com:ip:pr_decoupler:1.0\
+oscar-rc.dev:zbnt_hw:circular_dma:1.1\
+xilinx.com:ip:fifo_generator:13.2\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
-xilinx.com:ip:pr_decoupler:1.0\
-xilinx.com:ip:axi_dwidth_converter:2.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 xilinx.com:ip:axi_pcie:2.9\
-xilinx.com:ip:axi_clock_converter:2.1\
 oscar-rc.dev:zbnt_hw:util_icap:1.0\
 xilinx.com:ip:prc:1.3\
 "
@@ -451,7 +452,6 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
 
   # Create pins
-  create_bd_pin -dir I decouple
   create_bd_pin -dir I irq
   create_bd_pin -dir O -type clk m_axi_aclk
   create_bd_pin -dir O -from 0 -to 0 m_axi_aresetn
@@ -459,8 +459,6 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   create_bd_pin -dir I -from 0 -to 0 -type clk pcie_clk_p
   create_bd_pin -dir I -type rst pcie_perstn
   create_bd_pin -dir I -type rst rst_n
-  create_bd_pin -dir I -type clk s_axi_aclk
-  create_bd_pin -dir I -type rst s_axi_aresetn
 
   # Create instance: axi_bridge, and set properties
   set axi_bridge [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_pcie:2.9 axi_bridge ]
@@ -499,97 +497,6 @@ proc create_hier_cell_pcie { parentCell nameHier } {
    CONFIG.shared_logic_in_core {false} \
  ] $axi_bridge
 
-  # Create instance: axi_cc, and set properties
-  set axi_cc [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_clock_converter:2.1 axi_cc ]
-
-  # Create instance: axi_decoupler, and set properties
-  set axi_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 axi_decoupler ]
-  set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {s_axi_pcie {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 SIGNALS {ARVALID {PRESENT 0 WIDTH 1} ARREADY {PRESENT 0 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 0 WIDTH 1} RREADY {PRESENT 0 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 32} AWLEN {PRESENT 1 WIDTH 8} AWSIZE {PRESENT 1 WIDTH 3} AWBURST {PRESENT 1 WIDTH 2} AWLOCK {PRESENT 1 WIDTH 1} AWCACHE {PRESENT 1 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 128} WSTRB {PRESENT 1 WIDTH 16} WLAST {PRESENT 1 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 0 WIDTH 32} ARLEN {PRESENT 0 WIDTH 8} ARSIZE {PRESENT 0 WIDTH 3} ARBURST {PRESENT 0 WIDTH 2} ARLOCK {PRESENT 0 WIDTH 1} ARCACHE {PRESENT 0 WIDTH 4} ARPROT {PRESENT 0 WIDTH 3} ARREGION {PRESENT 0 WIDTH 4} ARQOS {PRESENT 0 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 0 WIDTH 128} RRESP {PRESENT 0 WIDTH 2} RLAST {PRESENT 0 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}}}} IPI_PROP_COUNT 2} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
-   CONFIG.GUI_INTERFACE_NAME {s_axi_pcie} \
-   CONFIG.GUI_INTERFACE_PROTOCOL {axi4} \
-   CONFIG.GUI_SELECT_INTERFACE {0} \
-   CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:aximm_rtl:1.0} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_3 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_5 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_6 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_7 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_8 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_9 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_0 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_3 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_4 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_5 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_6 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_7 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_8 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_9 {true} \
-   CONFIG.GUI_SIGNAL_SELECT_0 {ARVALID} \
-   CONFIG.GUI_SIGNAL_SELECT_1 {ARREADY} \
-   CONFIG.GUI_SIGNAL_SELECT_2 {AWVALID} \
-   CONFIG.GUI_SIGNAL_SELECT_3 {AWREADY} \
-   CONFIG.GUI_SIGNAL_SELECT_4 {BVALID} \
-   CONFIG.GUI_SIGNAL_SELECT_5 {BREADY} \
-   CONFIG.GUI_SIGNAL_SELECT_6 {RVALID} \
-   CONFIG.GUI_SIGNAL_SELECT_7 {RREADY} \
-   CONFIG.GUI_SIGNAL_SELECT_8 {WVALID} \
-   CONFIG.GUI_SIGNAL_SELECT_9 {WREADY} \
- ] $axi_decoupler
-
-  # Create instance: irq_decoupler, and set properties
-  set irq_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 irq_decoupler ]
-  set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {irq {ID 0 VLNV xilinx.com:signal:interrupt_rtl:1.0 SIGNALS {INTERRUPT {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 3} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
-   CONFIG.GUI_INTERFACE_NAME {irq} \
-   CONFIG.GUI_INTERFACE_PROTOCOL {none} \
-   CONFIG.GUI_SELECT_INTERFACE {0} \
-   CONFIG.GUI_SELECT_VLNV {xilinx.com:signal:interrupt_rtl:1.0} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_1 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_2 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_3 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_4 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_5 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_6 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_7 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_8 {false} \
-   CONFIG.GUI_SIGNAL_DECOUPLED_9 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
-   CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_2 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_3 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_4 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_5 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_6 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_7 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_8 {false} \
-   CONFIG.GUI_SIGNAL_PRESENT_9 {false} \
-   CONFIG.GUI_SIGNAL_SELECT_0 {INTERRUPT} \
-   CONFIG.GUI_SIGNAL_SELECT_1 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_2 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_3 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_4 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_5 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_6 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_7 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_8 {-1} \
-   CONFIG.GUI_SIGNAL_SELECT_9 {-1} \
- ] $irq_decoupler
-
-  # Create instance: refclk_bufg, and set properties
-  set refclk_bufg [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg ]
-  set_property -dict [ list \
-   CONFIG.C_BUF_TYPE {BUFG} \
- ] $refclk_bufg
-
   # Create instance: refclk_ibufds, and set properties
   set refclk_ibufds [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_ibufds ]
   set_property -dict [ list \
@@ -600,27 +507,20 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_decoupler/rp_s_axi_pcie]
+  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_bridge/S_AXI]
   connect_bd_intf_net -intf_net axi_pcie_0_pcie_7x_mgt [get_bd_intf_pins PCIE] [get_bd_intf_pins axi_bridge/pcie_7x_mgt]
   connect_bd_intf_net -intf_net axi_pcie_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins axi_bridge/M_AXI]
-  connect_bd_intf_net -intf_net axi_pcie_cc_M_AXI [get_bd_intf_pins axi_bridge/S_AXI] [get_bd_intf_pins axi_cc/M_AXI]
-  connect_bd_intf_net -intf_net decoupler_s_s_axi_pcie [get_bd_intf_pins axi_cc/S_AXI] [get_bd_intf_pins axi_decoupler/s_s_axi_pcie]
 
   # Create port connections
   connect_bd_net -net IBUF_DS_N_0_1 [get_bd_pins pcie_clk_n] [get_bd_pins refclk_ibufds/IBUF_DS_N]
   connect_bd_net -net IBUF_DS_P_0_1 [get_bd_pins pcie_clk_p] [get_bd_pins refclk_ibufds/IBUF_DS_P]
   connect_bd_net -net aux_reset_in_0_1 [get_bd_pins pcie_perstn] [get_bd_pins reset/aux_reset_in]
-  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins m_axi_aclk] [get_bd_pins axi_bridge/axi_aclk_out] [get_bd_pins axi_cc/m_axi_aclk] [get_bd_pins reset/slowest_sync_clk]
+  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins m_axi_aclk] [get_bd_pins axi_bridge/axi_aclk_out] [get_bd_pins reset/slowest_sync_clk]
   connect_bd_net -net axi_pcie_mmcm_lock [get_bd_pins axi_bridge/mmcm_lock] [get_bd_pins reset/dcm_locked]
-  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins axi_decoupler/decouple] [get_bd_pins irq_decoupler/decouple]
-  connect_bd_net -net irq_1 [get_bd_pins irq] [get_bd_pins irq_decoupler/rp_irq_INTERRUPT]
-  connect_bd_net -net irq_decoupler_s_irq_INTERRUPT [get_bd_pins axi_bridge/INTX_MSI_Request] [get_bd_pins irq_decoupler/s_irq_INTERRUPT]
-  connect_bd_net -net refclk_ibufds_IBUF_OUT [get_bd_pins refclk_bufg/BUFG_I] [get_bd_pins refclk_ibufds/IBUF_OUT]
-  connect_bd_net -net reset_pcie_interconnect_aresetn [get_bd_pins m_axi_aresetn] [get_bd_pins axi_bridge/axi_aresetn] [get_bd_pins axi_cc/m_axi_aresetn] [get_bd_pins reset/interconnect_aresetn]
+  connect_bd_net -net irq_1 [get_bd_pins irq] [get_bd_pins axi_bridge/INTX_MSI_Request]
+  connect_bd_net -net refclk_ibufds_IBUF_OUT [get_bd_pins axi_bridge/REFCLK] [get_bd_pins refclk_ibufds/IBUF_OUT]
+  connect_bd_net -net reset_pcie_interconnect_aresetn [get_bd_pins m_axi_aresetn] [get_bd_pins axi_bridge/axi_aresetn] [get_bd_pins reset/interconnect_aresetn]
   connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins reset/ext_reset_in]
-  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins axi_cc/s_axi_aclk]
-  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins axi_cc/s_axi_aresetn]
-  connect_bd_net -net util_ds_buf_0_BUFG_O [get_bd_pins axi_bridge/REFCLK] [get_bd_pins refclk_bufg/BUFG_O]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -812,6 +712,7 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M02_AXI
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M03_AXI
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M04_AXI
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M05_AXI
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
 
   # Create pins
@@ -829,15 +730,15 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
    CONFIG.ENABLE_ADVANCED_OPTIONS {0} \
    CONFIG.M00_HAS_REGSLICE {0} \
    CONFIG.M01_HAS_REGSLICE {0} \
-   CONFIG.NUM_MI {5} \
+   CONFIG.NUM_MI {6} \
  ] $axi_interconnect
 
   # Create instance: decoupler, and set properties
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {m_axi_pcie {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 32} AWLEN {PRESENT 1 WIDTH 8} AWSIZE {PRESENT 1 WIDTH 3} AWBURST {PRESENT 1 WIDTH 2} AWLOCK {PRESENT 1 WIDTH 1} AWCACHE {PRESENT 1 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 128} WSTRB {PRESENT 1 WIDTH 16} WLAST {PRESENT 1 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 32} ARLEN {PRESENT 1 WIDTH 8} ARSIZE {PRESENT 1 WIDTH 3} ARBURST {PRESENT 1 WIDTH 2} ARLOCK {PRESENT 1 WIDTH 1} ARCACHE {PRESENT 1 WIDTH 4} ARPROT {PRESENT 1 WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 128} RRESP {PRESENT 1 WIDTH 2} RLAST {PRESENT 1 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}}}} IPI_PROP_COUNT 4} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axi_pcie {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 32} AWLEN {PRESENT 1 WIDTH 8} AWSIZE {PRESENT 1 WIDTH 3} AWBURST {PRESENT 1 WIDTH 2} AWLOCK {PRESENT 1 WIDTH 1} AWCACHE {PRESENT 1 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 64} WSTRB {PRESENT 1 WIDTH 8} WLAST {PRESENT 1 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 32} ARLEN {PRESENT 1 WIDTH 8} ARSIZE {PRESENT 1 WIDTH 3} ARBURST {PRESENT 1 WIDTH 2} ARLOCK {PRESENT 1 WIDTH 1} ARCACHE {PRESENT 1 WIDTH 4} ARPROT {PRESENT 1 WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 64} RRESP {PRESENT 1 WIDTH 2} RLAST {PRESENT 1 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}}}} IPI_PROP_COUNT 1} \
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
-   CONFIG.GUI_INTERFACE_NAME {m_axi_pcie} \
+   CONFIG.GUI_INTERFACE_NAME {axi_pcie} \
    CONFIG.GUI_INTERFACE_PROTOCOL {axi4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_MODE {slave} \
@@ -874,30 +775,23 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
    CONFIG.GUI_SIGNAL_SELECT_9 {WREADY} \
  ] $decoupler
 
-  # Create instance: width_converter, and set properties
-  set width_converter [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dwidth_converter:2.1 width_converter ]
-  set_property -dict [ list \
-   CONFIG.MI_DATA_WIDTH {64} \
-   CONFIG.SI_DATA_WIDTH {128} \
- ] $width_converter
-
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins M04_AXI] [get_bd_intf_pins axi_interconnect/M04_AXI]
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_interconnect/S00_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins decoupler/s_m_axi_pcie]
+  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins decoupler/s_axi_pcie]
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins M01_AXI] [get_bd_intf_pins axi_interconnect/M01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M02_AXI [get_bd_intf_pins M02_AXI] [get_bd_intf_pins axi_interconnect/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins M03_AXI] [get_bd_intf_pins axi_interconnect/M03_AXI]
-  connect_bd_intf_net -intf_net decoupler_rp_m_axi_pcie [get_bd_intf_pins decoupler/rp_m_axi_pcie] [get_bd_intf_pins width_converter/S_AXI]
-  connect_bd_intf_net -intf_net width_converter_M_AXI [get_bd_intf_pins M00_AXI] [get_bd_intf_pins width_converter/M_AXI]
+  connect_bd_intf_net -intf_net axi_interconnect_M05_AXI [get_bd_intf_pins M05_AXI] [get_bd_intf_pins axi_interconnect/M05_AXI]
+  connect_bd_intf_net -intf_net decoupler_rp_axi_pcie [get_bd_intf_pins M00_AXI] [get_bd_intf_pins decoupler/rp_axi_pcie]
 
   # Create port connections
-  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/S00_ACLK]
-  connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK] [get_bd_pins width_converter/s_axi_aclk]
+  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/S00_ACLK]
+  connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK]
   connect_bd_net -net clk_50M_1 [get_bd_pins clk_50M] [get_bd_pins axi_interconnect/M02_ACLK]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
-  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN]
-  connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN] [get_bd_pins width_converter/s_axi_aresetn]
+  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN]
+  connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN]
   connect_bd_net -net rst_50M_n_1 [get_bd_pins rst_50M_n] [get_bd_pins axi_interconnect/M02_ARESETN]
 
   # Restore current instance
@@ -971,6 +865,152 @@ proc create_hier_cell_id_bram { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins controller/s_axi_aclk]
   connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins controller/s_axi_aresetn]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: dma
+proc create_hier_cell_dma { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_dma() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
+  # Create pins
+  create_bd_pin -dir I clk_axi
+  create_bd_pin -dir I clk_axis
+  create_bd_pin -dir I decouple
+  create_bd_pin -dir O irq
+  create_bd_pin -dir I rst_axi_n
+  create_bd_pin -dir I rst_axis_n
+
+  # Create instance: axis_regslice, and set properties
+  set axis_regslice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_regslice ]
+  set_property -dict [ list \
+   CONFIG.REG_CONFIG {8} \
+ ] $axis_regslice
+
+  # Create instance: decoupler, and set properties
+  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
+  set_property -dict [ list \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis_dma {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 128} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TUSER {PRESENT 0 WIDTH 0} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 16} TKEEP {PRESENT 0 WIDTH 16}}}} IPI_PROP_COUNT 0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_INTERFACE_NAME {axis_dma} \
+   CONFIG.GUI_SELECT_INTERFACE {0} \
+   CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_1 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_4 {true} \
+   CONFIG.GUI_SIGNAL_SELECT_0 {TVALID} \
+   CONFIG.GUI_SIGNAL_SELECT_1 {TREADY} \
+   CONFIG.GUI_SIGNAL_SELECT_2 {TDATA} \
+   CONFIG.GUI_SIGNAL_SELECT_3 {TUSER} \
+   CONFIG.GUI_SIGNAL_SELECT_4 {TLAST} \
+   CONFIG.GUI_SIGNAL_SELECT_5 {TID} \
+   CONFIG.GUI_SIGNAL_SELECT_6 {TDEST} \
+   CONFIG.GUI_SIGNAL_SELECT_7 {TSTRB} \
+   CONFIG.GUI_SIGNAL_SELECT_8 {TKEEP} \
+   CONFIG.GUI_SIGNAL_WIDTH_2 {128} \
+   CONFIG.GUI_SIGNAL_WIDTH_7 {16} \
+   CONFIG.GUI_SIGNAL_WIDTH_8 {16} \
+ ] $decoupler
+
+  # Create instance: dma, and set properties
+  set dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:circular_dma:1.1 dma ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_OCCUP_WIDTH {14} \
+   CONFIG.C_AXIS_WIDTH {128} \
+ ] $dma
+
+  # Create instance: fifo_0, and set properties
+  set fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_0 ]
+  set_property -dict [ list \
+   CONFIG.Clock_Type_AXI {Independent_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {8189} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {13} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1021} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {13} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1021} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {13} \
+   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Implementation_axis {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_rach {Independent_Clocks_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Independent_Clocks_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Independent_Clocks_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {8191} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {8192} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {true} \
+   CONFIG.synchronization_stages_axi {4} \
+ ] $fifo_0
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins decoupler/rp_axis_dma]
+  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins dma/S_AXI]
+  connect_bd_intf_net -intf_net axis_regslice_M_AXIS [get_bd_intf_pins axis_regslice/M_AXIS] [get_bd_intf_pins fifo_0/S_AXIS]
+  connect_bd_intf_net -intf_net decoupler_s_axis_dma [get_bd_intf_pins axis_regslice/S_AXIS] [get_bd_intf_pins decoupler/s_axis_dma]
+  connect_bd_intf_net -intf_net dma_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins dma/M_AXI]
+  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_0/M_AXIS]
+
+  # Create port connections
+  connect_bd_net -net clk_axi_1 [get_bd_pins clk_axi] [get_bd_pins dma/clk] [get_bd_pins fifo_0/m_aclk]
+  connect_bd_net -net clk_axis_1 [get_bd_pins clk_axis] [get_bd_pins axis_regslice/aclk] [get_bd_pins fifo_0/s_aclk]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
+  connect_bd_net -net dma_irq [get_bd_pins irq] [get_bd_pins dma/irq]
+  connect_bd_net -net fifo_0_axis_rd_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_0/axis_rd_data_count]
+  connect_bd_net -net rst_axi_n_1 [get_bd_pins rst_axi_n] [get_bd_pins dma/rst_n]
+  connect_bd_net -net rst_n_axis_1 [get_bd_pins rst_axis_n] [get_bd_pins axis_regslice/aresetn] [get_bd_pins fifo_0/s_aresetn]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1282,6 +1322,9 @@ proc create_root_design { parentCell } {
   # Create instance: ddr3
   create_hier_cell_ddr3 [current_bd_instance .] ddr3
 
+  # Create instance: dma
+  create_hier_cell_dma [current_bd_instance .] dma
+
   # Create instance: id_bram
   create_hier_cell_id_bram [current_bd_instance .] id_bram
 
@@ -1302,15 +1345,13 @@ proc create_root_design { parentCell } {
 
   # Create instance: rp_wrapper, and set properties
   set rp_wrapper [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0 rp_wrapper ]
-  set_property -dict [ list \
-   CONFIG.C_ENABLE_DDR3 {false} \
- ] $rp_wrapper
 
   # Create interface connections
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins interconnect/S_AXI] [get_bd_intf_pins pcie/M_AXI]
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins dma/S_AXIS] [get_bd_intf_pins rp_wrapper/M_AXIS_DMA]
   connect_bd_intf_net -intf_net S_AXIS_ETH0_1 [get_bd_intf_pins macs/S_AXIS_ETH0] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH0]
   connect_bd_intf_net -intf_net S_AXIS_ETH2_1 [get_bd_intf_pins macs/S_AXIS_ETH2] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH2]
-  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins pcie/S_AXI] [get_bd_intf_pins rp_wrapper/M_AXI_PCIE]
+  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins dma/M_AXI] [get_bd_intf_pins pcie/S_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins bpi_controller/S_AXI] [get_bd_intf_pins interconnect/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins interconnect/M03_AXI] [get_bd_intf_pins pr_ctrl/s_axi_reg]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins id_bram/S_AXI] [get_bd_intf_pins interconnect/M01_AXI]
@@ -1319,6 +1360,7 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net ddr3_controller_DDR3 [get_bd_intf_ports ddr3] [get_bd_intf_pins ddr3/DDR3]
   connect_bd_intf_net -intf_net interconnect_M00_AXI [get_bd_intf_pins interconnect/M00_AXI] [get_bd_intf_pins rp_wrapper/S_AXI_PCIE]
   connect_bd_intf_net -intf_net interconnect_M04_AXI [get_bd_intf_pins ddr3/S_AXI_PCIE] [get_bd_intf_pins interconnect/M04_AXI]
+  connect_bd_intf_net -intf_net interconnect_M05_AXI [get_bd_intf_pins dma/S_AXI] [get_bd_intf_pins interconnect/M05_AXI]
   connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_ports phy0_rgmii] [get_bd_intf_pins macs/phy0_rgmii]
   connect_bd_intf_net -intf_net mac_eth1_RGMII [get_bd_intf_ports phy1_rgmii] [get_bd_intf_pins macs/phy1_rgmii]
   connect_bd_intf_net -intf_net mac_eth2_RGMII [get_bd_intf_ports phy2_rgmii] [get_bd_intf_pins macs/phy2_rgmii]
@@ -1337,8 +1379,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net IBUF_DS_P_0_1 [get_bd_ports pcie_clk_p] [get_bd_pins pcie/pcie_clk_p]
   connect_bd_net -net Net [get_bd_ports bpi_dq] [get_bd_pins bpi_controller/bpi_dq_io]
   connect_bd_net -net aux_reset_in_0_1 [get_bd_ports pcie_perstn] [get_bd_pins pcie/pcie_perstn]
-  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins interconnect/clk] [get_bd_pins pcie/m_axi_aclk]
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clocks/clk_125M] [get_bd_pins ddr3/s_axi_aclk] [get_bd_pins id_bram/s_axi_aclk] [get_bd_pins interconnect/clk_125M] [get_bd_pins macs/gtx_clk] [get_bd_pins pcie/s_axi_aclk] [get_bd_pins pr_ctrl/clk] [get_bd_pins rp_wrapper/clk]
+  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins dma/clk_axi] [get_bd_pins interconnect/clk] [get_bd_pins pcie/m_axi_aclk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clocks/clk_125M] [get_bd_pins ddr3/s_axi_aclk] [get_bd_pins dma/clk_axis] [get_bd_pins id_bram/s_axi_aclk] [get_bd_pins interconnect/clk_125M] [get_bd_pins macs/gtx_clk] [get_bd_pins pr_ctrl/clk] [get_bd_pins rp_wrapper/clk]
   connect_bd_net -net clocks_clk_200M [get_bd_pins clocks/clk_200M] [get_bd_pins ddr3/clk] [get_bd_pins idelay_ctrl/ref_clk]
   connect_bd_net -net clocks_clk_50M [get_bd_pins bpi_controller/clk] [get_bd_pins clocks/clk_50M] [get_bd_pins interconnect/clk_50M]
   connect_bd_net -net clocks_rst_100M_n [get_bd_pins clocks/rst_100M_n] [get_bd_pins pr_ctrl/icap_reset]
@@ -1353,22 +1395,23 @@ proc create_root_design { parentCell } {
   connect_bd_net -net macs_clk_rx1 [get_bd_pins macs/clk_rx1] [get_bd_pins rp_wrapper/clk_rx1]
   connect_bd_net -net macs_clk_rx2 [get_bd_pins macs/clk_rx2] [get_bd_pins rp_wrapper/clk_rx2]
   connect_bd_net -net macs_clk_rx3 [get_bd_pins macs/clk_rx3] [get_bd_pins rp_wrapper/clk_rx3]
-  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_ports led_2] [get_bd_pins interconnect/rst_n] [get_bd_pins pcie/m_axi_aresetn]
-  connect_bd_net -net pr_controller_vsm_vs_rm_decouple [get_bd_pins interconnect/decouple] [get_bd_pins macs/decouple] [get_bd_pins pcie/decouple] [get_bd_pins pr_ctrl/decouple]
+  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_ports led_2] [get_bd_pins dma/rst_axi_n] [get_bd_pins interconnect/rst_n] [get_bd_pins pcie/m_axi_aresetn]
+  connect_bd_net -net pr_controller_vsm_vs_rm_decouple [get_bd_pins dma/decouple] [get_bd_pins interconnect/decouple] [get_bd_pins macs/decouple] [get_bd_pins pr_ctrl/decouple]
   connect_bd_net -net pr_ctrl_rp_active_st [get_bd_ports led_3] [get_bd_pins pr_ctrl/rp_active_st]
   connect_bd_net -net pr_ctrl_rp_shutdown_req [get_bd_pins pr_ctrl/rp_shutdown_req] [get_bd_pins rp_wrapper/shutdown_req]
   connect_bd_net -net pr_ctrl_rst_rp_n [get_bd_pins pr_ctrl/rst_rp_n] [get_bd_pins rp_wrapper/rst_prc_n]
-  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins clocks/rst_125M_n] [get_bd_pins ddr3/s_axi_aresetn] [get_bd_pins id_bram/s_axi_aresetn] [get_bd_pins interconnect/rst_125M_n] [get_bd_pins macs/gtx_rst_n] [get_bd_pins pcie/s_axi_aresetn] [get_bd_pins pr_ctrl/rst_n] [get_bd_pins rp_wrapper/rst_pcie_n]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins clocks/rst_125M_n] [get_bd_pins ddr3/s_axi_aresetn] [get_bd_pins dma/rst_axis_n] [get_bd_pins id_bram/s_axi_aresetn] [get_bd_pins interconnect/rst_125M_n] [get_bd_pins macs/gtx_rst_n] [get_bd_pins pr_ctrl/rst_n] [get_bd_pins rp_wrapper/rst_pcie_n]
   connect_bd_net -net rp_active_1 [get_bd_pins pr_ctrl/rp_active] [get_bd_pins rp_wrapper/active]
   connect_bd_net -net rp_shutdown_ack_1 [get_bd_pins pr_ctrl/rp_shutdown_ack] [get_bd_pins rp_wrapper/shutdown_ack]
-  connect_bd_net -net rp_wrapper_irq [get_bd_pins pcie/irq] [get_bd_pins rp_wrapper/irq]
+  connect_bd_net -net rp_wrapper_irq [get_bd_pins dma/irq] [get_bd_pins pcie/irq]
   connect_bd_net -net rst_n_1 [get_bd_ports rst_n] [get_bd_pins clocks/rst_n] [get_bd_pins pcie/rst_n]
 
   # Create address segments
-  create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces rp_wrapper/M_AXI_PCIE] [get_bd_addr_segs pcie/axi_bridge/S_AXI/BAR0] SEG_axi_bridge_BAR0
+  create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs pcie/axi_bridge/S_AXI/BAR0] SEG_axi_bridge_BAR0
   create_bd_addr_seg -range 0x08000000 -offset 0x80000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs bpi_controller/S_AXI/S_AXI_ADDR] SEG_bpi_controller_S_AXI_ADDR
   create_bd_addr_seg -range 0x00002000 -offset 0x00000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs id_bram/controller/S_AXI/Mem0] SEG_controller_Mem0
   create_bd_addr_seg -range 0x00800000 -offset 0x00800000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs ddr3/controller/memmap/memaddr] SEG_controller_memaddr
+  create_bd_addr_seg -range 0x00002000 -offset 0x00004000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
   create_bd_addr_seg -range 0x00002000 -offset 0x00002000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/pr_controller/s_axi_reg/Reg] SEG_pr_controller_Reg
   create_bd_addr_seg -range 0x40000000 -offset 0x40000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] SEG_rp_wrapper_reg0
 
