@@ -8,6 +8,7 @@ set_property BITSTREAM.CONFIG.BPI_SYNC_MODE TYPE1 [current_design]
 
 # System clock and reset
 
+create_clock -add -name system_clk_p -period 5.0 -waveform {0 2.5} [get_ports system_clk_p]
 set_property -dict { PACKAGE_PIN AA3   IOSTANDARD LVDS } [get_ports system_clk_p]
 set_property -dict { PACKAGE_PIN AA2   IOSTANDARD LVDS } [get_ports system_clk_n]
 set_property -dict { PACKAGE_PIN AA8   IOSTANDARD LVCMOS18 } [get_ports rst_n]
