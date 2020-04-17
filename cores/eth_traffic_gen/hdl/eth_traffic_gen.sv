@@ -7,13 +7,12 @@
 /*!
 	eth_traffic_gen: Ethernet Traffic Generator
 
-	This core generates a stream of ethernet frames by combining headers stored in DRAM and pseudo-random data
-	obtained from a linear-feedback shift register. The core provides an AXI4-Lite interface that allows the
-	user to adjust the contents of the frame headers, the size of the pseudo-random payload and the idle time
-	between generated frames.
+	This core generates a stream of ethernet frames by combining headers stored in DRAM and pseudo-random data.
+	The core provides an AXI4-Lite interface that allows the user to adjust the contents of the frame headers,
+	the size of the pseudo-random payload and the idle time between generated frames.
 */
 
-module eth_traffic_gen #(parameter axi_width = 32)
+module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -27,8 +26,8 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
-	input logic [axi_width-1:0] s_axi_wdata,
-	input logic [(axi_width/8)-1:0] s_axi_wstrb,
+	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -41,7 +40,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
-	output logic [axi_width-1:0] s_axi_rdata,
+	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
@@ -49,7 +48,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	// M_AXIS : AXI4-Stream master interface (to TEMAC)
 
 	output logic [7:0] m_axis_tdata,
-	output logic m_axis_tkeep,
+	output logic m_axis_tuser,
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
@@ -67,15 +66,15 @@ module eth_traffic_gen #(parameter axi_width = 32)
 	logic lfsr_seed_req;
 	logic [7:0] lfsr_seed_val;
 
-	logic [10-$clog2(axi_width/8):0] mem_frame_a_addr, mem_frame_b_addr;
-	logic [axi_width-1:0] mem_frame_a_wdata, mem_frame_a_rdata;
-	logic [axi_width-1:0] mem_frame_b_rdata;
-	logic [(axi_width/8)-1:0] mem_frame_a_we;
+	logic [10-$clog2(C_AXI_WIDTH/8):0] mem_frame_a_addr, mem_frame_b_addr;
+	logic [C_AXI_WIDTH-1:0] mem_frame_a_wdata, mem_frame_a_rdata;
+	logic [C_AXI_WIDTH-1:0] mem_frame_b_rdata;
+	logic [(C_AXI_WIDTH/8)-1:0] mem_frame_a_we;
 
-	logic [7-$clog2(axi_width/8):0] mem_pattern_a_addr, mem_pattern_b_addr;
-	logic [axi_width-1:0] mem_pattern_a_wdata, mem_pattern_a_rdata;
-	logic [axi_width-1:0] mem_pattern_b_rdata;
-	logic [(axi_width/8)-1:0] mem_pattern_a_we;
+	logic [7-$clog2(C_AXI_WIDTH/8):0] mem_pattern_a_addr, mem_pattern_b_addr;
+	logic [C_AXI_WIDTH-1:0] mem_pattern_a_wdata, mem_pattern_a_rdata;
+	logic [C_AXI_WIDTH-1:0] mem_pattern_b_rdata;
+	logic [(C_AXI_WIDTH/8)-1:0] mem_pattern_a_we;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -85,7 +84,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		end
 	end
 
-	eth_traffic_gen_axi #(axi_width) U0
+	eth_traffic_gen_axi #(C_AXI_WIDTH) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -127,7 +126,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.tx_enable(tx_enable),
 
 		.tx_state(tx_state),
-		.tx_ptr({mem_frame_b_addr, {($clog2(axi_width/8)){1'b0}}}),
+		.tx_ptr({mem_frame_b_addr, {($clog2(C_AXI_WIDTH/8)){1'b0}}}),
 
 		.frame_size(frame_size),
 		.frame_delay(frame_delay),
@@ -140,7 +139,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.lfsr_seed_val(lfsr_seed_val)
 	);
 
-	eth_traffic_gen_axis #(axi_width) U1
+	eth_traffic_gen_axis #(C_AXI_WIDTH) U1
 	(
 		.clk(clk),
 		.rst(~rst_n),
@@ -161,13 +160,13 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.mem_pattern_rdata(mem_pattern_b_rdata),
 
 		.m_axis_tdata(m_axis_tdata),
-		.m_axis_tkeep(m_axis_tkeep),
+		.m_axis_tuser(m_axis_tuser),
 		.m_axis_tlast(m_axis_tlast),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
 	);
 
-	frame_dram #(axi_width) U2
+	frame_dram #(C_AXI_WIDTH) U2
 	(
 		.clk(clk),
 
@@ -180,7 +179,7 @@ module eth_traffic_gen #(parameter axi_width = 32)
 		.dpo(mem_frame_b_rdata)
 	);
 
-	pattern_dram #(axi_width) U3
+	pattern_dram #(C_AXI_WIDTH) U3
 	(
 		.clk(clk),
 

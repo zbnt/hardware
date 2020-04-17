@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 1)
+module eth_traffic_gen_w #(parameter C_AXI_WIDTH = 32)
 (
 	input wire clk,
 	input wire rst_n,
@@ -18,8 +18,8 @@ module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
 
-	input wire [axi_width-1:0] s_axi_wdata,
-	input wire [(axi_width/8)-1:0] s_axi_wstrb,
+	input wire [C_AXI_WIDTH-1:0] s_axi_wdata,
+	input wire [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
 	input wire s_axi_wvalid,
 	output wire s_axi_wready,
 
@@ -32,20 +32,20 @@ module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
 
-	output wire [axi_width-1:0] s_axi_rdata,
+	output wire [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output wire [1:0] s_axi_rresp,
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
 
-	// M_AXIS : AXI4-Stream master interface (to TEMAC)
+	// M_AXIS : AXI4-Stream master interface (to MAC)
 
 	output wire [7:0] m_axis_tdata,
-	output wire m_axis_tkeep,
+	output wire m_axis_tuser,
 	output wire m_axis_tlast,
 	output wire m_axis_tvalid,
 	input wire m_axis_tready
 );
-	eth_traffic_gen #(axi_width) U0
+	eth_traffic_gen #(C_AXI_WIDTH) U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
@@ -81,7 +81,7 @@ module eth_traffic_gen_w #(parameter axi_width = 32, parameter use_ext_enable = 
 		// M_AXIS
 
 		.m_axis_tdata(m_axis_tdata),
-		.m_axis_tkeep(m_axis_tkeep),
+		.m_axis_tuser(m_axis_tuser),
 		.m_axis_tlast(m_axis_tlast),
 		.m_axis_tvalid(m_axis_tvalid),
 		.m_axis_tready(m_axis_tready)
