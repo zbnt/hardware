@@ -375,7 +375,6 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M05_AXI
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M06_AXI
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M07_AXI
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M08_AXI
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_PCIE
 
   # Create pins
@@ -387,7 +386,7 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   # Create instance: axi_interconnect, and set properties
   set axi_interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect ]
   set_property -dict [ list \
-   CONFIG.NUM_MI {9} \
+   CONFIG.NUM_MI {8} \
  ] $axi_interconnect
 
   # Create instance: shutdown, and set properties
@@ -398,7 +397,6 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
  ] $shutdown
 
   # Create interface connections
-  connect_bd_intf_net -intf_net S_AXI_LITE_1 [get_bd_intf_pins M08_AXI] [get_bd_intf_pins axi_interconnect/M08_AXI]
   connect_bd_intf_net -intf_net S_AXI_PCIE_1 [get_bd_intf_pins S_AXI_PCIE] [get_bd_intf_pins shutdown/S_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins M03_AXI] [get_bd_intf_pins axi_interconnect/M03_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M05_AXI [get_bd_intf_pins M05_AXI] [get_bd_intf_pins axi_interconnect/M05_AXI]
@@ -411,8 +409,8 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   connect_bd_intf_net -intf_net shutdown_M_AXI [get_bd_intf_pins axi_interconnect/S00_AXI] [get_bd_intf_pins shutdown/M_AXI]
 
   # Create port connections
-  connect_bd_net -net ARESETN_1 [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M02_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/M06_ARESETN] [get_bd_pins axi_interconnect/M07_ARESETN] [get_bd_pins axi_interconnect/M08_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins shutdown/resetn]
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M02_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/M06_ACLK] [get_bd_pins axi_interconnect/M07_ACLK] [get_bd_pins axi_interconnect/M08_ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins shutdown/clk]
+  connect_bd_net -net ARESETN_1 [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M02_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/M06_ARESETN] [get_bd_pins axi_interconnect/M07_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins shutdown/resetn]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M02_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/M06_ACLK] [get_bd_pins axi_interconnect/M07_ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins shutdown/clk]
   connect_bd_net -net shutdown_in_shutdown [get_bd_pins shutdown_ack] [get_bd_pins shutdown/in_shutdown]
   connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins shutdown/request_shutdown]
 
@@ -1321,14 +1319,14 @@ proc create_root_design { parentCell } {
   connect_bd_net -net simple_timer_time_running [get_bd_pins eth0/time_running] [get_bd_pins eth1/time_running] [get_bd_pins mitm/time_running] [get_bd_pins simple_timer/time_running]
 
   # Create address segments
-  create_bd_addr_seg -range 0x00020000 -offset 0x00100000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs mitm/detector/S_AXI/S_AXI_ADDR] SEG_detector_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00001000 -offset 0x00020000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00001000 -offset 0x00040000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00001000 -offset 0x00060000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
-  create_bd_addr_seg -range 0x00001000 -offset 0x00080000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs mitm/stats_a/S_AXI/S_AXI_ADDR] SEG_stats_a_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00001000 -offset 0x000A0000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs mitm/stats_b/S_AXI/S_AXI_ADDR] SEG_stats_b_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00002000 -offset 0x000C0000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00002000 -offset 0x000E0000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00020000 -offset 0x000E0000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs mitm/detector/S_AXI/S_AXI_ADDR] SEG_detector_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x00000000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs simple_timer/S_AXI/S_AXI_ADDR] SEG_simple_timer_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x00020000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth0/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x00040000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth1/stats/S_AXI/S_AXI_ADDR] SEG_stats_S_AXI_ADDR1
+  create_bd_addr_seg -range 0x00001000 -offset 0x00060000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs mitm/stats_a/S_AXI/S_AXI_ADDR] SEG_stats_a_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x00080000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs mitm/stats_b/S_AXI/S_AXI_ADDR] SEG_stats_b_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00002000 -offset 0x000A0000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth0/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00002000 -offset 0x000C0000 [get_bd_addr_spaces S_AXI_PCIE] [get_bd_addr_segs eth1/tgen/S_AXI/S_AXI_ADDR] SEG_tgen_S_AXI_ADDR1
 
 
   # Restore current instance
