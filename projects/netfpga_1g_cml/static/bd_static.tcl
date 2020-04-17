@@ -136,6 +136,7 @@ oscar-rc.dev:zbnt_hw:circular_dma:1.1\
 xilinx.com:ip:fifo_generator:13.2\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
+xilinx.com:ip:axi_dwidth_converter:2.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 xilinx.com:ip:axi_pcie:2.9\
 oscar-rc.dev:zbnt_hw:util_icap:1.0\
@@ -364,7 +365,7 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {active {ID 0 VLNV xilinx.com:signal:data_rtl:1.0 SIGNALS {DATA {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 2} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {active} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:signal:data_rtl:1.0} \
@@ -588,7 +589,7 @@ proc create_hier_cell_macs { parentCell nameHier } {
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {INTF {eth0 {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth1 {ID 1 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth2 {ID 2 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth3 {ID 3 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0 HAS_SIGNAL_STATUS 0} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {eth0} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
@@ -615,6 +616,7 @@ proc create_hier_cell_macs { parentCell nameHier } {
   # Create instance: mac_eth0, and set properties
   set mac_eth0 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth0 ]
   set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac_eth0
@@ -622,6 +624,7 @@ proc create_hier_cell_macs { parentCell nameHier } {
   # Create instance: mac_eth1, and set properties
   set mac_eth1 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth1 ]
   set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac_eth1
@@ -629,6 +632,7 @@ proc create_hier_cell_macs { parentCell nameHier } {
   # Create instance: mac_eth2, and set properties
   set mac_eth2 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth2 ]
   set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac_eth2
@@ -636,6 +640,7 @@ proc create_hier_cell_macs { parentCell nameHier } {
   # Create instance: mac_eth3, and set properties
   set mac_eth3 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth3 ]
   set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac_eth3
@@ -737,7 +742,7 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axi_pcie {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 32} AWLEN {PRESENT 1 WIDTH 8} AWSIZE {PRESENT 1 WIDTH 3} AWBURST {PRESENT 1 WIDTH 2} AWLOCK {PRESENT 1 WIDTH 1} AWCACHE {PRESENT 1 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 64} WSTRB {PRESENT 1 WIDTH 8} WLAST {PRESENT 1 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 32} ARLEN {PRESENT 1 WIDTH 8} ARSIZE {PRESENT 1 WIDTH 3} ARBURST {PRESENT 1 WIDTH 2} ARLOCK {PRESENT 1 WIDTH 1} ARCACHE {PRESENT 1 WIDTH 4} ARPROT {PRESENT 1 WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 64} RRESP {PRESENT 1 WIDTH 2} RLAST {PRESENT 1 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}}}} IPI_PROP_COUNT 1} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axi_pcie} \
    CONFIG.GUI_INTERFACE_PROTOCOL {axi4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -775,9 +780,16 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
    CONFIG.GUI_SIGNAL_SELECT_9 {WREADY} \
  ] $decoupler
 
+  # Create instance: width_converter, and set properties
+  set width_converter [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dwidth_converter:2.1 width_converter ]
+  set_property -dict [ list \
+   CONFIG.MI_DATA_WIDTH {64} \
+ ] $width_converter
+
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins M04_AXI] [get_bd_intf_pins axi_interconnect/M04_AXI]
-  connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_interconnect/S00_AXI]
+  connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins axi_interconnect/S00_AXI] [get_bd_intf_pins width_converter/M_AXI]
+  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins width_converter/S_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins decoupler/s_axi_pcie]
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins M01_AXI] [get_bd_intf_pins axi_interconnect/M01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M02_AXI [get_bd_intf_pins M02_AXI] [get_bd_intf_pins axi_interconnect/M02_AXI]
@@ -786,11 +798,11 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   connect_bd_intf_net -intf_net decoupler_rp_axi_pcie [get_bd_intf_pins M00_AXI] [get_bd_intf_pins decoupler/rp_axi_pcie]
 
   # Create port connections
-  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/S00_ACLK]
+  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins width_converter/s_axi_aclk]
   connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK]
   connect_bd_net -net clk_50M_1 [get_bd_pins clk_50M] [get_bd_pins axi_interconnect/M02_ACLK]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
-  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN]
+  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins width_converter/s_axi_aresetn]
   connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN]
   connect_bd_net -net rst_50M_n_1 [get_bd_pins rst_50M_n] [get_bd_pins axi_interconnect/M02_ARESETN]
 
@@ -927,7 +939,7 @@ proc create_hier_cell_dma { parentCell nameHier } {
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis_dma {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 128} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TUSER {PRESENT 0 WIDTH 0} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 16} TKEEP {PRESENT 0 WIDTH 16}}}} IPI_PROP_COUNT 0} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axis_dma} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
