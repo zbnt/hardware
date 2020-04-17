@@ -294,8 +294,8 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
 
   # Create pins
-  create_bd_pin -dir I -type clk clk_125M
   create_bd_pin -dir I clk_rx
+  create_bd_pin -dir I -type clk clk_tx
   create_bd_pin -dir I -from 63 -to 0 current_time
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O shutdown_ack
@@ -355,7 +355,7 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net clk_rx_1 [get_bd_pins clk_rx] [get_bd_pins rx_shutdown/clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_tx] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins rx_shutdown/rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n] [get_bd_pins tx_shutdown/rst_n]
   connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net shutdown_and_Res [get_bd_pins shutdown_ack] [get_bd_pins shutdown_and/Res]
@@ -410,8 +410,8 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
 
   # Create pins
-  create_bd_pin -dir I -type clk clk_125M
   create_bd_pin -dir I clk_rx
+  create_bd_pin -dir I -type clk clk_tx
   create_bd_pin -dir I -from 63 -to 0 current_time
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O shutdown_ack
@@ -471,7 +471,7 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net clk_rx_1 [get_bd_pins clk_rx] [get_bd_pins rx_shutdown/clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_tx] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins rx_shutdown/rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n] [get_bd_pins tx_shutdown/rst_n]
   connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net shutdown_and_Res [get_bd_pins shutdown_ack] [get_bd_pins shutdown_and/Res]
@@ -526,8 +526,8 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
 
   # Create pins
-  create_bd_pin -dir I -type clk clk_125M
   create_bd_pin -dir I clk_rx
+  create_bd_pin -dir I -type clk clk_tx
   create_bd_pin -dir I -from 63 -to 0 current_time
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O shutdown_ack
@@ -587,7 +587,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net clk_rx_1 [get_bd_pins clk_rx] [get_bd_pins rx_shutdown/clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_tx] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins rx_shutdown/rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n] [get_bd_pins tx_shutdown/rst_n]
   connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net shutdown_and_Res [get_bd_pins shutdown_ack] [get_bd_pins shutdown_and/Res]
@@ -642,8 +642,8 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
 
   # Create pins
-  create_bd_pin -dir I -type clk clk_125M
   create_bd_pin -dir I clk_rx
+  create_bd_pin -dir I -type clk clk_tx
   create_bd_pin -dir I -from 63 -to 0 current_time
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O shutdown_ack
@@ -703,7 +703,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net clk_rx_1 [get_bd_pins clk_rx] [get_bd_pins rx_shutdown/clk] [get_bd_pins stats/clk_rx]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins stats/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_tx] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins stats/clk] [get_bd_pins stats/clk_tx] [get_bd_pins tgen/clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins rx_shutdown/rst_n] [get_bd_pins stats/rst_n] [get_bd_pins tgen/rst_n] [get_bd_pins tx_shutdown/rst_n]
   connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net shutdown_and_Res [get_bd_pins shutdown_ack] [get_bd_pins shutdown_and/Res]
@@ -1248,7 +1248,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_rx3_1 [get_bd_ports clk_rx3] [get_bd_pins eth3/clk_rx]
   connect_bd_net -net clk_rx_1 [get_bd_ports clk_rx0] [get_bd_pins eth0/clk_rx]
   connect_bd_net -net clk_rx_2 [get_bd_ports clk_rx1] [get_bd_pins eth1/clk_rx]
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_ports clk] [get_bd_pins dma_fifos/clk] [get_bd_pins eth0/clk_125M] [get_bd_pins eth1/clk_125M] [get_bd_pins eth2/clk_125M] [get_bd_pins eth3/clk_125M] [get_bd_pins interconnect/clk] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_ports clk] [get_bd_pins dma_fifos/clk] [get_bd_pins eth0/clk_tx] [get_bd_pins eth1/clk_tx] [get_bd_pins eth2/clk_tx] [get_bd_pins eth3/clk_tx] [get_bd_pins interconnect/clk] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
   connect_bd_net -net dma_fifos_shutdown_ack [get_bd_pins dma_fifos/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net eth0_shutdown_ack [get_bd_pins eth0/shutdown_ack] [get_bd_pins shutdown_concat/In1]
   connect_bd_net -net eth1_shutdown_ack [get_bd_pins eth1/shutdown_ack] [get_bd_pins shutdown_concat/In2]
