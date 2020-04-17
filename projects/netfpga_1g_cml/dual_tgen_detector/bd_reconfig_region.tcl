@@ -209,13 +209,13 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 axis_stats_a
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 axis_stats_b
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_detector
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats_loop
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats_main
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats_a
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats_b
 
   # Create pins
-  create_bd_pin -dir I -type clk clk_125M
   create_bd_pin -dir I clk_rx_a
   create_bd_pin -dir I clk_rx_b
+  create_bd_pin -dir I -type clk clk_tx
   create_bd_pin -dir I -from 63 -to 0 current_time
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O shutdown_ack
@@ -308,8 +308,8 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   connect_bd_intf_net -intf_net detector_M_AXIS_LOG_A [get_bd_intf_pins axis_detector_a] [get_bd_intf_pins detector/M_AXIS_LOG_A]
   connect_bd_intf_net -intf_net detector_M_AXIS_LOG_B [get_bd_intf_pins axis_detector_b] [get_bd_intf_pins detector/M_AXIS_LOG_B]
   connect_bd_intf_net -intf_net s_axi_measurer_1 [get_bd_intf_pins s_axi_detector] [get_bd_intf_pins detector/S_AXI]
-  connect_bd_intf_net -intf_net s_axi_stats_loop_1 [get_bd_intf_pins s_axi_stats_loop] [get_bd_intf_pins stats_b/S_AXI]
-  connect_bd_intf_net -intf_net s_axi_stats_main_1 [get_bd_intf_pins s_axi_stats_main] [get_bd_intf_pins stats_a/S_AXI]
+  connect_bd_intf_net -intf_net s_axi_stats_loop_1 [get_bd_intf_pins s_axi_stats_b] [get_bd_intf_pins stats_b/S_AXI]
+  connect_bd_intf_net -intf_net s_axi_stats_main_1 [get_bd_intf_pins s_axi_stats_a] [get_bd_intf_pins stats_a/S_AXI]
   connect_bd_intf_net -intf_net stats_M_AXIS_LOG [get_bd_intf_pins axis_stats_a] [get_bd_intf_pins stats_a/M_AXIS_LOG]
   connect_bd_intf_net -intf_net stats_b_M_AXIS_LOG [get_bd_intf_pins axis_stats_b] [get_bd_intf_pins stats_b/M_AXIS_LOG]
 
@@ -317,7 +317,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   connect_bd_net -net clk_rx_b_1 [get_bd_pins clk_rx_b] [get_bd_pins detector/s_axis_b_clk] [get_bd_pins rx_shutdown_b/clk] [get_bd_pins stats_b/clk_rx]
   connect_bd_net -net clk_rx_main_1 [get_bd_pins clk_rx_a] [get_bd_pins detector/s_axis_a_clk] [get_bd_pins rx_shutdown_a/clk] [get_bd_pins stats_a/clk_rx]
   connect_bd_net -net current_time_0_1 [get_bd_pins current_time] [get_bd_pins detector/current_time] [get_bd_pins stats_a/current_time] [get_bd_pins stats_b/current_time]
-  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_125M] [get_bd_pins detector/m_axis_a_clk] [get_bd_pins detector/m_axis_b_clk] [get_bd_pins detector/s_axi_clk] [get_bd_pins rx_shutdown_a/shutdown_clk] [get_bd_pins rx_shutdown_b/shutdown_clk] [get_bd_pins stats_a/clk] [get_bd_pins stats_a/clk_tx] [get_bd_pins stats_b/clk] [get_bd_pins stats_b/clk_tx] [get_bd_pins tx_shutdown_a/clk] [get_bd_pins tx_shutdown_b/clk]
+  connect_bd_net -net gtx_clk_0_1 [get_bd_pins clk_tx] [get_bd_pins detector/m_axis_a_clk] [get_bd_pins detector/m_axis_b_clk] [get_bd_pins detector/s_axi_clk] [get_bd_pins rx_shutdown_a/shutdown_clk] [get_bd_pins rx_shutdown_b/shutdown_clk] [get_bd_pins stats_a/clk] [get_bd_pins stats_a/clk_tx] [get_bd_pins stats_b/clk] [get_bd_pins stats_b/clk_tx] [get_bd_pins tx_shutdown_a/clk] [get_bd_pins tx_shutdown_b/clk]
   connect_bd_net -net rst_n_0_1 [get_bd_pins rst_n] [get_bd_pins detector/s_axi_resetn] [get_bd_pins rx_shutdown_a/rst_n] [get_bd_pins rx_shutdown_b/rst_n] [get_bd_pins stats_a/rst_n] [get_bd_pins stats_b/rst_n] [get_bd_pins tx_shutdown_a/rst_n] [get_bd_pins tx_shutdown_b/rst_n]
   connect_bd_net -net rx_shutdown_a_shutdown_ack [get_bd_pins rx_shutdown_a/shutdown_ack] [get_bd_pins shutdown_concat/In2]
   connect_bd_net -net rx_shutdown_b_shutdown_ack [get_bd_pins rx_shutdown_b/shutdown_ack] [get_bd_pins shutdown_concat/In3]
@@ -1277,7 +1277,7 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net S_AXIS_B_1 [get_bd_intf_ports S_AXIS_ETH3] [get_bd_intf_pins mitm/S_AXIS_B]
   connect_bd_intf_net -intf_net S_AXI_PCIE_1 [get_bd_intf_ports S_AXI_PCIE] [get_bd_intf_pins interconnect/S_AXI_PCIE]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins eth1/s_axi_tgen] [get_bd_intf_pins interconnect/M03_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M05_AXI [get_bd_intf_pins interconnect/M05_AXI] [get_bd_intf_pins mitm/s_axi_stats_loop]
+  connect_bd_intf_net -intf_net axi_interconnect_M05_AXI [get_bd_intf_pins interconnect/M05_AXI] [get_bd_intf_pins mitm/s_axi_stats_b]
   connect_bd_intf_net -intf_net axi_interconnect_M07_AXI [get_bd_intf_pins interconnect/M07_AXI] [get_bd_intf_pins simple_timer/S_AXI]
   connect_bd_intf_net -intf_net dma_fifos_M_AXIS [get_bd_intf_ports M_AXIS_DMA] [get_bd_intf_pins dma_fifos/M_AXIS]
   connect_bd_intf_net -intf_net eth0_AXIS_TX [get_bd_intf_ports M_AXIS_ETH0] [get_bd_intf_pins eth0/M_AXIS]
@@ -1293,7 +1293,7 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net s_axi_detector_1 [get_bd_intf_pins interconnect/M04_AXI] [get_bd_intf_pins mitm/s_axi_detector]
   connect_bd_intf_net -intf_net s_axi_stats_1 [get_bd_intf_pins eth0/s_axi_stats] [get_bd_intf_pins interconnect/M00_AXI]
   connect_bd_intf_net -intf_net s_axi_stats_2 [get_bd_intf_pins eth1/s_axi_stats] [get_bd_intf_pins interconnect/M02_AXI]
-  connect_bd_intf_net -intf_net s_axi_stats_main_1 [get_bd_intf_pins interconnect/M06_AXI] [get_bd_intf_pins mitm/s_axi_stats_main]
+  connect_bd_intf_net -intf_net s_axi_stats_main_1 [get_bd_intf_pins interconnect/M06_AXI] [get_bd_intf_pins mitm/s_axi_stats_a]
   connect_bd_intf_net -intf_net s_axi_tgen_1 [get_bd_intf_pins eth0/s_axi_tgen] [get_bd_intf_pins interconnect/M01_AXI]
 
   # Create port connections
@@ -1303,7 +1303,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_rx_2 [get_bd_ports clk_rx1] [get_bd_pins eth1/clk_rx]
   connect_bd_net -net clk_rx_a_1 [get_bd_ports clk_rx2] [get_bd_pins mitm/clk_rx_a]
   connect_bd_net -net clk_rx_b_1 [get_bd_ports clk_rx3] [get_bd_pins mitm/clk_rx_b]
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_ports clk] [get_bd_pins dma_fifos/clk] [get_bd_pins eth0/clk_125M] [get_bd_pins eth1/clk_125M] [get_bd_pins interconnect/clk] [get_bd_pins mitm/clk_125M] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_ports clk] [get_bd_pins dma_fifos/clk] [get_bd_pins eth0/clk_125M] [get_bd_pins eth1/clk_125M] [get_bd_pins interconnect/clk] [get_bd_pins mitm/clk_tx] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
   connect_bd_net -net dma_fifos_shutdown_ack [get_bd_pins dma_fifos/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net eth0_shutdown_ack [get_bd_pins eth0/shutdown_ack] [get_bd_pins shutdown_concat/In2]
   connect_bd_net -net eth1_shutdown_ack [get_bd_pins eth1/shutdown_ack] [get_bd_pins shutdown_concat/In4]
