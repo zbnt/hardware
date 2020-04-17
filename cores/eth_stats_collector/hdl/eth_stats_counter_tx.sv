@@ -12,6 +12,7 @@ module eth_stats_counter_tx
 	input logic axis_tx_tready,
 	input logic axis_tx_tvalid,
 	input logic axis_tx_tlast,
+	input logic axis_tx_tuser,
 
 	output logic [16:0] frame_bytes,
 	output logic frame_good,
@@ -35,6 +36,10 @@ module eth_stats_counter_tx
 							in_frame <= 1'b0;
 						end
 
+						if(axis_tx_tuser) begin
+							frame_good <= 1'b0;
+						end
+
 						if(~&frame_bytes) begin
 							frame_bytes <= frame_bytes + 17'd1;
 						end
@@ -49,7 +54,7 @@ module eth_stats_counter_tx
 					in_frame <= 1'b1;
 
 					frame_bytes <= 17'd1;
-					frame_good <= 1'b1;
+					frame_good <= ~axis_tx_tuser;
 				end
 
 				valid <= 1'b0;

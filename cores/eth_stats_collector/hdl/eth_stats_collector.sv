@@ -66,6 +66,7 @@ module eth_stats_collector
 	input logic axis_tx_tready,
 	input logic axis_tx_tvalid,
 	input logic axis_tx_tlast,
+	input logic axis_tx_tuser,
 
 	// AXIS_RX
 
@@ -189,6 +190,7 @@ module eth_stats_collector
 		.axis_tx_tready(axis_tx_tready),
 		.axis_tx_tvalid(axis_tx_tvalid),
 		.axis_tx_tlast(axis_tx_tlast),
+		.axis_tx_tuser(axis_tx_tuser),
 
 		.frame_bytes(tx_frame_length),
 		.frame_good(tx_frame_good),

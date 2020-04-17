@@ -59,6 +59,7 @@ module eth_stats_collector_w
 	input wire axis_tx_tready,
 	input wire axis_tx_tvalid,
 	input wire axis_tx_tlast,
+	input wire axis_tx_tuser,
 
 	// AXIS_RX
 
@@ -121,6 +122,7 @@ module eth_stats_collector_w
 		.axis_tx_tready(axis_tx_tready),
 		.axis_tx_tvalid(axis_tx_tvalid),
 		.axis_tx_tlast(axis_tx_tlast),
+		.axis_tx_tuser(axis_tx_tuser),
 
 		// AXIS_RX
 
