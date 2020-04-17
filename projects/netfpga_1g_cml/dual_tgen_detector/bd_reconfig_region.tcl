@@ -499,7 +499,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   # Create instance: tgen, and set properties
   set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
   set_property -dict [ list \
-   CONFIG.axi_width {64} \
+   CONFIG.C_AXI_WIDTH {64} \
  ] $tgen
 
   # Create instance: tx_shutdown, and set properties
@@ -517,8 +517,8 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   connect_bd_intf_net -intf_net rx_shutdown_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins stats/AXIS_RX]
   connect_bd_intf_net -intf_net stats_M_AXIS_LOG [get_bd_intf_pins axis_stats] [get_bd_intf_pins stats/M_AXIS_LOG]
   connect_bd_intf_net -intf_net tgen_M_AXIS [get_bd_intf_pins tgen/M_AXIS] [get_bd_intf_pins tx_shutdown/S_AXIS]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets tgen_M_AXIS] [get_bd_intf_pins stats/AXIS_TX] [get_bd_intf_pins tgen/M_AXIS]
   connect_bd_intf_net -intf_net tx_shutdown_M_AXIS [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tx_shutdown/M_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets tx_shutdown_M_AXIS] [get_bd_intf_pins M_AXIS] [get_bd_intf_pins stats/AXIS_TX]
 
   # Create port connections
   connect_bd_net -net clk_rx_1 [get_bd_pins clk_rx] [get_bd_pins rx_shutdown/clk] [get_bd_pins stats/clk_rx]
@@ -615,7 +615,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   # Create instance: tgen, and set properties
   set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
   set_property -dict [ list \
-   CONFIG.axi_width {64} \
+   CONFIG.C_AXI_WIDTH {64} \
  ] $tgen
 
   # Create instance: tx_shutdown, and set properties
@@ -631,10 +631,10 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
   connect_bd_intf_net -intf_net pr_shutdown_axis_0_M_AXIS [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tx_shutdown/M_AXIS]
+  connect_bd_intf_net -intf_net [get_bd_intf_nets pr_shutdown_axis_0_M_AXIS] [get_bd_intf_pins M_AXIS] [get_bd_intf_pins stats/AXIS_TX]
   connect_bd_intf_net -intf_net rx_shutdown_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins stats/AXIS_RX]
   connect_bd_intf_net -intf_net stats_M_AXIS_LOG [get_bd_intf_pins axis_stats] [get_bd_intf_pins stats/M_AXIS_LOG]
   connect_bd_intf_net -intf_net tgen_M_AXIS [get_bd_intf_pins tgen/M_AXIS] [get_bd_intf_pins tx_shutdown/S_AXIS]
-  connect_bd_intf_net -intf_net [get_bd_intf_nets tgen_M_AXIS] [get_bd_intf_pins stats/AXIS_TX] [get_bd_intf_pins tgen/M_AXIS]
 
   # Create port connections
   connect_bd_net -net clk_rx_1 [get_bd_pins clk_rx] [get_bd_pins rx_shutdown/clk] [get_bd_pins stats/clk_rx]
