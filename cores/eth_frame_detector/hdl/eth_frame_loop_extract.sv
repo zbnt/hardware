@@ -121,7 +121,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 								if(s_axis_frame_tready) begin
 									if(s_axis_tlast) begin
 										state <= ST_WRITE_CTL;
-										s_axis_ctl_tdata <= {'0, script_match, count + 16'd1, current_time};
+										s_axis_ctl_tdata <= {'0, script_match, count + 16'd1, current_time_cdc};
 										s_axis_ctl_tvalid <= 1'b1;
 									end
 
@@ -129,7 +129,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 								end else begin
 									state <= ST_OVERFLOW;
 									s_axis_frame_tdata <= {s_axis_tdata, byte_sr};
-									s_axis_ctl_tdata <= {'0, count + 16'd1, current_time};
+									s_axis_ctl_tdata <= {'0, count + 16'd1, current_time_cdc};
 
 									if(s_axis_tlast) begin
 										overflow_count_cdc <= overflow_count_cdc + 64'd1;
@@ -145,7 +145,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 							count <= count + 16'd1;
 						end else if(s_axis_tlast) begin
 							state <= ST_WRITE_CTL;
-							s_axis_ctl_tdata <= {'0, script_match, count, current_time};
+							s_axis_ctl_tdata <= {'0, script_match, count, current_time_cdc};
 							s_axis_ctl_tvalid <= 1'b1;
 
 							if(count[$clog2(C_AXIS_LOG_WIDTH/8)-1:0] != '0) begin
