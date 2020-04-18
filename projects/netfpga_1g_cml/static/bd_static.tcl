@@ -139,6 +139,7 @@ xilinx.com:ip:blk_mem_gen:8.4\
 xilinx.com:ip:axi_dwidth_converter:2.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 xilinx.com:ip:axi_pcie:2.9\
+oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0\
 oscar-rc.dev:zbnt_hw:util_icap:1.0\
 xilinx.com:ip:prc:1.3\
 "
@@ -351,15 +352,20 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -type clk clk
-  create_bd_pin -dir O decouple
-  create_bd_pin -dir I -type clk icap_clk
-  create_bd_pin -dir I -type rst icap_reset
+  create_bd_pin -dir I clk_rp
+  create_bd_pin -dir O -from 0 -to 0 decouple
   create_bd_pin -dir I -from 0 -to 0 -type data rp_active
   create_bd_pin -dir O -from 0 -to 0 rp_active_st
   create_bd_pin -dir I rp_shutdown_ack
-  create_bd_pin -dir O rp_shutdown_req
+  create_bd_pin -dir O -from 0 -to 0 rp_shutdown_req
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O rst_rp_n
+
+  # Create instance: decouple_cdc, and set properties
+  set decouple_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 decouple_cdc ]
+  set_property -dict [ list \
+   CONFIG.C_NUM_STAGES {2} \
+ ] $decouple_cdc
 
   # Create instance: decoupler, and set properties
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
@@ -392,22 +398,36 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
    CONFIG.GUI_VS_START_IN_SHUTDOWN {true} \
  ] $pr_controller
 
+  # Create instance: shutdown_ack, and set properties
+  set shutdown_ack [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 shutdown_ack ]
+  set_property -dict [ list \
+   CONFIG.C_NUM_STAGES {2} \
+ ] $shutdown_ack
+
+  # Create instance: shutdown_req_cdc, and set properties
+  set shutdown_req_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 shutdown_req_cdc ]
+  set_property -dict [ list \
+   CONFIG.C_NUM_STAGES {2} \
+ ] $shutdown_req_cdc
+
   # Create interface connections
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins s_axi_reg] [get_bd_intf_pins pr_controller/s_axi_reg]
   connect_bd_intf_net -intf_net pr_controller_ICAP [get_bd_intf_pins icap/ICAP] [get_bd_intf_pins pr_controller/ICAP]
   connect_bd_intf_net -intf_net pr_controller_m_axi_mem [get_bd_intf_pins m_axi_mem] [get_bd_intf_pins pr_controller/m_axi_mem]
 
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clk] [get_bd_pins pr_controller/clk]
-  connect_bd_net -net clocks_rst_100M_n [get_bd_pins icap_reset] [get_bd_pins pr_controller/icap_reset]
-  connect_bd_net -net dcm_eth_clk_100M [get_bd_pins icap_clk] [get_bd_pins pr_controller/icap_clk]
+  connect_bd_net -net clk_rp_1 [get_bd_pins clk_rp] [get_bd_pins decouple_cdc/clk_dst] [get_bd_pins shutdown_ack/clk_src] [get_bd_pins shutdown_req_cdc/clk_dst]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clk] [get_bd_pins decouple_cdc/clk_src] [get_bd_pins pr_controller/clk] [get_bd_pins pr_controller/icap_clk] [get_bd_pins shutdown_ack/clk_dst] [get_bd_pins shutdown_req_cdc/clk_src]
+  connect_bd_net -net decouple_cdc_data_dst [get_bd_pins decouple] [get_bd_pins decouple_cdc/data_dst] [get_bd_pins decoupler/decouple]
   connect_bd_net -net decoupler_s_active_DATA [get_bd_pins rp_active_st] [get_bd_pins decoupler/s_active_DATA]
-  connect_bd_net -net pr_controller_vsm_0_rm_decouple [get_bd_pins decouple] [get_bd_pins decoupler/decouple] [get_bd_pins pr_controller/vsm_0_rm_decouple]
+  connect_bd_net -net pr_controller_vsm_0_rm_decouple [get_bd_pins decouple_cdc/data_src] [get_bd_pins pr_controller/vsm_0_rm_decouple]
   connect_bd_net -net pr_controller_vsm_0_rm_reset [get_bd_pins rst_rp_n] [get_bd_pins pr_controller/vsm_0_rm_reset]
-  connect_bd_net -net pr_controller_vsm_0_rm_shutdown_req [get_bd_pins rp_shutdown_req] [get_bd_pins pr_controller/vsm_0_rm_shutdown_req]
-  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins pr_controller/reset]
+  connect_bd_net -net pr_controller_vsm_0_rm_shutdown_req [get_bd_pins pr_controller/vsm_0_rm_shutdown_req] [get_bd_pins shutdown_req_cdc/data_src]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins pr_controller/icap_reset] [get_bd_pins pr_controller/reset]
   connect_bd_net -net rp_active_1 [get_bd_pins rp_active] [get_bd_pins decoupler/rp_active_DATA]
-  connect_bd_net -net rp_shutdown_ack_1 [get_bd_pins rp_shutdown_ack] [get_bd_pins pr_controller/vsm_0_rm_shutdown_ack]
+  connect_bd_net -net rp_shutdown_ack_1 [get_bd_pins rp_shutdown_ack] [get_bd_pins shutdown_ack/data_src]
+  connect_bd_net -net shutdown_ack_data_dst [get_bd_pins pr_controller/vsm_0_rm_shutdown_ack] [get_bd_pins shutdown_ack/data_dst]
+  connect_bd_net -net shutdown_req_cdc_data_dst [get_bd_pins rp_shutdown_req] [get_bd_pins shutdown_req_cdc/data_dst]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -722,9 +742,11 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir I clk_100M
   create_bd_pin -dir I -type clk clk_125M
   create_bd_pin -dir I -type clk clk_50M
   create_bd_pin -dir I decouple
+  create_bd_pin -dir I rst_100M_n
   create_bd_pin -dir I -type rst rst_125M_n
   create_bd_pin -dir I -type rst rst_50M_n
   create_bd_pin -dir I -type rst rst_n
@@ -799,11 +821,13 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins width_converter/s_axi_aclk]
-  connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK]
+  connect_bd_net -net clk_100M_1 [get_bd_pins clk_100M] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK]
+  connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK]
   connect_bd_net -net clk_50M_1 [get_bd_pins clk_50M] [get_bd_pins axi_interconnect/M02_ACLK]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
   connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins width_converter/s_axi_aresetn]
-  connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN]
+  connect_bd_net -net rst_100M_n_1 [get_bd_pins rst_100M_n] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN]
+  connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN]
   connect_bd_net -net rst_50M_n_1 [get_bd_pins rst_50M_n] [get_bd_pins axi_interconnect/M02_ARESETN]
 
   # Restore current instance
@@ -1393,14 +1417,13 @@ proc create_root_design { parentCell } {
   connect_bd_net -net Net [get_bd_ports bpi_dq] [get_bd_pins bpi_controller/bpi_dq_io]
   connect_bd_net -net aux_reset_in_0_1 [get_bd_ports pcie_perstn] [get_bd_pins pcie/pcie_perstn]
   connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins dma/clk_axi] [get_bd_pins interconnect/clk] [get_bd_pins pcie/m_axi_aclk]
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clocks/clk_125M] [get_bd_pins ddr3/s_axi_aclk] [get_bd_pins dma/clk_axis] [get_bd_pins id_bram/s_axi_aclk] [get_bd_pins interconnect/clk_125M] [get_bd_pins macs/gtx_clk] [get_bd_pins pr_ctrl/clk] [get_bd_pins rp_wrapper/clk]
+  connect_bd_net -net clk_1 [get_bd_pins clocks/clk_100M] [get_bd_pins ddr3/s_axi_aclk] [get_bd_pins interconnect/clk_100M] [get_bd_pins pr_ctrl/clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clocks/clk_125M] [get_bd_pins dma/clk_axis] [get_bd_pins id_bram/s_axi_aclk] [get_bd_pins interconnect/clk_125M] [get_bd_pins macs/gtx_clk] [get_bd_pins pr_ctrl/clk_rp] [get_bd_pins rp_wrapper/clk]
   connect_bd_net -net clocks_clk_200M [get_bd_pins clocks/clk_200M] [get_bd_pins ddr3/clk] [get_bd_pins idelay_ctrl/ref_clk]
   connect_bd_net -net clocks_clk_50M [get_bd_pins bpi_controller/clk] [get_bd_pins clocks/clk_50M] [get_bd_pins interconnect/clk_50M]
-  connect_bd_net -net clocks_rst_100M_n [get_bd_pins clocks/rst_100M_n] [get_bd_pins pr_ctrl/icap_reset]
   connect_bd_net -net clocks_rst_200M [get_bd_pins clocks/rst_200M] [get_bd_pins idelay_ctrl/rst]
   connect_bd_net -net clocks_rst_200M_n [get_bd_pins clocks/rst_200M_n] [get_bd_pins ddr3/rst_n]
   connect_bd_net -net clocks_rst_50M_n [get_bd_pins bpi_controller/rst_n] [get_bd_pins clocks/rst_50M_n] [get_bd_pins interconnect/rst_50M_n]
-  connect_bd_net -net dcm_eth_clk_100M [get_bd_pins clocks/clk_100M] [get_bd_pins pr_ctrl/icap_clk]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins clocks/clk_125M_90] [get_bd_pins macs/gtx_clk90]
   connect_bd_net -net ddr3_ready [get_bd_ports led_0] [get_bd_pins ddr3/ready]
   connect_bd_net -net idelay_ctrl_rdy [get_bd_ports led_1] [get_bd_pins idelay_ctrl/rdy]
@@ -1413,10 +1436,11 @@ proc create_root_design { parentCell } {
   connect_bd_net -net pr_ctrl_rp_active_st [get_bd_ports led_3] [get_bd_pins pr_ctrl/rp_active_st]
   connect_bd_net -net pr_ctrl_rp_shutdown_req [get_bd_pins pr_ctrl/rp_shutdown_req] [get_bd_pins rp_wrapper/shutdown_req]
   connect_bd_net -net pr_ctrl_rst_rp_n [get_bd_pins pr_ctrl/rst_rp_n] [get_bd_pins rp_wrapper/rst_prc_n]
-  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins clocks/rst_125M_n] [get_bd_pins ddr3/s_axi_aresetn] [get_bd_pins dma/rst_axis_n] [get_bd_pins id_bram/s_axi_aresetn] [get_bd_pins interconnect/rst_125M_n] [get_bd_pins macs/gtx_rst_n] [get_bd_pins pr_ctrl/rst_n] [get_bd_pins rp_wrapper/rst_pcie_n]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins clocks/rst_125M_n] [get_bd_pins dma/rst_axis_n] [get_bd_pins id_bram/s_axi_aresetn] [get_bd_pins interconnect/rst_125M_n] [get_bd_pins macs/gtx_rst_n] [get_bd_pins rp_wrapper/rst_pcie_n]
   connect_bd_net -net rp_active_1 [get_bd_pins pr_ctrl/rp_active] [get_bd_pins rp_wrapper/active]
   connect_bd_net -net rp_shutdown_ack_1 [get_bd_pins pr_ctrl/rp_shutdown_ack] [get_bd_pins rp_wrapper/shutdown_ack]
   connect_bd_net -net rp_wrapper_irq [get_bd_pins dma/irq] [get_bd_pins pcie/irq]
+  connect_bd_net -net rst_100M_n_1 [get_bd_pins clocks/rst_100M_n] [get_bd_pins ddr3/s_axi_aresetn] [get_bd_pins interconnect/rst_100M_n] [get_bd_pins pr_ctrl/rst_n]
   connect_bd_net -net rst_n_1 [get_bd_ports rst_n] [get_bd_pins clocks/rst_n] [get_bd_pins pcie/rst_n]
 
   # Create address segments
