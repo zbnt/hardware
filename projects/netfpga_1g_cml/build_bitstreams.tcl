@@ -74,6 +74,7 @@ proc gen_static_bitstream { dcp } {
 
 	# Generate bitstream in bit format, convert to correct byte ordering for BPIx16
 
+	set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
 	write_bitstream -force -file ../bit/static.bit
 	write_cfgmem -force -format bin -size 128 -interface BPIx16 -checksum -file ../static.bin -loadbit { up 0x00000000 ../bit/static.bit }
 
@@ -85,12 +86,14 @@ proc gen_partial_bitstream { dcp bitstream_name } {
 
 	# Generate bitstreams in bin format
 
+	set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
 	write_bitstream -force -bin_file ../bit/${bitstream_name}
 
 	# Convert to the correct format for writing to ICAP
 
+	file del ../rp_${bitstream_name}.bin
 	source [get_property REPOSITORY [get_ipdefs xilinx.com:ip:prc:1.3]]/xilinx/prc_v1_3/tcl/api.tcl
-	prc_v1_3::format_bin_for_icap -i ../bit/${bitstream_name}_pblock_pr_partial.bin -o ../rp_${bitstream_name}.bin -c 1
+	prc_v1_3::format_bin_for_icap -i ../bit/${bitstream_name}_pblock_pr_partial.bin -o ../rp_${bitstream_name}.bin
 
 	close_project
 }
