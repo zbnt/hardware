@@ -1,0 +1,71 @@
+/*
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "zbnt,rp_dual_tgen_latency";
+
+	rp_amba {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		rom@0 {
+			compatible = "zbnt,rp_dtb";
+			reg = <0x00000000 0x1000>;
+		};
+
+		timer@1000 {
+			compatible = "zbnt,simple_timer";
+			reg = <0x00001000 0x1000>;
+		};
+
+		stats@2000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00002000 0x1000>;
+			zbnt,ports = <0>;
+		};
+
+		stats@3000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00003000 0x1000>;
+			zbnt,ports = <1>;
+		};
+
+		stats@4000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00004000 0x1000>;
+			zbnt,ports = <2>;
+		};
+
+		stats@5000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00005000 0x1000>;
+			zbnt,ports = <3>;
+		};
+
+		tgen@6000 {
+			compatible = "zbnt,traffic_generator";
+			reg = <0x00006000 0x1000>;
+			zbnt,ports = <0>;
+		};
+
+		tgen@7000 {
+			compatible = "zbnt,traffic_generator";
+			reg = <0x00007000 0x1000>;
+			zbnt,ports = <1>;
+		};
+
+		latency@8000 {
+			compatible = "zbnt,latency_measurer";
+			reg = <0x00008000 0x1000>;
+			zbnt,ports = <2 3>;
+		};
+	};
+};

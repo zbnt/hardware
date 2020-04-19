@@ -16,10 +16,21 @@ set_property USED_IN_SYNTHESIS FALSE [get_files RGMII.xdc]
 set_property IP_REPO_PATHS {../../../cores ../cores} [current_fileset]
 update_ip_catalog -rebuild
 
+# Create empty coe file for dtb rom
+
+set coe_file [open vivado/dtb.coe w]
+puts $coe_file "memory_initialization_radix=16;\nmemory_initialization_vector=00;"
+close $coe_file
+
 # Create block diagram
 
 source bd_static.tcl
 read_verilog [make_wrapper -top -files [get_files bd_static.bd]]
+
+# Replace coe file with a symlink to the real one, this is a workaround for what seems to be a bug in Vivado
+
+file del vivado/dtb.coe
+file link -symbolic vivado/dtb.coe ../../hw/coe/dtb_static.coe
 
 # Create synthesis run
 

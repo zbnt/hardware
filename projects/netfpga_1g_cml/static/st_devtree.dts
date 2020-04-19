@@ -1,0 +1,52 @@
+/*
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "zbnt,netfpga_1g_cml";
+
+	st_amba {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		region = <0>;
+
+		rom@0 {
+			compatible = "zbnt,static_dtb";
+			reg = <0x00000000 0x1000>;
+		};
+
+		prc@1000 {
+			compatible = "xlnx,pr_controller";
+			reg = <0x00001000 0x1000>;
+		};
+
+		dma@2000 {
+			compatible = "zbnt,circular_dma";
+			reg = <0x00002000 0x1000>;
+		};
+
+		ddr3@400000 {
+			compatible = "zbnt,pr_mem";
+			reg = <0x00400000 0x400000>;
+		};
+	};
+
+	rp_amba {
+		compatible = "simple-bus";
+		region = <2>;
+	};
+
+	bpi16 {
+		compatible = "zbnt,cfg_mem";
+		size = <0x8000000>;
+		region = <4>;
+	};
+};

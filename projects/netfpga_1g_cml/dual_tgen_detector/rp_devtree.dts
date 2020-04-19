@@ -1,0 +1,71 @@
+/*
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "zbnt,rp_dual_tgen_detector";
+
+	rp_amba {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		rom@0 {
+			compatible = "zbnt,rp_dtb";
+			reg = <0x00000000 0x1000>;
+		};
+
+		timer@20000 {
+			compatible = "zbnt,simple_timer";
+			reg = <0x00020000 0x1000>;
+		};
+
+		stats@40000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00040000 0x1000>;
+			zbnt,ports = <0>;
+		};
+
+		stats@60000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00060000 0x1000>;
+			zbnt,ports = <1>;
+		};
+
+		stats@80000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x00080000 0x1000>;
+			zbnt,ports = <2>;
+		};
+
+		stats@a0000 {
+			compatible = "zbnt,stats_collector";
+			reg = <0x000a0000 0x1000>;
+			zbnt,ports = <3>;
+		};
+
+		tgen@c0000 {
+			compatible = "zbnt,traffic_generator";
+			reg = <0x000c0000 0x2000>;
+			zbnt,ports = <0>;
+		};
+
+		tgen@e0000 {
+			compatible = "zbnt,traffic_generator";
+			reg = <0x000e0000 0x2000>;
+			zbnt,ports = <1>;
+		};
+
+		detector@100000 {
+			compatible = "zbnt,frame_detector";
+			reg = <0x00100000 0x20000>;
+			zbnt,ports = <2 3>;
+		};
+	};
+};
