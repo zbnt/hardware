@@ -78,7 +78,7 @@ module rp_wrapper
 
 	// S_AXI_PCIE
 
-	input wire [29:0] s_axi_pcie_araddr,
+	input wire [21:0] s_axi_pcie_araddr,
 	input wire [1:0] s_axi_pcie_arburst,
 	input wire [7:0] s_axi_pcie_arlen,
 	input wire [2:0] s_axi_pcie_arsize,
@@ -91,7 +91,7 @@ module rp_wrapper
 	output wire s_axi_pcie_rvalid,
 	input wire s_axi_pcie_rready,
 
-	input wire [29:0] s_axi_pcie_awaddr,
+	input wire [21:0] s_axi_pcie_awaddr,
 	input wire [1:0] s_axi_pcie_awburst,
 	input wire [7:0] s_axi_pcie_awlen,
 	input wire [2:0] s_axi_pcie_awsize,

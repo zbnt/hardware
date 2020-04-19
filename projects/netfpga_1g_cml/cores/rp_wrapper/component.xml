@@ -782,7 +782,7 @@
       <spirit:addressBlock>
         <spirit:name>reg0</spirit:name>
         <spirit:baseAddress spirit:format="bitString" spirit:resolve="user" spirit:bitStringLength="32">0</spirit:baseAddress>
-        <spirit:range spirit:format="long" spirit:resolve="user" spirit:minimum="4096" spirit:rangeType="long">1073741824</spirit:range>
+        <spirit:range spirit:format="long" spirit:resolve="user" spirit:minimum="4096" spirit:rangeType="long">4194304</spirit:range>
         <spirit:width spirit:format="long" spirit:resolve="user">64</spirit:width>
         <spirit:usage>register</spirit:usage>
       </spirit:addressBlock>
@@ -802,7 +802,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>b8b4835c</spirit:value>
+            <spirit:value>a018a2b5</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -818,7 +818,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>b8b4835c</spirit:value>
+            <spirit:value>a018a2b5</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1577,7 +1577,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">29</spirit:left>
+            <spirit:left spirit:format="long">21</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -1759,7 +1759,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">29</spirit:left>
+            <spirit:left spirit:format="long">21</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -1999,7 +1999,7 @@
       <spirit:file>
         <spirit:name>hdl/rp_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_b8b4835c</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_a018a2b5</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -2036,15 +2036,15 @@
       </xilinx:taxonomies>
       <xilinx:displayName>ZBNT Reconfigurable Partition</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>4</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-04-17T04:34:50Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>5</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-04-18T08:36:24Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="8ea368d4"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="a7454da5"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="95f065ba"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="4f3d5be8"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="7ee951b6"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="ab475088"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="41e24ae1"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="6c4e22b6"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
