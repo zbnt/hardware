@@ -24,11 +24,6 @@ close $coe_file
 
 source bd_reconfig_region.tcl
 
-# Replace coe file with a symlink to the real one, this is a workaround for what seems to be a bug in Vivado
-
-file del vivado/dtb.coe
-file link -symbolic vivado/dtb.coe ../../hw/coe/dtb_dual_tgen_latency.coe
-
 # Create synthesis run
 
 set_property -name "flow" -value "Vivado Synthesis 2018" -objects [get_runs synth_1]

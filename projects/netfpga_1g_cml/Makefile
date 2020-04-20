@@ -1,7 +1,9 @@
 
-.PHONY: all synth bitstreams clean
+.PHONY: all bitstreams synth clean clean_bitstreams clean_synth
 
 all: bitstreams
+
+# Synthesis and implementation
 
 bitstreams: synth
 	vivado -mode batch -source build_bitstreams.tcl -nolog -nojournal
@@ -12,11 +14,17 @@ synth:
 	vivado -mode batch -source dual_tgen_detector/synth_design.tcl -nolog -nojournal
 	vivado -mode batch -source quad_tgen/synth_design.tcl -nolog -nojournal
 
-clean:
+# Cleanup
+
+clean: clean_bitstreams clean_synth clean_coe clean_dtb
+
+clean_bitstreams:
+	-rm -r hw/bit hw/reports hw/dcp/impl
+	-rm hw/*.bin hw/*.prm
+
+clean_synth:
 	-rm -r static/vivado
 	-rm -r dual_tgen_latency/vivado
 	-rm -r dual_tgen_detector/vivado
 	-rm -r quad_tgen/vivado
-	-rm hw/*.bin
-	-rm hw/*.prm
-	-rm -r hw/bit hw/dcp hw/reports
+	-rm -r hw/dcp/*.dcp

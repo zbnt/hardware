@@ -9,13 +9,21 @@ if { [info exists ::env(NUM_JOBS) ] } {
 	set jobs [exec nproc]
 }
 
-# Create project and run synthesis, if needed
+# Create project
 
 if { ![file exists vivado/zbnt_hw_quad_tgen.xpr ] } {
 	source create_project.tcl
 } else {
 	open_project vivado/zbnt_hw_quad_tgen.xpr
 }
+
+# Create coe with device tree data
+
+if { [exec ../../../scripts/generate_devtree_coe.py rp_devtree.dts vivado/dtb.coe RP] } {
+	reset_runs -quiet bd_reconfig_region_mem_0_synth_1
+}
+
+# Launch synthesis run
 
 if { [get_property needs_refresh [get_runs synth_1]] || [get_property status [get_runs synth_1]] == "Not started" } {
 	reset_runs synth_1

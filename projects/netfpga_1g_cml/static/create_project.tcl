@@ -27,11 +27,6 @@ close $coe_file
 source bd_static.tcl
 read_verilog [make_wrapper -top -files [get_files bd_static.bd]]
 
-# Replace coe file with a symlink to the real one, this is a workaround for what seems to be a bug in Vivado
-
-file del vivado/dtb.coe
-file link -symbolic vivado/dtb.coe ../../hw/coe/dtb_static.coe
-
 # Create synthesis run
 
 set_property -name "flow" -value "Vivado Synthesis 2018" -objects [get_runs synth_1]
