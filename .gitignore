@@ -1,5 +1,6 @@
 .directory
 hd_visual
+__pycache__
 
 /projects/*/*/vivado
 /projects/*/hw/*
