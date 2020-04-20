@@ -16,7 +16,7 @@ synth:
 
 # Cleanup
 
-clean: clean_bitstreams clean_synth clean_coe clean_dtb
+clean: clean_bitstreams clean_synth
 
 clean_bitstreams:
 	-rm -r hw/bit hw/reports hw/dcp/impl
