@@ -123,9 +123,11 @@ set bCheckIPsPassed 1
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
-oscar-rc.dev:zbnt_hw:bpi_flash:1.0\
 xilinx.com:ip:util_idelay_ctrl:1.0\
 oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0\
+xilinx.com:ip:xlconstant:1.1\
+oscar-rc.dev:zbnt_hw:bpi_flash:1.0\
+oscar-rc.dev:zbnt_hw:util_startup:1.0\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_ds_buf:2.1\
 xilinx.com:ip:proc_sys_reset:5.0\
@@ -1290,6 +1292,75 @@ proc create_hier_cell_clocks { parentCell nameHier } {
   current_bd_instance $oldCurInst
 }
 
+# Hierarchical cell: bpi
+proc create_hier_cell_bpi { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_bpi() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:emc_rtl:1.0 bpi
+
+  # Create pins
+  create_bd_pin -dir IO -from 15 -to 0 bpi_dq
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir I -type rst rst_n
+
+  # Create instance: constant_ce, and set properties
+  set constant_ce [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 constant_ce ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {0} \
+ ] $constant_ce
+
+  # Create instance: controller, and set properties
+  set controller [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:bpi_flash:1.0 controller ]
+
+  # Create instance: startup_clk, and set properties
+  set startup_clk [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_startup:1.0 startup_clk ]
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins S_AXI] [get_bd_intf_pins controller/S_AXI]
+  connect_bd_intf_net -intf_net bpi_controller_BPI [get_bd_intf_pins bpi] [get_bd_intf_pins controller/BPI]
+
+  # Create port connections
+  connect_bd_net -net Net [get_bd_pins bpi_dq] [get_bd_pins controller/bpi_dq_io]
+  connect_bd_net -net clocks_clk_50M [get_bd_pins clk] [get_bd_pins controller/clk] [get_bd_pins startup_clk/usrcclko]
+  connect_bd_net -net clocks_rst_50M_n [get_bd_pins rst_n] [get_bd_pins controller/rst_n]
+  connect_bd_net -net constant_ce_dout [get_bd_pins constant_ce/dout] [get_bd_pins startup_clk/usrcclkts]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
 
 # Procedure to create entire design; Provide argument to make
 # procedure reusable. If parentCell is "", will use root.
@@ -1351,8 +1422,8 @@ proc create_root_design { parentCell } {
   set phy3_rstn [ create_bd_port -dir O -from 0 -to 0 phy3_rstn ]
   set rst_n [ create_bd_port -dir I -type rst rst_n ]
 
-  # Create instance: bpi_controller, and set properties
-  set bpi_controller [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:bpi_flash:1.0 bpi_controller ]
+  # Create instance: bpi
+  create_hier_cell_bpi [current_bd_instance .] bpi
 
   # Create instance: clocks
   create_hier_cell_clocks [current_bd_instance .] clocks
@@ -1390,11 +1461,11 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net S_AXIS_ETH0_1 [get_bd_intf_pins macs/S_AXIS_ETH0] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH0]
   connect_bd_intf_net -intf_net S_AXIS_ETH2_1 [get_bd_intf_pins macs/S_AXIS_ETH2] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH2]
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins dma/M_AXI] [get_bd_intf_pins pcie/S_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins bpi_controller/S_AXI] [get_bd_intf_pins interconnect/M02_AXI]
+  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins bpi/S_AXI] [get_bd_intf_pins interconnect/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins interconnect/M03_AXI] [get_bd_intf_pins pr_ctrl/s_axi_reg]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins dtb_rom/S_AXI] [get_bd_intf_pins interconnect/M01_AXI]
   connect_bd_intf_net -intf_net axi_pcie_0_pcie_7x_mgt [get_bd_intf_ports pcie] [get_bd_intf_pins pcie/PCIE]
-  connect_bd_intf_net -intf_net bpi_controller_BPI [get_bd_intf_ports bpi] [get_bd_intf_pins bpi_controller/BPI]
+  connect_bd_intf_net -intf_net bpi_controller_BPI [get_bd_intf_ports bpi] [get_bd_intf_pins bpi/bpi]
   connect_bd_intf_net -intf_net ddr3_controller_DDR3 [get_bd_intf_ports ddr3] [get_bd_intf_pins ddr3/DDR3]
   connect_bd_intf_net -intf_net interconnect_M00_AXI [get_bd_intf_pins interconnect/M00_AXI] [get_bd_intf_pins rp_wrapper/S_AXI_PCIE]
   connect_bd_intf_net -intf_net interconnect_M04_AXI [get_bd_intf_pins ddr3/S_AXI_PCIE] [get_bd_intf_pins interconnect/M04_AXI]
@@ -1415,16 +1486,16 @@ proc create_root_design { parentCell } {
   # Create port connections
   connect_bd_net -net IBUF_DS_N_0_1 [get_bd_ports pcie_clk_n] [get_bd_pins pcie/pcie_clk_n]
   connect_bd_net -net IBUF_DS_P_0_1 [get_bd_ports pcie_clk_p] [get_bd_pins pcie/pcie_clk_p]
-  connect_bd_net -net Net [get_bd_ports bpi_dq] [get_bd_pins bpi_controller/bpi_dq_io]
+  connect_bd_net -net Net [get_bd_ports bpi_dq] [get_bd_pins bpi/bpi_dq]
   connect_bd_net -net aux_reset_in_0_1 [get_bd_ports pcie_perstn] [get_bd_pins pcie/pcie_perstn]
   connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins dma/clk_axi] [get_bd_pins interconnect/clk] [get_bd_pins pcie/m_axi_aclk]
   connect_bd_net -net clk_1 [get_bd_pins clocks/clk_100M] [get_bd_pins ddr3/s_axi_aclk] [get_bd_pins interconnect/clk_100M] [get_bd_pins pr_ctrl/clk]
   connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clocks/clk_125M] [get_bd_pins dma/clk_axis] [get_bd_pins dtb_rom/s_axi_aclk] [get_bd_pins interconnect/clk_125M] [get_bd_pins macs/gtx_clk] [get_bd_pins pr_ctrl/clk_rp] [get_bd_pins rp_wrapper/clk]
   connect_bd_net -net clocks_clk_200M [get_bd_pins clocks/clk_200M] [get_bd_pins ddr3/clk] [get_bd_pins idelay_ctrl/ref_clk]
-  connect_bd_net -net clocks_clk_50M [get_bd_pins bpi_controller/clk] [get_bd_pins clocks/clk_50M] [get_bd_pins interconnect/clk_50M]
+  connect_bd_net -net clocks_clk_50M [get_bd_pins bpi/clk] [get_bd_pins clocks/clk_50M] [get_bd_pins interconnect/clk_50M]
   connect_bd_net -net clocks_rst_200M [get_bd_pins clocks/rst_200M] [get_bd_pins idelay_ctrl/rst]
   connect_bd_net -net clocks_rst_200M_n [get_bd_pins clocks/rst_200M_n] [get_bd_pins ddr3/rst_n]
-  connect_bd_net -net clocks_rst_50M_n [get_bd_pins bpi_controller/rst_n] [get_bd_pins clocks/rst_50M_n] [get_bd_pins interconnect/rst_50M_n]
+  connect_bd_net -net clocks_rst_50M_n [get_bd_pins bpi/rst_n] [get_bd_pins clocks/rst_50M_n] [get_bd_pins interconnect/rst_50M_n]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins clocks/clk_125M_90] [get_bd_pins macs/gtx_clk90]
   connect_bd_net -net ddr3_ready [get_bd_ports led_0] [get_bd_pins ddr3/ready]
   connect_bd_net -net idelay_ctrl_rdy [get_bd_ports led_1] [get_bd_pins idelay_ctrl/rdy]
@@ -1446,7 +1517,7 @@ proc create_root_design { parentCell } {
 
   # Create address segments
   create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs pcie/axi_bridge/S_AXI/BAR0] SEG_axi_bridge_BAR0
-  create_bd_addr_seg -range 0x08000000 -offset 0x80000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs bpi_controller/S_AXI/S_AXI_ADDR] SEG_bpi_controller_S_AXI_ADDR
+  create_bd_addr_seg -range 0x08000000 -offset 0x80000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs bpi/controller/S_AXI/S_AXI_ADDR] SEG_bpi_controller_S_AXI_ADDR
   create_bd_addr_seg -range 0x00001000 -offset 0x00000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] SEG_controller_Mem0
   create_bd_addr_seg -range 0x00400000 -offset 0x00400000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs ddr3/controller/memmap/memaddr] SEG_controller_memaddr
   create_bd_addr_seg -range 0x00001000 -offset 0x00002000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
