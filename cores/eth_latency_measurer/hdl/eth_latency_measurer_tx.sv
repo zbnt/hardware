@@ -27,7 +27,7 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 	// M_AXIS
 
 	output logic [7:0] m_axis_tdata,
-	output logic m_axis_tkeep,
+	output logic m_axis_tuser,
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
@@ -58,7 +58,7 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 		m_axis_tvalid = 1'b0;
 		m_axis_tdata = 8'd0;
 		m_axis_tlast = 1'b0;
-		m_axis_tkeep = 1'b1;
+		m_axis_tuser = 1'b1;
 
 		tx_begin = (state == ST_SEND_HEADERS && count == 16'd0 && m_axis_tready);
 

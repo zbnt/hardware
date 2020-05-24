@@ -6,7 +6,7 @@
 
 module eth_latency_measurer_w #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_ENABLE = 1, parameter C_AXIS_LOG_WIDTH = 64)
 (
-	// S_AXI : AXI4-Lite slave interface (from PS)
+	// S_AXI : AXI4-Lite slave interface
 
 	input wire s_axi_clk,
 	input wire s_axi_resetn,
@@ -35,37 +35,37 @@ module eth_latency_measurer_w #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
 
-	// M_AXIS_MAIN : AXI4-Stream master interface (to TEMAC of main iface)
+	// M_AXIS_MAIN : AXI4-Stream master interface (to MAC of main iface)
 
 	output wire [7:0] m_axis_main_tdata,
-	output wire m_axis_main_tkeep,
+	output wire m_axis_main_tuser,
 	output wire m_axis_main_tlast,
 	output wire m_axis_main_tvalid,
 	input wire m_axis_main_tready,
 
-	// S_AXIS_MAIN : AXI4-Stream slave interface (from TEMAC of main iface)
+	// S_AXIS_MAIN : AXI4-Stream slave interface (from MAC of main iface)
 
 	input wire s_axis_main_clk,
 
 	input wire [7:0] s_axis_main_tdata,
-	input wire s_axis_main_tkeep,
+	input wire s_axis_main_tuser,
 	input wire s_axis_main_tlast,
 	input wire s_axis_main_tvalid,
 
-	// M_AXIS_LOOP : AXI4-Stream master interface (to TEMAC of loopback iface)
+	// M_AXIS_LOOP : AXI4-Stream master interface (to MAC of loopback iface)
 
 	output wire [7:0] m_axis_loop_tdata,
-	output wire m_axis_loop_tkeep,
+	output wire m_axis_loop_tuser,
 	output wire m_axis_loop_tlast,
 	output wire m_axis_loop_tvalid,
 	input wire m_axis_loop_tready,
 
-	// S_AXIS_LOOP : AXI4-Stream slave interface (from TEMAC of loopback iface)
+	// S_AXIS_LOOP : AXI4-Stream slave interface (from MAC of loopback iface)
 
 	input wire s_axis_loop_clk,
 
 	input wire [7:0] s_axis_loop_tdata,
-	input wire s_axis_loop_tkeep,
+	input wire s_axis_loop_tuser,
 	input wire s_axis_loop_tlast,
 	input wire s_axis_loop_tvalid,
 
@@ -115,7 +115,7 @@ module eth_latency_measurer_w #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG
 		// M_AXIS_MAIN
 
 		.m_axis_main_tdata(m_axis_main_tdata),
-		.m_axis_main_tkeep(m_axis_main_tkeep),
+		.m_axis_main_tuser(m_axis_main_tuser),
 		.m_axis_main_tlast(m_axis_main_tlast),
 		.m_axis_main_tvalid(m_axis_main_tvalid),
 		.m_axis_main_tready(m_axis_main_tready),
@@ -125,14 +125,14 @@ module eth_latency_measurer_w #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG
 		.s_axis_main_clk(s_axis_main_clk),
 
 		.s_axis_main_tdata(s_axis_main_tdata),
-		.s_axis_main_tkeep(s_axis_main_tkeep),
+		.s_axis_main_tuser(s_axis_main_tuser),
 		.s_axis_main_tlast(s_axis_main_tlast),
 		.s_axis_main_tvalid(s_axis_main_tvalid),
 
 		// M_AXIS_LOOP
 
 		.m_axis_loop_tdata(m_axis_loop_tdata),
-		.m_axis_loop_tkeep(m_axis_loop_tkeep),
+		.m_axis_loop_tuser(m_axis_loop_tuser),
 		.m_axis_loop_tlast(m_axis_loop_tlast),
 		.m_axis_loop_tvalid(m_axis_loop_tvalid),
 		.m_axis_loop_tready(m_axis_loop_tready),
@@ -142,7 +142,7 @@ module eth_latency_measurer_w #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG
 		.s_axis_loop_clk(s_axis_loop_clk),
 
 		.s_axis_loop_tdata(s_axis_loop_tdata),
-		.s_axis_loop_tkeep(s_axis_loop_tkeep),
+		.s_axis_loop_tuser(s_axis_loop_tuser),
 		.s_axis_loop_tlast(s_axis_loop_tlast),
 		.s_axis_loop_tvalid(s_axis_loop_tvalid),
 

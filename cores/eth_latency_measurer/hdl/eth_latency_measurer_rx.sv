@@ -25,7 +25,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic s_axis_tkeep,
+	input logic s_axis_tuser,
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid
 );

@@ -47,7 +47,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 	// M_AXIS_MAIN : AXI4-Stream master interface (to TEMAC of main iface)
 
 	output logic [7:0] m_axis_main_tdata,
-	output logic m_axis_main_tkeep,
+	output logic m_axis_main_tuser,
 	output logic m_axis_main_tlast,
 	output logic m_axis_main_tvalid,
 	input logic m_axis_main_tready,
@@ -57,14 +57,14 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 	input logic s_axis_main_clk,
 
 	input logic [7:0] s_axis_main_tdata,
-	input logic s_axis_main_tkeep,
+	input logic s_axis_main_tuser,
 	input logic s_axis_main_tlast,
 	input logic s_axis_main_tvalid,
 
 	// M_AXIS_LOOP : AXI4-Stream master interface (to TEMAC of loopback iface)
 
 	output logic [7:0] m_axis_loop_tdata,
-	output logic m_axis_loop_tkeep,
+	output logic m_axis_loop_tuser,
 	output logic m_axis_loop_tlast,
 	output logic m_axis_loop_tvalid,
 	input logic m_axis_loop_tready,
@@ -74,7 +74,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 	input logic s_axis_loop_clk,
 
 	input logic [7:0] s_axis_loop_tdata,
-	input logic s_axis_loop_tkeep,
+	input logic s_axis_loop_tuser,
 	input logic s_axis_loop_tlast,
 	input logic s_axis_loop_tvalid,
 
@@ -251,7 +251,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 		.ping_id(ping_count[15:0]),
 
 		.m_axis_tdata(m_axis_main_tdata),
-		.m_axis_tkeep(m_axis_main_tkeep),
+		.m_axis_tuser(m_axis_main_tuser),
 		.m_axis_tlast(m_axis_main_tlast),
 		.m_axis_tvalid(m_axis_main_tvalid),
 		.m_axis_tready(m_axis_main_tready)
@@ -274,7 +274,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 		.ping_id(main_rx_ping_id),
 
 		.s_axis_tdata(s_axis_main_tdata),
-		.s_axis_tkeep(s_axis_main_tkeep),
+		.s_axis_tuser(s_axis_main_tuser),
 		.s_axis_tlast(s_axis_main_tlast),
 		.s_axis_tvalid(s_axis_main_tvalid)
 	);
@@ -300,7 +300,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 		.ping_id(ping_count[15:0]),
 
 		.m_axis_tdata(m_axis_loop_tdata),
-		.m_axis_tkeep(m_axis_loop_tkeep),
+		.m_axis_tuser(m_axis_loop_tuser),
 		.m_axis_tlast(m_axis_loop_tlast),
 		.m_axis_tvalid(m_axis_loop_tvalid),
 		.m_axis_tready(m_axis_loop_tready)
@@ -323,7 +323,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 		.ping_id(loop_rx_ping_id),
 
 		.s_axis_tdata(s_axis_loop_tdata),
-		.s_axis_tkeep(s_axis_loop_tkeep),
+		.s_axis_tuser(s_axis_loop_tuser),
 		.s_axis_tlast(s_axis_loop_tlast),
 		.s_axis_tvalid(s_axis_loop_tvalid)
 	);
