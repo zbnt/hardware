@@ -565,7 +565,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
-  create_bd_intf_pin -mode Monitor -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 axis_stats
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
@@ -583,7 +583,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   # Create instance: rx_regslice, and set properties
   set rx_regslice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 rx_regslice ]
   set_property -dict [ list \
-   CONFIG.REG_CONFIG {0} \
+   CONFIG.REG_CONFIG {1} \
  ] $rx_regslice
 
   # Create instance: stats, and set properties
@@ -600,9 +600,9 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
  ] $tgen
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Conn [get_bd_intf_pins S_AXIS] [get_bd_intf_pins rx_regslice/S_AXIS]
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins rx_regslice/S_AXIS]
   connect_bd_intf_net -intf_net rx_regslice_M_AXIS [get_bd_intf_pins rx_regslice/M_AXIS] [get_bd_intf_pins stats/AXIS_RX]
   connect_bd_intf_net -intf_net stats_M_AXIS_LOG [get_bd_intf_pins axis_stats] [get_bd_intf_pins stats/M_AXIS_LOG]
   connect_bd_intf_net -intf_net tx_shutdown_M_AXIS [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tgen/M_AXIS]
@@ -656,7 +656,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
-  create_bd_intf_pin -mode Monitor -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 axis_stats
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_stats
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_tgen
@@ -674,7 +674,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   # Create instance: rx_regslice, and set properties
   set rx_regslice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 rx_regslice ]
   set_property -dict [ list \
-   CONFIG.REG_CONFIG {0} \
+   CONFIG.REG_CONFIG {1} \
  ] $rx_regslice
 
   # Create instance: stats, and set properties
@@ -691,9 +691,9 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
  ] $tgen
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Conn [get_bd_intf_pins S_AXIS] [get_bd_intf_pins rx_regslice/S_AXIS]
   connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins s_axi_tgen] [get_bd_intf_pins tgen/S_AXI]
   connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins rx_regslice/S_AXIS]
   connect_bd_intf_net -intf_net pr_shutdown_axis_0_M_AXIS [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tgen/M_AXIS]
   connect_bd_intf_net -intf_net [get_bd_intf_nets pr_shutdown_axis_0_M_AXIS] [get_bd_intf_pins M_AXIS] [get_bd_intf_pins stats/AXIS_TX]
   connect_bd_intf_net -intf_net rx_regslice_M_AXIS [get_bd_intf_pins rx_regslice/M_AXIS] [get_bd_intf_pins stats/AXIS_RX]
@@ -1395,8 +1395,8 @@ proc create_root_design { parentCell } {
  ] $simple_timer
 
   # Create interface connections
-connect_bd_intf_net -intf_net S_AXIS_0_1 [get_bd_intf_ports S_AXIS_ETH0] [get_bd_intf_pins eth0/S_AXIS]
-connect_bd_intf_net -intf_net S_AXIS_1_1 [get_bd_intf_ports S_AXIS_ETH1] [get_bd_intf_pins eth1/S_AXIS]
+  connect_bd_intf_net -intf_net S_AXIS_0_1 [get_bd_intf_ports S_AXIS_ETH0] [get_bd_intf_pins eth0/S_AXIS]
+  connect_bd_intf_net -intf_net S_AXIS_1_1 [get_bd_intf_ports S_AXIS_ETH1] [get_bd_intf_pins eth1/S_AXIS]
   connect_bd_intf_net -intf_net S_AXIS_A_1 [get_bd_intf_ports S_AXIS_ETH2] [get_bd_intf_pins mitm/S_AXIS_A]
   connect_bd_intf_net -intf_net S_AXIS_B_1 [get_bd_intf_ports S_AXIS_ETH3] [get_bd_intf_pins mitm/S_AXIS_B]
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins dtb_rom/S_AXI] [get_bd_intf_pins interconnect/M08_AXI]
