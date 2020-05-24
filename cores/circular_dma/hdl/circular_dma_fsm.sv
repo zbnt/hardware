@@ -15,12 +15,9 @@ module circular_dma_fsm
 	input logic clk,
 	input logic rst_n,
 
-	input logic shutdown_req,
-	output logic shutdown_ack,
-
-	input logic flush_fifo,
+	input logic fifo_flush_req,
+	input logic fifo_flush_ack,
 	input logic [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
-	output logic fifo_empty,
 
 	input logic enable,
 	input logic [2:0] clear_irq,
@@ -75,8 +72,6 @@ module circular_dma_fsm
 			status_flags <= 3'd0;
 			burst_count <= 8'd0;
 			counter_rst <= 1'b0;
-			fifo_empty <= 1'b0;
-			shutdown_ack <= 1'b0;
 
 			m_axi_awaddr <= '0;
 			m_axi_awlen <= '0;
@@ -88,7 +83,7 @@ module circular_dma_fsm
 
 			case(state)
 				ST_WAIT_ENABLE: begin
-					if(enable && irq == 3'd0 && mem_size >= C_BURST_BYTES && ~fifo_empty && ~shutdown_req) begin
+					if(enable && irq == 3'd0 && mem_size >= C_BURST_BYTES && (~fifo_flush_req | ~fifo_flush_ack)) begin
 						state <= ST_WRITE_ADDR;
 						mem_size_q <= mem_size - C_BURST_BYTES;
 						bytes_written <= 32'd0;
@@ -99,23 +94,18 @@ module circular_dma_fsm
 
 						m_axi_awaddr <= mem_base;
 					end
-
-					shutdown_ack <= shutdown_req;
-					fifo_empty <= (fifo_occupancy == 'd0);
 				end
 
 				ST_WRITE_ADDR: begin
 					if(~m_axi_awvalid) begin
-						if(shutdown_req) begin
-							state <= ST_WAIT_ENABLE;
-						end else if(fifo_occupancy >= C_MAX_BURST) begin
+						if(fifo_occupancy >= C_MAX_BURST) begin
 							m_axi_awlen <= C_MAX_BURST[7:0] - 8'd1;
 							m_axi_awvalid <= 1'b1;
-						end else if(flush_fifo) begin
+						end else if(fifo_flush_req) begin
 							if(fifo_occupancy != 'd0) begin
 								m_axi_awlen <= fifo_occupancy[7:0] - 8'd1;
 								m_axi_awvalid <= 1'b1;
-							end else begin
+							end else if(fifo_flush_ack) begin
 								state <= ST_WAIT_ENABLE;
 								irq[0] <= enable_irq[0];
 								status_flags[0] <= 1'b0;
@@ -147,13 +137,12 @@ module circular_dma_fsm
 				ST_WAIT_RESP: begin
 					if(m_axi_bvalid) begin
 						m_axi_bready <= 1'b0;
-						fifo_empty <= (fifo_occupancy == 'd0);
 
 						if(~m_axi_bresp[1]) begin
 							last_msg_end <= last_msg_end_b;
 							bytes_written <= bytes_written + {{(24-$clog2(C_AXIS_WIDTH/8)){1'b0}}, m_axi_awlen + 8'd1, {($clog2(C_AXIS_WIDTH/8)){1'b0}}};
 
-							if(bytes_written == mem_size_q || (flush_fifo && fifo_occupancy == 'd0) || shutdown_req) begin
+							if(bytes_written == mem_size_q || (fifo_flush_req & fifo_flush_ack)) begin
 								state <= ST_WAIT_ENABLE;
 								irq[0] <= enable_irq[0];
 								status_flags[0] <= 1'b0;

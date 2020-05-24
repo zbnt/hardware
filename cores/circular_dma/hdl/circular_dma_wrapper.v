@@ -14,18 +14,18 @@ module circular_dma_w
 	parameter C_VALUE_AWPROT = 3'd0,
 	parameter C_VALUE_AWCACHE = 4'b1111,
 	parameter C_VALUE_AWUSER = 4'b1111,
-	parameter C_ENABLE_SHUTDOWN = 0
+	parameter C_IRQ_TYPE = 0
 )
 (
 	input wire clk,
 	input wire rst_n,
-	input wire [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	output wire irq,
-	output wire fifo_rst_n,
+	input wire irq_ack,
 
-	input wire shutdown_req,
-	output wire shutdown_ack,
+	output wire fifo_flush_req,
+	input wire fifo_flush_ack,
+	input wire [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	// S_AXI
 
@@ -95,19 +95,20 @@ module circular_dma_w
 		C_ADDR_WIDTH,
 		C_AXIS_WIDTH,
 		C_MAX_BURST,
-		C_AXIS_OCCUP_WIDTH
+		C_AXIS_OCCUP_WIDTH,
+		C_IRQ_TYPE
 	)
 	U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),
-		.fifo_occupancy(fifo_occupancy),
 
 		.irq(irq),
-		.fifo_rst_n(fifo_rst_n),
+		.irq_ack(irq_ack),
 
-		.shutdown_req(shutdown_req & C_ENABLE_SHUTDOWN[0]),
-		.shutdown_ack(shutdown_ack),
+		.fifo_flush_req(fifo_flush_req),
+		.fifo_flush_ack(fifo_flush_ack),
+		.fifo_occupancy(fifo_occupancy),
 
 		// S_AXI
 

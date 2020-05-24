@@ -30,7 +30,7 @@ proc init_gui { IPINST } {
 
   #Adding Group
   set Other_options [ipgui::add_group $IPINST -name "Other options" -parent ${Page_0}]
-  ipgui::add_param $IPINST -name "C_ENABLE_SHUTDOWN" -parent ${Other_options}
+  ipgui::add_param $IPINST -name "C_IRQ_TYPE" -parent ${Other_options} -widget comboBox
 
 
 
@@ -72,12 +72,12 @@ proc validate_PARAM_VALUE.C_AXI_WIDTH { PARAM_VALUE.C_AXI_WIDTH } {
 	return true
 }
 
-proc update_PARAM_VALUE.C_ENABLE_SHUTDOWN { PARAM_VALUE.C_ENABLE_SHUTDOWN } {
-	# Procedure called to update C_ENABLE_SHUTDOWN when any of the dependent parameters in the arguments change
+proc update_PARAM_VALUE.C_IRQ_TYPE { PARAM_VALUE.C_IRQ_TYPE } {
+	# Procedure called to update C_IRQ_TYPE when any of the dependent parameters in the arguments change
 }
 
-proc validate_PARAM_VALUE.C_ENABLE_SHUTDOWN { PARAM_VALUE.C_ENABLE_SHUTDOWN } {
-	# Procedure called to validate C_ENABLE_SHUTDOWN
+proc validate_PARAM_VALUE.C_IRQ_TYPE { PARAM_VALUE.C_IRQ_TYPE } {
+	# Procedure called to validate C_IRQ_TYPE
 	return true
 }
 
@@ -158,8 +158,8 @@ proc update_MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH { MODELPARAM_VALUE.C_AXIS_OCCUP_
 	set_property value [get_property value ${PARAM_VALUE.C_AXIS_OCCUP_WIDTH}] ${MODELPARAM_VALUE.C_AXIS_OCCUP_WIDTH}
 }
 
-proc update_MODELPARAM_VALUE.C_ENABLE_SHUTDOWN { MODELPARAM_VALUE.C_ENABLE_SHUTDOWN PARAM_VALUE.C_ENABLE_SHUTDOWN } {
+proc update_MODELPARAM_VALUE.C_IRQ_TYPE { MODELPARAM_VALUE.C_IRQ_TYPE PARAM_VALUE.C_IRQ_TYPE } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.C_ENABLE_SHUTDOWN}] ${MODELPARAM_VALUE.C_ENABLE_SHUTDOWN}
+	set_property value [get_property value ${PARAM_VALUE.C_IRQ_TYPE}] ${MODELPARAM_VALUE.C_IRQ_TYPE}
 }
 

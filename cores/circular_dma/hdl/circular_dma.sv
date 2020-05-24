@@ -16,18 +16,19 @@ module circular_dma
 	parameter C_ADDR_WIDTH = 32,
 	parameter C_AXIS_WIDTH = 64,
 	parameter C_MAX_BURST = 16,
-	parameter C_AXIS_OCCUP_WIDTH = 16
+	parameter C_AXIS_OCCUP_WIDTH = 16,
+	parameter C_IRQ_TYPE = 0
 )
 (
 	input logic clk,
 	input logic rst_n,
-	input logic [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	output logic irq,
-	output logic fifo_rst_n,
+	input logic irq_ack,
 
-	input logic shutdown_req,
-	output logic shutdown_ack,
+	output logic fifo_flush_req,
+	input logic fifo_flush_ack,
+	input logic [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -78,7 +79,57 @@ module circular_dma
 	input logic s_axis_s2mm_tvalid,
 	output logic s_axis_s2mm_tready
 );
-	// axi4_lite registers
+	// Flush ACK
+
+	logic [4:0] flush_count;
+	logic flush_ack;
+
+	always_ff @(posedge clk) begin
+		if(~rst_n | ~fifo_flush_ack) begin
+			flush_ack <= 1'b0;
+			flush_count <= 5'd0;
+		end else begin
+			if(flush_count == 5'd31) begin
+				flush_ack <= 1'b1;
+			end else begin
+				flush_count <= flush_count + 5'd1;
+			end
+		end
+	end
+
+	// IRQ
+
+	if(C_IRQ_TYPE == 0) begin
+		// Level-triggered
+
+		always_ff @(posedge clk) begin
+			irq <= rst_n & (|bits_irq);
+		end
+	end else begin
+		// Edge-triggered
+
+		logic irq_sent;
+
+		always_ff @(posedge clk) begin
+			if(~rst_n) begin
+				irq <= 1'b0;
+				irq_sent <= 1'b0;
+			end else begin
+				irq <= 1'b0;
+
+				if(bits_irq != 'd0 && ~irq_sent) begin
+					irq <= 1'b1;
+					irq_sent <= 1'b1;
+				end
+
+				if(irq_ack) begin
+					irq_sent <= 1'b0;
+				end
+			end
+		end
+	end
+
+	// Registers
 
 	logic enable, srst, flush_fifo, fifo_empty;
 	logic [2:0] bits_irq, clear_irq, enable_irq;
@@ -117,9 +168,10 @@ module circular_dma
 
 		.enable(enable),
 		.srst(srst),
-		.flush_fifo(flush_fifo),
 		.status_flags(status_flags),
-		.fifo_empty(fifo_empty),
+
+		.fifo_flush_req(fifo_flush_req),
+		.fifo_flush_ack(flush_ack),
 
 		.irq(bits_irq),
 		.clear_irq(clear_irq),
@@ -132,17 +184,16 @@ module circular_dma
 		.timeout(timeout)
 	);
 
+	// FSM
+
 	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST, C_AXIS_OCCUP_WIDTH) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.shutdown_req(shutdown_req),
-		.shutdown_ack(shutdown_ack),
-
-		.flush_fifo(flush_fifo),
+		.fifo_flush_req(fifo_flush_req),
+		.fifo_flush_ack(flush_ack),
 		.fifo_occupancy(fifo_occupancy),
-		.fifo_empty(fifo_empty),
 
 		.enable(enable),
 		.clear_irq(clear_irq),
@@ -179,12 +230,4 @@ module circular_dma
 		.s_axis_s2mm_tvalid(s_axis_s2mm_tvalid),
 		.s_axis_s2mm_tready(s_axis_s2mm_tready)
 	);
-
-	always_ff @(posedge clk) begin
-		irq <= rst_n & (|bits_irq) & ~shutdown_req;
-	end
-
-	always_comb begin
-		fifo_rst_n = rst_n & ~srst;
-	end
 endmodule
