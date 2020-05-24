@@ -125,25 +125,32 @@ if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:util_idelay_ctrl:1.0\
 oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0\
+xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:xlconstant:1.1\
 oscar-rc.dev:zbnt_hw:bpi_flash:1.0\
 oscar-rc.dev:zbnt_hw:util_startup:1.0\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_ds_buf:2.1\
 xilinx.com:ip:proc_sys_reset:5.0\
-xilinx.com:ip:mig_7series:4.2\
+xilinx.com:ip:util_reduced_logic:2.0\
+xilinx.com:ip:pr_axi_shutdown_manager:1.0\
 xilinx.com:ip:axis_register_slice:1.1\
 xilinx.com:ip:pr_decoupler:1.0\
 oscar-rc.dev:zbnt_hw:circular_dma:1.1\
-xilinx.com:ip:fifo_generator:13.2\
+oscar-rc.dev:zbnt_hw:util_regslice:1.0\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
 xilinx.com:ip:axi_dwidth_converter:2.1\
-alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 xilinx.com:ip:axi_pcie:2.9\
 oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0\
 oscar-rc.dev:zbnt_hw:util_icap:1.0\
 xilinx.com:ip:prc:1.3\
+xilinx.com:ip:mig_7series:4.2\
+xilinx.com:ip:fifo_generator:13.2\
+oscar-rc.dev:zbnt_hw:axi_mm_fifo:1.0\
+alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
+oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0\
+xilinx.com:ip:util_vector_logic:2.0\
 "
 
    set list_ips_missing ""
@@ -173,7 +180,7 @@ if { $bCheckIPsPassed != 1 } {
 # MIG PRJ FILE TCL PROCs
 ##################################################################
 
-proc write_mig_file_bd_static_controller_0 { str_mig_prj_filepath } {
+proc write_mig_file_bd_static_controller_1 { str_mig_prj_filepath } {
 
    file mkdir [ file dirname "$str_mig_prj_filepath" ]
    set mig_prj_file [open $str_mig_prj_filepath  w+]
@@ -305,7 +312,7 @@ proc write_mig_file_bd_static_controller_0 { str_mig_prj_filepath } {
 
    close $mig_prj_file
 }
-# End of write_mig_file_bd_static_controller_0()
+# End of write_mig_file_bd_static_controller_1()
 
 
 
@@ -313,6 +320,913 @@ proc write_mig_file_bd_static_controller_0 { str_mig_prj_filepath } {
 # DESIGN PROCs
 ##################################################################
 
+
+# Hierarchical cell: test_empty
+proc create_hier_cell_test_empty { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_test_empty() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I clk_axi
+  create_bd_pin -dir I clk_axis
+  create_bd_pin -dir O -from 0 -to 0 fifo_empty
+  create_bd_pin -dir I -from 23 -to 0 occupancy0
+  create_bd_pin -dir I -from 13 -to 0 occupancy1
+  create_bd_pin -dir I -from 13 -to 0 occupancy2
+  create_bd_pin -dir I rst_axi_n
+
+  # Create instance: cdc_0, and set properties
+  set cdc_0 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 cdc_0 ]
+  set_property -dict [ list \
+   CONFIG.C_WIDTH {2} \
+ ] $cdc_0
+
+  # Create instance: concat_0, and set properties
+  set concat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 concat_0 ]
+
+  # Create instance: concat_1, and set properties
+  set concat_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 concat_1 ]
+
+  # Create instance: not_0, and set properties
+  set not_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 not_0 ]
+  set_property -dict [ list \
+   CONFIG.C_OPERATION {not} \
+   CONFIG.C_SIZE {1} \
+   CONFIG.LOGO_FILE {data/sym_notgate.png} \
+ ] $not_0
+
+  # Create instance: or_0, and set properties
+  set or_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_0 ]
+  set_property -dict [ list \
+   CONFIG.C_OPERATION {or} \
+   CONFIG.C_SIZE {24} \
+   CONFIG.LOGO_FILE {data/sym_orgate.png} \
+ ] $or_0
+
+  # Create instance: or_1, and set properties
+  set or_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_1 ]
+  set_property -dict [ list \
+   CONFIG.C_OPERATION {or} \
+   CONFIG.C_SIZE {14} \
+   CONFIG.LOGO_FILE {data/sym_orgate.png} \
+ ] $or_1
+
+  # Create instance: or_2, and set properties
+  set or_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_2 ]
+  set_property -dict [ list \
+   CONFIG.C_OPERATION {or} \
+   CONFIG.C_SIZE {14} \
+   CONFIG.LOGO_FILE {data/sym_orgate.png} \
+ ] $or_2
+
+  # Create instance: or_3, and set properties
+  set or_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_3 ]
+  set_property -dict [ list \
+   CONFIG.C_OPERATION {or} \
+   CONFIG.C_SIZE {3} \
+   CONFIG.LOGO_FILE {data/sym_orgate.png} \
+ ] $or_3
+
+  # Create instance: regslice_0, and set properties
+  set regslice_0 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_regslice:1.0 regslice_0 ]
+  set_property -dict [ list \
+   CONFIG.C_NUM_STAGES {1} \
+   CONFIG.C_WIDTH {1} \
+ ] $regslice_0
+
+  # Create port connections
+  connect_bd_net -net cdc_data_dst [get_bd_pins cdc_0/data_dst] [get_bd_pins concat_1/In0]
+  connect_bd_net -net clk_axi_1 [get_bd_pins clk_axi] [get_bd_pins cdc_0/clk_dst] [get_bd_pins regslice_0/clk]
+  connect_bd_net -net clk_axis_1 [get_bd_pins clk_axis] [get_bd_pins cdc_0/clk_src]
+  connect_bd_net -net concat1_dout [get_bd_pins concat_1/dout] [get_bd_pins or_3/Op1]
+  connect_bd_net -net fifo_0_axis_data_count [get_bd_pins occupancy1] [get_bd_pins or_1/Op1]
+  connect_bd_net -net fifo_1_occupancy [get_bd_pins occupancy0] [get_bd_pins or_0/Op1]
+  connect_bd_net -net fifo_2_axis_rd_data_count [get_bd_pins occupancy2] [get_bd_pins or_2/Op1]
+  connect_bd_net -net not0_Res [get_bd_pins fifo_empty] [get_bd_pins not_0/Res]
+  connect_bd_net -net or0_Res [get_bd_pins concat_0/In0] [get_bd_pins or_0/Res]
+  connect_bd_net -net or1_Res [get_bd_pins concat_0/In1] [get_bd_pins or_1/Res]
+  connect_bd_net -net or2_Res [get_bd_pins or_2/Res] [get_bd_pins regslice_0/data_in]
+  connect_bd_net -net regslice_data_out [get_bd_pins concat_1/In1] [get_bd_pins regslice_0/data_out]
+  connect_bd_net -net rst_axi_n_1 [get_bd_pins rst_axi_n] [get_bd_pins regslice_0/rst_n]
+  connect_bd_net -net util_reduced_logic_0_Res [get_bd_pins not_0/Op1] [get_bd_pins or_3/Res]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins cdc_0/data_src] [get_bd_pins concat_0/dout]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: eth3
+proc create_hier_cell_eth3 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth3() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
+  # Create pins
+  create_bd_pin -dir O -type clk clk_rx
+  create_bd_pin -dir I decouple
+  create_bd_pin -dir I -type clk gtx_clk
+  create_bd_pin -dir I -type clk gtx_clk90
+  create_bd_pin -dir I -type rst gtx_rst_n
+  create_bd_pin -dir O -from 1 -to 0 shutdown_ack
+  create_bd_pin -dir I shutdown_req
+
+  # Create instance: mac, and set properties
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
+  set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
+ ] $mac
+
+  # Create instance: rx_shutdown, and set properties
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 rx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TREADY {false} \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $rx_shutdown
+
+  # Create instance: shutdown_concat, and set properties
+  set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
+
+  # Create instance: tx_decoupler, and set properties
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set_property -dict [ list \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_INTERFACE_NAME {axis} \
+   CONFIG.GUI_SELECT_CDC_STAGES {4} \
+   CONFIG.GUI_SELECT_INTERFACE {0} \
+   CONFIG.GUI_SELECT_MODE {slave} \
+   CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
+   CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_4 {true} \
+   CONFIG.GUI_SIGNAL_SELECT_0 {TVALID} \
+   CONFIG.GUI_SIGNAL_SELECT_1 {TREADY} \
+   CONFIG.GUI_SIGNAL_SELECT_2 {TDATA} \
+   CONFIG.GUI_SIGNAL_SELECT_3 {TUSER} \
+   CONFIG.GUI_SIGNAL_SELECT_4 {TLAST} \
+   CONFIG.GUI_SIGNAL_SELECT_5 {TID} \
+   CONFIG.GUI_SIGNAL_SELECT_6 {TDEST} \
+   CONFIG.GUI_SIGNAL_SELECT_7 {TSTRB} \
+   CONFIG.GUI_SIGNAL_SELECT_8 {TKEEP} \
+   CONFIG.GUI_SIGNAL_WIDTH_2 {8} \
+   CONFIG.GUI_SIGNAL_WIDTH_7 {1} \
+   CONFIG.GUI_SIGNAL_WIDTH_8 {1} \
+ ] $tx_decoupler
+
+  # Create instance: tx_reset, and set properties
+  set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
+
+  # Create instance: tx_shutdown, and set properties
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 tx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $tx_shutdown
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net decoupler_s_eth0 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins tx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_pins RGMII] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net mac_eth0_RX_AXIS [get_bd_intf_pins mac/RX_AXIS] [get_bd_intf_pins rx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net pr_decoupler_0_rp_axis [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tx_decoupler/rp_axis]
+  connect_bd_intf_net -intf_net pr_shutdown_axis_0_M_AXIS [get_bd_intf_pins mac/TX_AXIS] [get_bd_intf_pins tx_shutdown/M_AXIS]
+  connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
+
+  # Create port connections
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
+  connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins tx_reset/ext_reset_in] [get_bd_pins tx_shutdown/rst_n]
+  connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In1]
+  connect_bd_net -net shutdown_concat_dout [get_bd_pins shutdown_ack] [get_bd_pins shutdown_concat/dout]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins rx_shutdown/shutdown_req] [get_bd_pins tx_shutdown/shutdown_req]
+  connect_bd_net -net tx_reset_peripheral_aresetn [get_bd_pins rx_shutdown/rst_n] [get_bd_pins tx_reset/peripheral_aresetn]
+  connect_bd_net -net tx_shutdown_shutdown_ack [get_bd_pins shutdown_concat/In0] [get_bd_pins tx_shutdown/shutdown_ack]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: eth2
+proc create_hier_cell_eth2 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth2() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
+  # Create pins
+  create_bd_pin -dir O -type clk clk_rx
+  create_bd_pin -dir I decouple
+  create_bd_pin -dir I -type clk gtx_clk
+  create_bd_pin -dir I -type clk gtx_clk90
+  create_bd_pin -dir I -type rst gtx_rst_n
+  create_bd_pin -dir O -from 1 -to 0 shutdown_ack
+  create_bd_pin -dir I shutdown_req
+
+  # Create instance: mac, and set properties
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
+  set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
+ ] $mac
+
+  # Create instance: rx_shutdown, and set properties
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 rx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TREADY {false} \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $rx_shutdown
+
+  # Create instance: shutdown_concat, and set properties
+  set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
+
+  # Create instance: tx_decoupler, and set properties
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set_property -dict [ list \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_INTERFACE_NAME {axis} \
+   CONFIG.GUI_SELECT_CDC_STAGES {4} \
+   CONFIG.GUI_SELECT_INTERFACE {0} \
+   CONFIG.GUI_SELECT_MODE {slave} \
+   CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
+   CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_4 {true} \
+   CONFIG.GUI_SIGNAL_SELECT_0 {TVALID} \
+   CONFIG.GUI_SIGNAL_SELECT_1 {TREADY} \
+   CONFIG.GUI_SIGNAL_SELECT_2 {TDATA} \
+   CONFIG.GUI_SIGNAL_SELECT_3 {TUSER} \
+   CONFIG.GUI_SIGNAL_SELECT_4 {TLAST} \
+   CONFIG.GUI_SIGNAL_SELECT_5 {TID} \
+   CONFIG.GUI_SIGNAL_SELECT_6 {TDEST} \
+   CONFIG.GUI_SIGNAL_SELECT_7 {TSTRB} \
+   CONFIG.GUI_SIGNAL_SELECT_8 {TKEEP} \
+   CONFIG.GUI_SIGNAL_WIDTH_2 {8} \
+   CONFIG.GUI_SIGNAL_WIDTH_7 {1} \
+   CONFIG.GUI_SIGNAL_WIDTH_8 {1} \
+ ] $tx_decoupler
+
+  # Create instance: tx_reset, and set properties
+  set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
+
+  # Create instance: tx_shutdown, and set properties
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 tx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $tx_shutdown
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net decoupler_s_eth0 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins tx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_pins RGMII] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net mac_eth0_RX_AXIS [get_bd_intf_pins mac/RX_AXIS] [get_bd_intf_pins rx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net pr_decoupler_0_rp_axis [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tx_decoupler/rp_axis]
+  connect_bd_intf_net -intf_net pr_shutdown_axis_0_M_AXIS [get_bd_intf_pins mac/TX_AXIS] [get_bd_intf_pins tx_shutdown/M_AXIS]
+  connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
+
+  # Create port connections
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
+  connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins tx_reset/ext_reset_in] [get_bd_pins tx_shutdown/rst_n]
+  connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In1]
+  connect_bd_net -net shutdown_concat_dout [get_bd_pins shutdown_ack] [get_bd_pins shutdown_concat/dout]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins rx_shutdown/shutdown_req] [get_bd_pins tx_shutdown/shutdown_req]
+  connect_bd_net -net tx_reset_peripheral_aresetn [get_bd_pins rx_shutdown/rst_n] [get_bd_pins tx_reset/peripheral_aresetn]
+  connect_bd_net -net tx_shutdown_shutdown_ack [get_bd_pins shutdown_concat/In0] [get_bd_pins tx_shutdown/shutdown_ack]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: eth1
+proc create_hier_cell_eth1 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth1() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
+  # Create pins
+  create_bd_pin -dir O -type clk clk_rx
+  create_bd_pin -dir I decouple
+  create_bd_pin -dir I -type clk gtx_clk
+  create_bd_pin -dir I -type clk gtx_clk90
+  create_bd_pin -dir I -type rst gtx_rst_n
+  create_bd_pin -dir O -from 1 -to 0 shutdown_ack
+  create_bd_pin -dir I shutdown_req
+
+  # Create instance: mac, and set properties
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
+  set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
+ ] $mac
+
+  # Create instance: rx_shutdown, and set properties
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 rx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TREADY {false} \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $rx_shutdown
+
+  # Create instance: shutdown_concat, and set properties
+  set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
+
+  # Create instance: tx_decoupler, and set properties
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set_property -dict [ list \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_INTERFACE_NAME {axis} \
+   CONFIG.GUI_SELECT_CDC_STAGES {4} \
+   CONFIG.GUI_SELECT_INTERFACE {0} \
+   CONFIG.GUI_SELECT_MODE {slave} \
+   CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
+   CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_4 {true} \
+   CONFIG.GUI_SIGNAL_SELECT_0 {TVALID} \
+   CONFIG.GUI_SIGNAL_SELECT_1 {TREADY} \
+   CONFIG.GUI_SIGNAL_SELECT_2 {TDATA} \
+   CONFIG.GUI_SIGNAL_SELECT_3 {TUSER} \
+   CONFIG.GUI_SIGNAL_SELECT_4 {TLAST} \
+   CONFIG.GUI_SIGNAL_SELECT_5 {TID} \
+   CONFIG.GUI_SIGNAL_SELECT_6 {TDEST} \
+   CONFIG.GUI_SIGNAL_SELECT_7 {TSTRB} \
+   CONFIG.GUI_SIGNAL_SELECT_8 {TKEEP} \
+   CONFIG.GUI_SIGNAL_WIDTH_2 {8} \
+   CONFIG.GUI_SIGNAL_WIDTH_7 {1} \
+   CONFIG.GUI_SIGNAL_WIDTH_8 {1} \
+ ] $tx_decoupler
+
+  # Create instance: tx_reset, and set properties
+  set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
+
+  # Create instance: tx_shutdown, and set properties
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 tx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $tx_shutdown
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net decoupler_s_eth0 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins tx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_pins RGMII] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net mac_eth0_RX_AXIS [get_bd_intf_pins mac/RX_AXIS] [get_bd_intf_pins rx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net pr_decoupler_0_rp_axis [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tx_decoupler/rp_axis]
+  connect_bd_intf_net -intf_net pr_shutdown_axis_0_M_AXIS [get_bd_intf_pins mac/TX_AXIS] [get_bd_intf_pins tx_shutdown/M_AXIS]
+  connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
+
+  # Create port connections
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
+  connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins tx_reset/ext_reset_in] [get_bd_pins tx_shutdown/rst_n]
+  connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In1]
+  connect_bd_net -net shutdown_concat_dout [get_bd_pins shutdown_ack] [get_bd_pins shutdown_concat/dout]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins rx_shutdown/shutdown_req] [get_bd_pins tx_shutdown/shutdown_req]
+  connect_bd_net -net tx_reset_peripheral_aresetn [get_bd_pins rx_shutdown/rst_n] [get_bd_pins tx_reset/peripheral_aresetn]
+  connect_bd_net -net tx_shutdown_shutdown_ack [get_bd_pins shutdown_concat/In0] [get_bd_pins tx_shutdown/shutdown_ack]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: eth0
+proc create_hier_cell_eth0 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth0() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
+  # Create pins
+  create_bd_pin -dir O -type clk clk_rx
+  create_bd_pin -dir I decouple
+  create_bd_pin -dir I -type clk gtx_clk
+  create_bd_pin -dir I -type clk gtx_clk90
+  create_bd_pin -dir I -type rst gtx_rst_n
+  create_bd_pin -dir O -from 1 -to 0 shutdown_ack
+  create_bd_pin -dir I shutdown_req
+
+  # Create instance: mac, and set properties
+  set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
+  set_property -dict [ list \
+   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_IFACE_TYPE {RGMII} \
+   CONFIG.C_USE_CLK90 {true} \
+ ] $mac
+
+  # Create instance: rx_shutdown, and set properties
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 rx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TREADY {false} \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $rx_shutdown
+
+  # Create instance: shutdown_concat, and set properties
+  set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
+
+  # Create instance: tx_decoupler, and set properties
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set_property -dict [ list \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_INTERFACE_NAME {axis} \
+   CONFIG.GUI_SELECT_CDC_STAGES {4} \
+   CONFIG.GUI_SELECT_INTERFACE {0} \
+   CONFIG.GUI_SELECT_MODE {slave} \
+   CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
+   CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_4 {true} \
+   CONFIG.GUI_SIGNAL_SELECT_0 {TVALID} \
+   CONFIG.GUI_SIGNAL_SELECT_1 {TREADY} \
+   CONFIG.GUI_SIGNAL_SELECT_2 {TDATA} \
+   CONFIG.GUI_SIGNAL_SELECT_3 {TUSER} \
+   CONFIG.GUI_SIGNAL_SELECT_4 {TLAST} \
+   CONFIG.GUI_SIGNAL_SELECT_5 {TID} \
+   CONFIG.GUI_SIGNAL_SELECT_6 {TDEST} \
+   CONFIG.GUI_SIGNAL_SELECT_7 {TSTRB} \
+   CONFIG.GUI_SIGNAL_SELECT_8 {TKEEP} \
+   CONFIG.GUI_SIGNAL_WIDTH_2 {8} \
+   CONFIG.GUI_SIGNAL_WIDTH_7 {1} \
+   CONFIG.GUI_SIGNAL_WIDTH_8 {1} \
+ ] $tx_decoupler
+
+  # Create instance: tx_reset, and set properties
+  set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
+
+  # Create instance: tx_shutdown, and set properties
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0 tx_shutdown ]
+  set_property -dict [ list \
+   CONFIG.C_AXIS_HAS_TUSER {true} \
+   CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_CDC_STAGES {4} \
+ ] $tx_shutdown
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net decoupler_s_eth0 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins tx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_pins RGMII] [get_bd_intf_pins mac/RGMII]
+  connect_bd_intf_net -intf_net mac_eth0_RX_AXIS [get_bd_intf_pins mac/RX_AXIS] [get_bd_intf_pins rx_shutdown/S_AXIS]
+  connect_bd_intf_net -intf_net pr_decoupler_0_rp_axis [get_bd_intf_pins M_AXIS] [get_bd_intf_pins tx_decoupler/rp_axis]
+  connect_bd_intf_net -intf_net pr_shutdown_axis_0_M_AXIS [get_bd_intf_pins mac/TX_AXIS] [get_bd_intf_pins tx_shutdown/M_AXIS]
+  connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
+
+  # Create port connections
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
+  connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins mac/gtx_rst_n] [get_bd_pins tx_reset/ext_reset_in] [get_bd_pins tx_shutdown/rst_n]
+  connect_bd_net -net rx_shutdown_shutdown_ack [get_bd_pins rx_shutdown/shutdown_ack] [get_bd_pins shutdown_concat/In1]
+  connect_bd_net -net shutdown_concat_dout [get_bd_pins shutdown_ack] [get_bd_pins shutdown_concat/dout]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins rx_shutdown/shutdown_req] [get_bd_pins tx_shutdown/shutdown_req]
+  connect_bd_net -net tx_reset_peripheral_aresetn [get_bd_pins rx_shutdown/rst_n] [get_bd_pins tx_reset/peripheral_aresetn]
+  connect_bd_net -net tx_shutdown_shutdown_ack [get_bd_pins shutdown_concat/In0] [get_bd_pins tx_shutdown/shutdown_ack]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: fifo_chain
+proc create_hier_cell_fifo_chain { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_fifo_chain() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
+  # Create pins
+  create_bd_pin -dir I -type clk clk_axi
+  create_bd_pin -dir I -type clk clk_axis
+  create_bd_pin -dir I -type clk clk_ddr
+  create_bd_pin -dir O -from 0 -to 0 fifo_empty
+  create_bd_pin -dir I flush
+  create_bd_pin -dir O -from 13 -to 0 occupancy
+  create_bd_pin -dir I -type rst rst_axis_n
+  create_bd_pin -dir I -type rst rst_ddr_n
+
+  # Create instance: fifo_0, and set properties
+  set fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_0 ]
+  set_property -dict [ list \
+   CONFIG.Clock_Type_AXI {Common_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {8190} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
+   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {8191} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {8192} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {true} \
+   CONFIG.synchronization_stages_axi {4} \
+ ] $fifo_0
+
+  # Create instance: fifo_1, and set properties
+  set fifo_1 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axi_mm_fifo:1.0 fifo_1 ]
+  set_property -dict [ list \
+   CONFIG.C_END_ADDR {268435455} \
+   CONFIG.C_MAX_OCCUPANCY {16515072} \
+   CONFIG.C_MEM_SIZE {268435456} \
+   CONFIG.C_WIDTH {128} \
+ ] $fifo_1
+
+  # Create instance: fifo_2, and set properties
+  set fifo_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_2 ]
+  set_property -dict [ list \
+   CONFIG.Clock_Type_AXI {Independent_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {8189} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {13} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1021} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {13} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1021} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {13} \
+   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Implementation_axis {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_rach {Independent_Clocks_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Independent_Clocks_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Independent_Clocks_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Independent_Clocks_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {8191} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {8192} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {true} \
+   CONFIG.synchronization_stages_axi {4} \
+ ] $fifo_2
+
+  # Create instance: test_empty
+  create_hier_cell_test_empty $hier_obj test_empty
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net axi_mm_fifo_0_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins fifo_1/M_AXI]
+  connect_bd_intf_net -intf_net axi_mm_fifo_0_M_AXIS [get_bd_intf_pins fifo_1/M_AXIS] [get_bd_intf_pins fifo_2/S_AXIS]
+  connect_bd_intf_net -intf_net axis_regslice_M_AXIS [get_bd_intf_pins S_AXIS] [get_bd_intf_pins fifo_0/S_AXIS]
+  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins fifo_0/M_AXIS] [get_bd_intf_pins fifo_1/S_AXIS]
+  connect_bd_intf_net -intf_net fifo_2_M_AXIS [get_bd_intf_pins M_AXIS] [get_bd_intf_pins fifo_2/M_AXIS]
+
+  # Create port connections
+  connect_bd_net -net check_empty_fifo_empty [get_bd_pins fifo_empty] [get_bd_pins test_empty/fifo_empty]
+  connect_bd_net -net clk_axi_1 [get_bd_pins clk_axi] [get_bd_pins fifo_2/m_aclk]
+  connect_bd_net -net clk_axis_1 [get_bd_pins clk_axis] [get_bd_pins fifo_0/s_aclk] [get_bd_pins fifo_1/clk_axis] [get_bd_pins fifo_2/s_aclk] [get_bd_pins test_empty/clk_axis]
+  connect_bd_net -net ddr3_clk_ddr [get_bd_pins clk_ddr] [get_bd_pins fifo_1/clk_axi] [get_bd_pins test_empty/clk_axi]
+  connect_bd_net -net ddr3_rst_ddr_n [get_bd_pins rst_ddr_n] [get_bd_pins fifo_1/rst_axi_n] [get_bd_pins test_empty/rst_axi_n]
+  connect_bd_net -net fifo_0_axis_data_count [get_bd_pins fifo_0/axis_data_count] [get_bd_pins test_empty/occupancy1]
+  connect_bd_net -net fifo_1_occupancy [get_bd_pins fifo_1/occupancy] [get_bd_pins test_empty/occupancy0]
+  connect_bd_net -net fifo_2_axis_rd_data_count [get_bd_pins occupancy] [get_bd_pins fifo_2/axis_rd_data_count] [get_bd_pins test_empty/occupancy2]
+  connect_bd_net -net flush_1 [get_bd_pins flush] [get_bd_pins fifo_1/flush]
+  connect_bd_net -net rst_n_axis_1 [get_bd_pins rst_axis_n] [get_bd_pins fifo_0/s_aresetn] [get_bd_pins fifo_1/rst_axis_n] [get_bd_pins fifo_2/s_aresetn]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
+# Hierarchical cell: ddr3
+proc create_hier_cell_ddr3 { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_ddr3() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR3
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
+  # Create pins
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir O clk_ddr
+  create_bd_pin -dir O ready
+  create_bd_pin -dir O -from 0 -to 0 rst_ddr_n
+  create_bd_pin -dir I -type rst rst_n
+
+  # Create instance: controller, and set properties
+  set controller [ create_bd_cell -type ip -vlnv xilinx.com:ip:mig_7series:4.2 controller ]
+
+  # Generate the PRJ File for MIG
+  set str_mig_folder [get_property IP_DIR [ get_ips [ get_property CONFIG.Component_Name $controller ] ] ]
+  set str_mig_file_name mig_a.prj
+  set str_mig_file_path ${str_mig_folder}/${str_mig_file_name}
+
+  write_mig_file_bd_static_controller_1 $str_mig_file_path
+
+  set_property -dict [ list \
+   CONFIG.BOARD_MIG_PARAM {Custom} \
+   CONFIG.RESET_BOARD_INTERFACE {Custom} \
+   CONFIG.XML_INPUT_FILE {mig_a.prj} \
+ ] $controller
+
+  # Create instance: reset, and set properties
+  set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
+
+  # Create instance: width_converter, and set properties
+  set width_converter [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dwidth_converter:2.1 width_converter ]
+  set_property -dict [ list \
+   CONFIG.SI_DATA_WIDTH {128} \
+ ] $width_converter
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins width_converter/S_AXI]
+  connect_bd_intf_net -intf_net ddr3_controller_DDR3 [get_bd_intf_pins DDR3] [get_bd_intf_pins controller/DDR3]
+  connect_bd_intf_net -intf_net width_converter_M_AXI [get_bd_intf_pins controller/S_AXI] [get_bd_intf_pins width_converter/M_AXI]
+
+  # Create port connections
+  connect_bd_net -net clocks_clk_200M [get_bd_pins clk] [get_bd_pins controller/clk_ref_i] [get_bd_pins controller/sys_clk_i]
+  connect_bd_net -net clocks_rst_200M_n [get_bd_pins rst_n] [get_bd_pins controller/aresetn] [get_bd_pins controller/sys_rst]
+  connect_bd_net -net controller_init_calib_complete [get_bd_pins ready] [get_bd_pins controller/init_calib_complete]
+  connect_bd_net -net controller_mmcm_locked [get_bd_pins controller/mmcm_locked] [get_bd_pins reset/dcm_locked]
+  connect_bd_net -net controller_ui_clk_sync_rst [get_bd_pins controller/ui_clk_sync_rst] [get_bd_pins reset/ext_reset_in]
+  connect_bd_net -net ddr3_controller_ui_clk [get_bd_pins clk_ddr] [get_bd_pins controller/ui_clk] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins width_converter/s_axi_aclk]
+  connect_bd_net -net reset_peripheral_aresetn [get_bd_pins rst_ddr_n] [get_bd_pins reset/peripheral_aresetn] [get_bd_pins width_converter/s_axi_aresetn]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
 
 # Hierarchical cell: pr_ctrl
 proc create_hier_cell_pr_ctrl { parentCell nameHier } {
@@ -358,10 +1272,10 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   create_bd_pin -dir O -from 0 -to 0 decouple
   create_bd_pin -dir I -from 0 -to 0 -type data rp_active
   create_bd_pin -dir O -from 0 -to 0 rp_active_st
-  create_bd_pin -dir I rp_shutdown_ack
-  create_bd_pin -dir O -from 0 -to 0 rp_shutdown_req
   create_bd_pin -dir I -type rst rst_n
   create_bd_pin -dir O rst_rp_n
+  create_bd_pin -dir I -from 9 -to 0 shutdown_ack
+  create_bd_pin -dir O -from 0 -to 0 shutdown_req
 
   # Create instance: decouple_cdc, and set properties
   set decouple_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 decouple_cdc ]
@@ -373,7 +1287,7 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {active {ID 0 VLNV xilinx.com:signal:data_rtl:1.0 SIGNALS {DATA {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 2} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {active} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:signal:data_rtl:1.0} \
@@ -406,6 +1320,12 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
    CONFIG.C_NUM_STAGES {2} \
  ] $shutdown_ack
 
+  # Create instance: shutdown_and, and set properties
+  set shutdown_and [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 shutdown_and ]
+  set_property -dict [ list \
+   CONFIG.C_SIZE {10} \
+ ] $shutdown_and
+
   # Create instance: shutdown_req_cdc, and set properties
   set shutdown_req_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 shutdown_req_cdc ]
   set_property -dict [ list \
@@ -427,9 +1347,10 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   connect_bd_net -net pr_controller_vsm_0_rm_shutdown_req [get_bd_pins pr_controller/vsm_0_rm_shutdown_req] [get_bd_pins shutdown_req_cdc/data_src]
   connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins rst_n] [get_bd_pins pr_controller/icap_reset] [get_bd_pins pr_controller/reset]
   connect_bd_net -net rp_active_1 [get_bd_pins rp_active] [get_bd_pins decoupler/rp_active_DATA]
-  connect_bd_net -net rp_shutdown_ack_1 [get_bd_pins rp_shutdown_ack] [get_bd_pins shutdown_ack/data_src]
+  connect_bd_net -net shutdown_ack_1 [get_bd_pins shutdown_ack] [get_bd_pins shutdown_and/Op1]
   connect_bd_net -net shutdown_ack_data_dst [get_bd_pins pr_controller/vsm_0_rm_shutdown_ack] [get_bd_pins shutdown_ack/data_dst]
-  connect_bd_net -net shutdown_req_cdc_data_dst [get_bd_pins rp_shutdown_req] [get_bd_pins shutdown_req_cdc/data_dst]
+  connect_bd_net -net shutdown_and_Res [get_bd_pins shutdown_ack/data_src] [get_bd_pins shutdown_and/Res]
+  connect_bd_net -net shutdown_req_cdc_data_dst [get_bd_pins shutdown_req] [get_bd_pins shutdown_req_cdc/data_dst]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -476,6 +1397,7 @@ proc create_hier_cell_pcie { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I irq
+  create_bd_pin -dir O irq_ack
   create_bd_pin -dir O -type clk m_axi_aclk
   create_bd_pin -dir O -from 0 -to 0 m_axi_aresetn
   create_bd_pin -dir I -from 0 -to 0 -type clk pcie_clk_n
@@ -488,15 +1410,15 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.AXIBAR2PCIEBAR_0 {0x00000000} \
    CONFIG.AXIBAR_AS_0 {true} \
-   CONFIG.BAR0_SCALE {Megabytes} \
-   CONFIG.BAR0_SIZE {8} \
+   CONFIG.BAR0_SCALE {Kilobytes} \
+   CONFIG.BAR0_SIZE {16} \
    CONFIG.BAR1_ENABLED {true} \
    CONFIG.BAR1_SCALE {Megabytes} \
-   CONFIG.BAR1_SIZE {4} \
+   CONFIG.BAR1_SIZE {128} \
    CONFIG.BAR1_TYPE {Memory} \
    CONFIG.BAR2_ENABLED {true} \
    CONFIG.BAR2_SCALE {Megabytes} \
-   CONFIG.BAR2_SIZE {128} \
+   CONFIG.BAR2_SIZE {4} \
    CONFIG.BAR2_TYPE {Memory} \
    CONFIG.BAR_64BIT {true} \
    CONFIG.BASE_CLASS_MENU {Device_was_built_before_Class_Code_definitions_were_finalized} \
@@ -539,6 +1461,7 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   connect_bd_net -net IBUF_DS_N_0_1 [get_bd_pins pcie_clk_n] [get_bd_pins refclk_ibufds/IBUF_DS_N]
   connect_bd_net -net IBUF_DS_P_0_1 [get_bd_pins pcie_clk_p] [get_bd_pins refclk_ibufds/IBUF_DS_P]
   connect_bd_net -net aux_reset_in_0_1 [get_bd_pins pcie_perstn] [get_bd_pins reset/aux_reset_in]
+  connect_bd_net -net axi_bridge_INTX_MSI_Grant [get_bd_pins irq_ack] [get_bd_pins axi_bridge/INTX_MSI_Grant]
   connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins m_axi_aclk] [get_bd_pins axi_bridge/axi_aclk_out] [get_bd_pins reset/slowest_sync_clk]
   connect_bd_net -net axi_pcie_mmcm_lock [get_bd_pins axi_bridge/mmcm_lock] [get_bd_pins reset/dcm_locked]
   connect_bd_net -net irq_1 [get_bd_pins irq] [get_bd_pins axi_bridge/INTX_MSI_Request]
@@ -607,12 +1530,14 @@ proc create_hier_cell_macs { parentCell nameHier } {
   create_bd_pin -dir I -type clk gtx_clk
   create_bd_pin -dir I -type clk gtx_clk90
   create_bd_pin -dir I -type rst gtx_rst_n
+  create_bd_pin -dir O -from 7 -to 0 shutdown_ack
+  create_bd_pin -dir I shutdown_req
 
   # Create instance: decoupler, and set properties
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {INTF {eth0 {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth1 {ID 1 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth2 {ID 2 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth3 {ID 3 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0 HAS_SIGNAL_STATUS 0} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {eth0} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
@@ -636,65 +1561,57 @@ proc create_hier_cell_macs { parentCell nameHier } {
    CONFIG.GUI_SIGNAL_WIDTH_8 {1} \
  ] $decoupler
 
-  # Create instance: mac_eth0, and set properties
-  set mac_eth0 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth0 ]
-  set_property -dict [ list \
-   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
-   CONFIG.C_IFACE_TYPE {RGMII} \
-   CONFIG.C_USE_CLK90 {true} \
- ] $mac_eth0
+  # Create instance: eth0
+  create_hier_cell_eth0 $hier_obj eth0
 
-  # Create instance: mac_eth1, and set properties
-  set mac_eth1 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth1 ]
-  set_property -dict [ list \
-   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
-   CONFIG.C_IFACE_TYPE {RGMII} \
-   CONFIG.C_USE_CLK90 {true} \
- ] $mac_eth1
+  # Create instance: eth1
+  create_hier_cell_eth1 $hier_obj eth1
 
-  # Create instance: mac_eth2, and set properties
-  set mac_eth2 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth2 ]
-  set_property -dict [ list \
-   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
-   CONFIG.C_IFACE_TYPE {RGMII} \
-   CONFIG.C_USE_CLK90 {true} \
- ] $mac_eth2
+  # Create instance: eth2
+  create_hier_cell_eth2 $hier_obj eth2
 
-  # Create instance: mac_eth3, and set properties
-  set mac_eth3 [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac_eth3 ]
+  # Create instance: eth3
+  create_hier_cell_eth3 $hier_obj eth3
+
+  # Create instance: shutdown_concat, and set properties
+  set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
   set_property -dict [ list \
-   CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
-   CONFIG.C_IFACE_TYPE {RGMII} \
-   CONFIG.C_USE_CLK90 {true} \
- ] $mac_eth3
+   CONFIG.NUM_PORTS {4} \
+ ] $shutdown_concat
 
   # Create interface connections
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins decoupler/s_eth1] [get_bd_intf_pins eth1/S_AXIS]
+  connect_bd_intf_net -intf_net S_AXIS_2 [get_bd_intf_pins decoupler/s_eth2] [get_bd_intf_pins eth2/S_AXIS]
+  connect_bd_intf_net -intf_net S_AXIS_3 [get_bd_intf_pins decoupler/s_eth3] [get_bd_intf_pins eth3/S_AXIS]
   connect_bd_intf_net -intf_net S_AXIS_ETH0_1 [get_bd_intf_pins S_AXIS_ETH0] [get_bd_intf_pins decoupler/rp_eth0]
   connect_bd_intf_net -intf_net S_AXIS_ETH1_1 [get_bd_intf_pins S_AXIS_ETH1] [get_bd_intf_pins decoupler/rp_eth1]
   connect_bd_intf_net -intf_net S_AXIS_ETH2_1 [get_bd_intf_pins S_AXIS_ETH2] [get_bd_intf_pins decoupler/rp_eth2]
   connect_bd_intf_net -intf_net S_AXIS_ETH3_1 [get_bd_intf_pins S_AXIS_ETH3] [get_bd_intf_pins decoupler/rp_eth3]
-  connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_pins phy0_rgmii] [get_bd_intf_pins mac_eth0/RGMII]
-  connect_bd_intf_net -intf_net mac_eth0_RX_AXIS [get_bd_intf_pins M_AXIS_ETH0] [get_bd_intf_pins mac_eth0/RX_AXIS]
-  connect_bd_intf_net -intf_net mac_eth1_RGMII [get_bd_intf_pins phy1_rgmii] [get_bd_intf_pins mac_eth1/RGMII]
-  connect_bd_intf_net -intf_net mac_eth1_RX_AXIS [get_bd_intf_pins M_AXIS_ETH1] [get_bd_intf_pins mac_eth1/RX_AXIS]
-  connect_bd_intf_net -intf_net mac_eth2_RGMII [get_bd_intf_pins phy2_rgmii] [get_bd_intf_pins mac_eth2/RGMII]
-  connect_bd_intf_net -intf_net mac_eth2_RX_AXIS [get_bd_intf_pins M_AXIS_ETH2] [get_bd_intf_pins mac_eth2/RX_AXIS]
-  connect_bd_intf_net -intf_net mac_eth3_RGMII [get_bd_intf_pins phy3_rgmii] [get_bd_intf_pins mac_eth3/RGMII]
-  connect_bd_intf_net -intf_net mac_eth3_RX_AXIS [get_bd_intf_pins M_AXIS_ETH3] [get_bd_intf_pins mac_eth3/RX_AXIS]
-  connect_bd_intf_net -intf_net pr_decoupler_0_s_eth0 [get_bd_intf_pins decoupler/s_eth0] [get_bd_intf_pins mac_eth0/TX_AXIS]
-  connect_bd_intf_net -intf_net pr_decoupler_0_s_eth1 [get_bd_intf_pins decoupler/s_eth1] [get_bd_intf_pins mac_eth1/TX_AXIS]
-  connect_bd_intf_net -intf_net pr_decoupler_0_s_eth2 [get_bd_intf_pins decoupler/s_eth2] [get_bd_intf_pins mac_eth2/TX_AXIS]
-  connect_bd_intf_net -intf_net pr_decoupler_0_s_eth3 [get_bd_intf_pins decoupler/s_eth3] [get_bd_intf_pins mac_eth3/TX_AXIS]
+  connect_bd_intf_net -intf_net decoupler_s_eth0 [get_bd_intf_pins decoupler/s_eth0] [get_bd_intf_pins eth0/S_AXIS]
+  connect_bd_intf_net -intf_net eth1_M_AXIS [get_bd_intf_pins M_AXIS_ETH1] [get_bd_intf_pins eth1/M_AXIS]
+  connect_bd_intf_net -intf_net eth1_RGMII [get_bd_intf_pins phy1_rgmii] [get_bd_intf_pins eth1/RGMII]
+  connect_bd_intf_net -intf_net eth2_M_AXIS [get_bd_intf_pins M_AXIS_ETH2] [get_bd_intf_pins eth2/M_AXIS]
+  connect_bd_intf_net -intf_net eth2_RGMII [get_bd_intf_pins phy2_rgmii] [get_bd_intf_pins eth2/RGMII]
+  connect_bd_intf_net -intf_net eth3_M_AXIS [get_bd_intf_pins M_AXIS_ETH3] [get_bd_intf_pins eth3/M_AXIS]
+  connect_bd_intf_net -intf_net eth3_RGMII [get_bd_intf_pins phy3_rgmii] [get_bd_intf_pins eth3/RGMII]
+  connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_pins phy0_rgmii] [get_bd_intf_pins eth0/RGMII]
+  connect_bd_intf_net -intf_net pr_decoupler_0_rp_axis [get_bd_intf_pins M_AXIS_ETH0] [get_bd_intf_pins eth0/M_AXIS]
 
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac_eth0/gtx_clk] [get_bd_pins mac_eth1/gtx_clk] [get_bd_pins mac_eth2/gtx_clk] [get_bd_pins mac_eth3/gtx_clk]
-  connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac_eth0/gtx_clk90] [get_bd_pins mac_eth1/gtx_clk90] [get_bd_pins mac_eth2/gtx_clk90] [get_bd_pins mac_eth3/gtx_clk90]
-  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
-  connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx0] [get_bd_pins mac_eth0/rx_clk]
-  connect_bd_net -net mac_eth1_rx_clk [get_bd_pins clk_rx1] [get_bd_pins mac_eth1/rx_clk]
-  connect_bd_net -net mac_eth2_rx_clk [get_bd_pins clk_rx2] [get_bd_pins mac_eth2/rx_clk]
-  connect_bd_net -net mac_eth3_rx_clk [get_bd_pins clk_rx3] [get_bd_pins mac_eth3/rx_clk]
-  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins mac_eth0/gtx_rst_n] [get_bd_pins mac_eth1/gtx_rst_n] [get_bd_pins mac_eth2/gtx_rst_n] [get_bd_pins mac_eth3/gtx_rst_n]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins eth0/gtx_clk] [get_bd_pins eth1/gtx_clk] [get_bd_pins eth2/gtx_clk] [get_bd_pins eth3/gtx_clk]
+  connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins eth0/gtx_clk90] [get_bd_pins eth1/gtx_clk90] [get_bd_pins eth2/gtx_clk90] [get_bd_pins eth3/gtx_clk90]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple] [get_bd_pins eth0/decouple] [get_bd_pins eth1/decouple] [get_bd_pins eth2/decouple] [get_bd_pins eth3/decouple]
+  connect_bd_net -net eth0_shutdown_ack [get_bd_pins eth0/shutdown_ack] [get_bd_pins shutdown_concat/In0]
+  connect_bd_net -net eth1_clk_rx [get_bd_pins clk_rx1] [get_bd_pins eth1/clk_rx]
+  connect_bd_net -net eth1_shutdown_ack [get_bd_pins eth1/shutdown_ack] [get_bd_pins shutdown_concat/In1]
+  connect_bd_net -net eth2_clk_rx [get_bd_pins clk_rx2] [get_bd_pins eth2/clk_rx]
+  connect_bd_net -net eth2_shutdown_ack [get_bd_pins eth2/shutdown_ack] [get_bd_pins shutdown_concat/In2]
+  connect_bd_net -net eth3_clk_rx [get_bd_pins clk_rx3] [get_bd_pins eth3/clk_rx]
+  connect_bd_net -net eth3_shutdown_ack [get_bd_pins eth3/shutdown_ack] [get_bd_pins shutdown_concat/In3]
+  connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx0] [get_bd_pins eth0/clk_rx]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_pins gtx_rst_n] [get_bd_pins eth0/gtx_rst_n] [get_bd_pins eth1/gtx_rst_n] [get_bd_pins eth2/gtx_rst_n] [get_bd_pins eth3/gtx_rst_n]
+  connect_bd_net -net shutdown_concat_dout [get_bd_pins shutdown_ack] [get_bd_pins shutdown_concat/dout]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins eth0/shutdown_req] [get_bd_pins eth1/shutdown_req] [get_bd_pins eth2/shutdown_req] [get_bd_pins eth3/shutdown_req]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -740,7 +1657,6 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M02_AXI
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M03_AXI
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M04_AXI
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M05_AXI
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
 
   # Create pins
@@ -753,6 +1669,8 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   create_bd_pin -dir I -type rst rst_125M_n
   create_bd_pin -dir I -type rst rst_50M_n
   create_bd_pin -dir I -type rst rst_n
+  create_bd_pin -dir O shutdown_ack
+  create_bd_pin -dir I shutdown_req
 
   # Create instance: axi_interconnect, and set properties
   set axi_interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect ]
@@ -760,16 +1678,16 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
    CONFIG.ENABLE_ADVANCED_OPTIONS {0} \
    CONFIG.M00_HAS_REGSLICE {0} \
    CONFIG.M01_HAS_REGSLICE {0} \
-   CONFIG.NUM_MI {6} \
+   CONFIG.NUM_MI {5} \
  ] $axi_interconnect
 
   # Create instance: decoupler, and set properties
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axi_pcie {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 32} AWLEN {PRESENT 1 WIDTH 8} AWSIZE {PRESENT 1 WIDTH 3} AWBURST {PRESENT 1 WIDTH 2} AWLOCK {PRESENT 1 WIDTH 1} AWCACHE {PRESENT 1 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 64} WSTRB {PRESENT 1 WIDTH 8} WLAST {PRESENT 1 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 32} ARLEN {PRESENT 1 WIDTH 8} ARSIZE {PRESENT 1 WIDTH 3} ARBURST {PRESENT 1 WIDTH 2} ARLOCK {PRESENT 1 WIDTH 1} ARCACHE {PRESENT 1 WIDTH 4} ARPROT {PRESENT 1 WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 64} RRESP {PRESENT 1 WIDTH 2} RLAST {PRESENT 1 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}}}} IPI_PROP_COUNT 0} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axi {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 22} AWLEN {PRESENT 0 WIDTH 8} AWSIZE {PRESENT 0 WIDTH 3} AWBURST {PRESENT 0 WIDTH 2} AWLOCK {PRESENT 0 WIDTH 1} AWCACHE {PRESENT 0 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 64} WSTRB {PRESENT 1 WIDTH 8} WLAST {PRESENT 0 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 22} ARLEN {PRESENT 0 WIDTH 8} ARSIZE {PRESENT 0 WIDTH 3} ARBURST {PRESENT 0 WIDTH 2} ARLOCK {PRESENT 0 WIDTH 1} ARCACHE {PRESENT 0 WIDTH 4} ARPROT {PRESENT 1 WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 64} RRESP {PRESENT 1 WIDTH 2} RLAST {PRESENT 0 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}} PROTOCOL axi4lite}} IPI_PROP_COUNT 2} \
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
-   CONFIG.GUI_INTERFACE_NAME {axi_pcie} \
-   CONFIG.GUI_INTERFACE_PROTOCOL {axi4} \
+   CONFIG.GUI_INTERFACE_NAME {axi} \
+   CONFIG.GUI_INTERFACE_PROTOCOL {axi4lite} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_MODE {slave} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:aximm_rtl:1.0} \
@@ -805,6 +1723,16 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
    CONFIG.GUI_SIGNAL_SELECT_9 {WREADY} \
  ] $decoupler
 
+  # Create instance: shutdown, and set properties
+  set shutdown [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_axi_shutdown_manager:1.0 shutdown ]
+  set_property -dict [ list \
+   CONFIG.DP_AXI_ADDR_WIDTH {22} \
+   CONFIG.DP_AXI_DATA_WIDTH {64} \
+   CONFIG.DP_AXI_RESP {2} \
+   CONFIG.DP_PROTOCOL {AXI4LITE} \
+   CONFIG.RP_IS_MASTER {false} \
+ ] $shutdown
+
   # Create instance: width_converter, and set properties
   set width_converter [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dwidth_converter:2.1 width_converter ]
   set_property -dict [ list \
@@ -815,23 +1743,25 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins M04_AXI] [get_bd_intf_pins axi_interconnect/M04_AXI]
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins axi_interconnect/S00_AXI] [get_bd_intf_pins width_converter/M_AXI]
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins width_converter/S_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins decoupler/s_axi_pcie]
+  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins shutdown/S_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins M01_AXI] [get_bd_intf_pins axi_interconnect/M01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M02_AXI [get_bd_intf_pins M02_AXI] [get_bd_intf_pins axi_interconnect/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins M03_AXI] [get_bd_intf_pins axi_interconnect/M03_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M05_AXI [get_bd_intf_pins M05_AXI] [get_bd_intf_pins axi_interconnect/M05_AXI]
-  connect_bd_intf_net -intf_net pr_decoupler_0_rp_axi_pcie [get_bd_intf_pins M00_AXI] [get_bd_intf_pins decoupler/rp_axi_pcie]
+  connect_bd_intf_net -intf_net decoupler_rp_axi [get_bd_intf_pins M00_AXI] [get_bd_intf_pins decoupler/rp_axi]
+  connect_bd_intf_net -intf_net shutdown_M_AXI [get_bd_intf_pins decoupler/s_axi] [get_bd_intf_pins shutdown/M_AXI]
 
   # Create port connections
-  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins width_converter/s_axi_aclk]
-  connect_bd_net -net clk_100M_1 [get_bd_pins clk_100M] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK]
-  connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK]
+  connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins clk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/M04_ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins width_converter/s_axi_aclk]
+  connect_bd_net -net clk_100M_1 [get_bd_pins clk_100M] [get_bd_pins axi_interconnect/M03_ACLK]
+  connect_bd_net -net clk_125M_1 [get_bd_pins clk_125M] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins shutdown/clk]
   connect_bd_net -net clk_50M_1 [get_bd_pins clk_50M] [get_bd_pins axi_interconnect/M02_ACLK]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
-  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins width_converter/s_axi_aresetn]
-  connect_bd_net -net rst_100M_n_1 [get_bd_pins rst_100M_n] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN]
-  connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN]
+  connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_pins rst_n] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins width_converter/s_axi_aresetn]
+  connect_bd_net -net rst_100M_n_1 [get_bd_pins rst_100M_n] [get_bd_pins axi_interconnect/M03_ARESETN]
+  connect_bd_net -net rst_125M_n_1 [get_bd_pins rst_125M_n] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins shutdown/resetn]
   connect_bd_net -net rst_50M_n_1 [get_bd_pins rst_50M_n] [get_bd_pins axi_interconnect/M02_ARESETN]
+  connect_bd_net -net shutdown_in_shutdown [get_bd_pins shutdown_ack] [get_bd_pins shutdown/in_shutdown]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins shutdown/request_shutdown]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -944,6 +1874,7 @@ proc create_hier_cell_dma { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR3
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
@@ -951,10 +1882,29 @@ proc create_hier_cell_dma { parentCell nameHier } {
   # Create pins
   create_bd_pin -dir I clk_axi
   create_bd_pin -dir I clk_axis
+  create_bd_pin -dir I clk_ddr
+  create_bd_pin -dir O ddr_ready
   create_bd_pin -dir I decouple
+  create_bd_pin -dir I ext_fifo_empty
   create_bd_pin -dir O irq
   create_bd_pin -dir I rst_axi_n
   create_bd_pin -dir I rst_axis_n
+  create_bd_pin -dir I rst_ddr_n
+  create_bd_pin -dir O shutdown_ack
+  create_bd_pin -dir I shutdown_req
+
+  # Create instance: and_0, and set properties
+  set and_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 and_0 ]
+  set_property -dict [ list \
+   CONFIG.C_SIZE {2} \
+ ] $and_0
+
+  # Create instance: axi_shutdown, and set properties
+  set axi_shutdown [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_axi_shutdown_manager:1.0 axi_shutdown ]
+  set_property -dict [ list \
+   CONFIG.DP_AXI_RESP {2} \
+   CONFIG.RP_IS_MASTER {true} \
+ ] $axi_shutdown
 
   # Create instance: axis_regslice, and set properties
   set axis_regslice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_regslice ]
@@ -962,11 +1912,17 @@ proc create_hier_cell_dma { parentCell nameHier } {
    CONFIG.REG_CONFIG {8} \
  ] $axis_regslice
 
-  # Create instance: decoupler, and set properties
-  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
+  # Create instance: concat_0, and set properties
+  set concat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 concat_0 ]
+
+  # Create instance: ddr3
+  create_hier_cell_ddr3 $hier_obj ddr3
+
+  # Create instance: decoupler_0, and set properties
+  set decoupler_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler_0 ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis_dma {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 128} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TUSER {PRESENT 0 WIDTH 0} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 16} TKEEP {PRESENT 0 WIDTH 16}}}} IPI_PROP_COUNT 0} \
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axis_dma} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
@@ -990,7 +1946,20 @@ proc create_hier_cell_dma { parentCell nameHier } {
    CONFIG.GUI_SIGNAL_WIDTH_2 {128} \
    CONFIG.GUI_SIGNAL_WIDTH_7 {16} \
    CONFIG.GUI_SIGNAL_WIDTH_8 {16} \
- ] $decoupler
+ ] $decoupler_0
+
+  # Create instance: decoupler_1, and set properties
+  set decoupler_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler_1 ]
+  set_property -dict [ list \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {intf {ID 0 VLNV xilinx.com:signal:data_rtl:1.0 SIGNALS {DATA {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_INTERFACE_NAME {intf} \
+   CONFIG.GUI_SELECT_INTERFACE {0} \
+   CONFIG.GUI_SELECT_VLNV {xilinx.com:signal:data_rtl:1.0} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
+   CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
+   CONFIG.GUI_SIGNAL_SELECT_0 {DATA} \
+ ] $decoupler_1
 
   # Create instance: dma, and set properties
   set dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:circular_dma:1.1 dma ]
@@ -1000,156 +1969,49 @@ proc create_hier_cell_dma { parentCell nameHier } {
    CONFIG.C_AXI_WIDTH {64} \
  ] $dma
 
-  # Create instance: fifo_0, and set properties
-  set fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_0 ]
+  # Create instance: fifo_chain
+  create_hier_cell_fifo_chain $hier_obj fifo_chain
+
+  # Create instance: regslice, and set properties
+  set regslice [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_regslice:1.0 regslice ]
   set_property -dict [ list \
-   CONFIG.Clock_Type_AXI {Independent_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {8189} \
-   CONFIG.Empty_Threshold_Assert_Value_rach {13} \
-   CONFIG.Empty_Threshold_Assert_Value_rdch {1021} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {13} \
-   CONFIG.Empty_Threshold_Assert_Value_wdch {1021} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {13} \
-   CONFIG.Enable_Data_Counts_axis {true} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Independent_Clocks_Block_RAM} \
-   CONFIG.FIFO_Implementation_rach {Independent_Clocks_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_rdch {Independent_Clocks_Block_RAM} \
-   CONFIG.FIFO_Implementation_wach {Independent_Clocks_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wdch {Independent_Clocks_Block_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Independent_Clocks_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {8191} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {8192} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TDATA_NUM_BYTES {16} \
-   CONFIG.TKEEP_WIDTH {16} \
-   CONFIG.TSTRB_WIDTH {16} \
-   CONFIG.TUSER_WIDTH {0} \
-   CONFIG.Use_Embedded_Registers_axis {true} \
-   CONFIG.synchronization_stages_axi {4} \
- ] $fifo_0
+   CONFIG.C_NUM_STAGES {1} \
+   CONFIG.C_WIDTH {1} \
+ ] $regslice
 
   # Create interface connections
-  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins decoupler/rp_axis_dma]
+  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins DDR3] [get_bd_intf_pins ddr3/DDR3]
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins decoupler_0/rp_axis_dma]
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins dma/S_AXI]
-  connect_bd_intf_net -intf_net axis_regslice_M_AXIS [get_bd_intf_pins axis_regslice/M_AXIS] [get_bd_intf_pins fifo_0/S_AXIS]
-  connect_bd_intf_net -intf_net decoupler_s_axis_dma [get_bd_intf_pins axis_regslice/S_AXIS] [get_bd_intf_pins decoupler/s_axis_dma]
-  connect_bd_intf_net -intf_net dma_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins dma/M_AXI]
-  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_0/M_AXIS]
+  connect_bd_intf_net -intf_net axi_mm_fifo_0_M_AXI [get_bd_intf_pins ddr3/S_AXI] [get_bd_intf_pins fifo_chain/M_AXI]
+  connect_bd_intf_net -intf_net axi_shutdown_M_AXI [get_bd_intf_pins M_AXI] [get_bd_intf_pins axi_shutdown/M_AXI]
+  connect_bd_intf_net -intf_net axis_regslice_M_AXIS [get_bd_intf_pins axis_regslice/M_AXIS] [get_bd_intf_pins fifo_chain/S_AXIS]
+  connect_bd_intf_net -intf_net axis_shutdown_M_AXIS [get_bd_intf_pins dma/S_AXIS_S2MM] [get_bd_intf_pins fifo_chain/M_AXIS]
+  connect_bd_intf_net -intf_net decoupler_s_axis_dma [get_bd_intf_pins axis_regslice/S_AXIS] [get_bd_intf_pins decoupler_0/s_axis_dma]
+  connect_bd_intf_net -intf_net dma_M_AXI [get_bd_intf_pins axi_shutdown/S_AXI] [get_bd_intf_pins dma/M_AXI]
 
   # Create port connections
-  connect_bd_net -net clk_axi_1 [get_bd_pins clk_axi] [get_bd_pins dma/clk] [get_bd_pins fifo_0/m_aclk]
-  connect_bd_net -net clk_axis_1 [get_bd_pins clk_axis] [get_bd_pins axis_regslice/aclk] [get_bd_pins fifo_0/s_aclk]
-  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler/decouple]
+  connect_bd_net -net axi_shutdown_in_shutdown [get_bd_pins shutdown_ack] [get_bd_pins axi_shutdown/in_shutdown]
+  connect_bd_net -net clk_axi_1 [get_bd_pins clk_axi] [get_bd_pins axi_shutdown/clk] [get_bd_pins dma/clk] [get_bd_pins fifo_chain/clk_axi]
+  connect_bd_net -net clk_axis_1 [get_bd_pins clk_axis] [get_bd_pins axis_regslice/aclk] [get_bd_pins fifo_chain/clk_axis] [get_bd_pins regslice/clk]
+  connect_bd_net -net clk_ddr_1 [get_bd_pins clk_ddr] [get_bd_pins ddr3/clk]
+  connect_bd_net -net ddr3_clk_ddr [get_bd_pins ddr3/clk_ddr] [get_bd_pins fifo_chain/clk_ddr]
+  connect_bd_net -net ddr3_ready [get_bd_pins ddr_ready] [get_bd_pins ddr3/ready]
+  connect_bd_net -net ddr3_rst_ddr_n [get_bd_pins ddr3/rst_ddr_n] [get_bd_pins fifo_chain/rst_ddr_n]
+  connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins decoupler_0/decouple] [get_bd_pins decoupler_1/decouple]
+  connect_bd_net -net decoupler1_s_intf_DATA [get_bd_pins decoupler_1/s_intf_DATA] [get_bd_pins regslice/data_in]
+  connect_bd_net -net dma_fifo_flush_req [get_bd_pins dma/fifo_flush_req] [get_bd_pins fifo_chain/flush]
   connect_bd_net -net dma_irq [get_bd_pins irq] [get_bd_pins dma/irq]
-  connect_bd_net -net fifo_0_axis_rd_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_0/axis_rd_data_count]
-  connect_bd_net -net rst_axi_n_1 [get_bd_pins rst_axi_n] [get_bd_pins dma/rst_n]
-  connect_bd_net -net rst_n_axis_1 [get_bd_pins rst_axis_n] [get_bd_pins axis_regslice/aresetn] [get_bd_pins fifo_0/s_aresetn]
-
-  # Restore current instance
-  current_bd_instance $oldCurInst
-}
-
-# Hierarchical cell: ddr3
-proc create_hier_cell_ddr3 { parentCell nameHier } {
-
-  variable script_folder
-
-  if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_ddr3() - Empty argument(s)!"}
-     return
-  }
-
-  # Get object for parentCell
-  set parentObj [get_bd_cells $parentCell]
-  if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
-     return
-  }
-
-  # Make sure parentObj is hier blk
-  set parentType [get_property TYPE $parentObj]
-  if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
-     return
-  }
-
-  # Save current instance; Restore later
-  set oldCurInst [current_bd_instance .]
-
-  # Set parent object as current
-  current_bd_instance $parentObj
-
-  # Create cell and set as current instance
-  set hier_obj [create_bd_cell -type hier $nameHier]
-  current_bd_instance $hier_obj
-
-  # Create interface pins
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR3
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_PCIE
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_PRC
-
-  # Create pins
-  create_bd_pin -dir I -type clk clk
-  create_bd_pin -dir O ready
-  create_bd_pin -dir I -type rst rst_n
-  create_bd_pin -dir I -type clk s_axi_aclk
-  create_bd_pin -dir I -type rst s_axi_aresetn
-
-  # Create instance: controller, and set properties
-  set controller [ create_bd_cell -type ip -vlnv xilinx.com:ip:mig_7series:4.2 controller ]
-
-  # Generate the PRJ File for MIG
-  set str_mig_folder [get_property IP_DIR [ get_ips [ get_property CONFIG.Component_Name $controller ] ] ]
-  set str_mig_file_name mig_a.prj
-  set str_mig_file_path ${str_mig_folder}/${str_mig_file_name}
-
-  write_mig_file_bd_static_controller_0 $str_mig_file_path
-
-  set_property -dict [ list \
-   CONFIG.BOARD_MIG_PARAM {Custom} \
-   CONFIG.RESET_BOARD_INTERFACE {Custom} \
-   CONFIG.XML_INPUT_FILE {mig_a.prj} \
- ] $controller
-
-  # Create instance: interconnect, and set properties
-  set interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 interconnect ]
-  set_property -dict [ list \
-   CONFIG.NUM_MI {1} \
-   CONFIG.NUM_SI {2} \
-   CONFIG.S00_HAS_DATA_FIFO {2} \
-   CONFIG.S01_HAS_DATA_FIFO {2} \
-   CONFIG.S01_HAS_REGSLICE {4} \
-   CONFIG.S02_HAS_DATA_FIFO {2} \
-   CONFIG.S02_HAS_REGSLICE {4} \
-   CONFIG.STRATEGY {2} \
- ] $interconnect
-
-  # Create instance: reset, and set properties
-  set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
-
-  # Create interface connections
-  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins S_AXI_PCIE] [get_bd_intf_pins interconnect/S01_AXI]
-  connect_bd_intf_net -intf_net S_AXI_ST_1 [get_bd_intf_pins S_AXI_PRC] [get_bd_intf_pins interconnect/S00_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins controller/S_AXI] [get_bd_intf_pins interconnect/M00_AXI]
-  connect_bd_intf_net -intf_net ddr3_controller_DDR3 [get_bd_intf_pins DDR3] [get_bd_intf_pins controller/DDR3]
-
-  # Create port connections
-  connect_bd_net -net M00_ARESETN_1 [get_bd_pins interconnect/M00_ARESETN] [get_bd_pins reset/peripheral_aresetn]
-  connect_bd_net -net clocks_clk_200M [get_bd_pins clk] [get_bd_pins controller/clk_ref_i] [get_bd_pins controller/sys_clk_i]
-  connect_bd_net -net clocks_rst_200M_n [get_bd_pins rst_n] [get_bd_pins controller/aresetn] [get_bd_pins controller/sys_rst]
-  connect_bd_net -net controller_init_calib_complete [get_bd_pins ready] [get_bd_pins controller/init_calib_complete]
-  connect_bd_net -net controller_mmcm_locked [get_bd_pins controller/mmcm_locked] [get_bd_pins reset/dcm_locked]
-  connect_bd_net -net controller_ui_clk_sync_rst [get_bd_pins controller/ui_clk_sync_rst] [get_bd_pins reset/ext_reset_in]
-  connect_bd_net -net ddr3_controller_ui_clk [get_bd_pins controller/ui_clk] [get_bd_pins interconnect/M00_ACLK] [get_bd_pins reset/slowest_sync_clk]
-  connect_bd_net -net s_axi_aclk_1 [get_bd_pins s_axi_aclk] [get_bd_pins interconnect/ACLK] [get_bd_pins interconnect/S00_ACLK] [get_bd_pins interconnect/S01_ACLK]
-  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins interconnect/ARESETN] [get_bd_pins interconnect/S00_ARESETN] [get_bd_pins interconnect/S01_ARESETN] [get_bd_pins reset/aux_reset_in]
+  connect_bd_net -net ext_fifo_empty_1 [get_bd_pins ext_fifo_empty] [get_bd_pins decoupler_1/rp_intf_DATA]
+  connect_bd_net -net fifo_2_axis_rd_data_count [get_bd_pins dma/fifo_occupancy] [get_bd_pins fifo_chain/occupancy]
+  connect_bd_net -net fifo_chain_fifo_empty [get_bd_pins concat_0/In0] [get_bd_pins fifo_chain/fifo_empty]
+  connect_bd_net -net regslice_data_out [get_bd_pins concat_0/In1] [get_bd_pins regslice/data_out]
+  connect_bd_net -net rst_axi_n_1 [get_bd_pins rst_axi_n] [get_bd_pins axi_shutdown/resetn] [get_bd_pins dma/rst_n]
+  connect_bd_net -net rst_ddr_n_1 [get_bd_pins rst_ddr_n] [get_bd_pins ddr3/rst_n]
+  connect_bd_net -net rst_n_axis_1 [get_bd_pins rst_axis_n] [get_bd_pins axis_regslice/aresetn] [get_bd_pins fifo_chain/rst_axis_n] [get_bd_pins regslice/rst_n]
+  connect_bd_net -net shutdown_req_1 [get_bd_pins shutdown_req] [get_bd_pins axi_shutdown/request_shutdown]
+  connect_bd_net -net util_reduced_logic_0_Res [get_bd_pins and_0/Res] [get_bd_pins dma/fifo_flush_ack]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins and_0/Op1] [get_bd_pins concat_0/dout]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1327,13 +2189,16 @@ proc create_hier_cell_bpi { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_PCIE
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_PRC
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:emc_rtl:1.0 bpi
 
   # Create pins
   create_bd_pin -dir IO -from 15 -to 0 bpi_dq
   create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir I clk_prc
   create_bd_pin -dir I -type rst rst_n
+  create_bd_pin -dir I rst_prc_n
 
   # Create instance: constant_ce, and set properties
   set constant_ce [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 constant_ce ]
@@ -1343,19 +2208,33 @@ proc create_hier_cell_bpi { parentCell nameHier } {
 
   # Create instance: controller, and set properties
   set controller [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:bpi_flash:1.0 controller ]
+  set_property -dict [ list \
+   CONFIG.C_OEL_TO_OEH_TIME {13} \
+ ] $controller
+
+  # Create instance: interconnect, and set properties
+  set interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 interconnect ]
+  set_property -dict [ list \
+   CONFIG.NUM_MI {1} \
+   CONFIG.NUM_SI {2} \
+ ] $interconnect
 
   # Create instance: startup_clk, and set properties
   set startup_clk [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_startup:1.0 startup_clk ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins S_AXI] [get_bd_intf_pins controller/S_AXI]
+  connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins S_AXI_PCIE] [get_bd_intf_pins interconnect/S00_AXI]
+  connect_bd_intf_net -intf_net S_AXI_PRC_1 [get_bd_intf_pins S_AXI_PRC] [get_bd_intf_pins interconnect/S01_AXI]
   connect_bd_intf_net -intf_net bpi_controller_BPI [get_bd_intf_pins bpi] [get_bd_intf_pins controller/BPI]
+  connect_bd_intf_net -intf_net interconnect_M00_AXI [get_bd_intf_pins controller/S_AXI] [get_bd_intf_pins interconnect/M00_AXI]
 
   # Create port connections
   connect_bd_net -net Net [get_bd_pins bpi_dq] [get_bd_pins controller/bpi_dq_io]
-  connect_bd_net -net clocks_clk_50M [get_bd_pins clk] [get_bd_pins controller/clk] [get_bd_pins startup_clk/usrcclko]
-  connect_bd_net -net clocks_rst_50M_n [get_bd_pins rst_n] [get_bd_pins controller/rst_n]
+  connect_bd_net -net clk_prc_1 [get_bd_pins clk_prc] [get_bd_pins interconnect/S01_ACLK]
+  connect_bd_net -net clocks_clk_50M [get_bd_pins clk] [get_bd_pins controller/clk] [get_bd_pins interconnect/ACLK] [get_bd_pins interconnect/M00_ACLK] [get_bd_pins interconnect/S00_ACLK] [get_bd_pins startup_clk/usrcclko]
+  connect_bd_net -net clocks_rst_50M_n [get_bd_pins rst_n] [get_bd_pins controller/rst_n] [get_bd_pins interconnect/ARESETN] [get_bd_pins interconnect/M00_ARESETN] [get_bd_pins interconnect/S00_ARESETN]
   connect_bd_net -net constant_ce_dout [get_bd_pins constant_ce/dout] [get_bd_pins startup_clk/usrcclkts]
+  connect_bd_net -net rst_prc_n_1 [get_bd_pins rst_prc_n] [get_bd_pins interconnect/S01_ARESETN]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1428,9 +2307,6 @@ proc create_root_design { parentCell } {
   # Create instance: clocks
   create_hier_cell_clocks [current_bd_instance .] clocks
 
-  # Create instance: ddr3
-  create_hier_cell_ddr3 [current_bd_instance .] ddr3
-
   # Create instance: dma
   create_hier_cell_dma [current_bd_instance .] dma
 
@@ -1455,21 +2331,24 @@ proc create_root_design { parentCell } {
   # Create instance: rp_wrapper, and set properties
   set rp_wrapper [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0 rp_wrapper ]
 
+  # Create instance: shutdown_concat, and set properties
+  set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
+  set_property -dict [ list \
+   CONFIG.NUM_PORTS {3} \
+ ] $shutdown_concat
+
   # Create interface connections
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins interconnect/S_AXI] [get_bd_intf_pins pcie/M_AXI]
-  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_pins dma/S_AXIS] [get_bd_intf_pins rp_wrapper/M_AXIS_DMA]
-  connect_bd_intf_net -intf_net S_AXIS_ETH0_1 [get_bd_intf_pins macs/S_AXIS_ETH0] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH0]
-  connect_bd_intf_net -intf_net S_AXIS_ETH2_1 [get_bd_intf_pins macs/S_AXIS_ETH2] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH2]
+  connect_bd_intf_net -intf_net S_AXIS_ETH3_1 [get_bd_intf_pins macs/S_AXIS_ETH3] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH3]
   connect_bd_intf_net -intf_net S_AXI_1 [get_bd_intf_pins dma/M_AXI] [get_bd_intf_pins pcie/S_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins bpi/S_AXI] [get_bd_intf_pins interconnect/M02_AXI]
+  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins bpi/S_AXI_PCIE] [get_bd_intf_pins interconnect/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins interconnect/M03_AXI] [get_bd_intf_pins pr_ctrl/s_axi_reg]
   connect_bd_intf_net -intf_net axi_interconnect_M03_AXI [get_bd_intf_pins dtb_rom/S_AXI] [get_bd_intf_pins interconnect/M01_AXI]
   connect_bd_intf_net -intf_net axi_pcie_0_pcie_7x_mgt [get_bd_intf_ports pcie] [get_bd_intf_pins pcie/PCIE]
   connect_bd_intf_net -intf_net bpi_controller_BPI [get_bd_intf_ports bpi] [get_bd_intf_pins bpi/bpi]
-  connect_bd_intf_net -intf_net ddr3_controller_DDR3 [get_bd_intf_ports ddr3] [get_bd_intf_pins ddr3/DDR3]
+  connect_bd_intf_net -intf_net dma_ddr4 [get_bd_intf_ports ddr3] [get_bd_intf_pins dma/DDR3]
   connect_bd_intf_net -intf_net interconnect_M00_AXI [get_bd_intf_pins interconnect/M00_AXI] [get_bd_intf_pins rp_wrapper/S_AXI_PCIE]
-  connect_bd_intf_net -intf_net interconnect_M04_AXI [get_bd_intf_pins ddr3/S_AXI_PCIE] [get_bd_intf_pins interconnect/M04_AXI]
-  connect_bd_intf_net -intf_net interconnect_M05_AXI [get_bd_intf_pins dma/S_AXI] [get_bd_intf_pins interconnect/M05_AXI]
+  connect_bd_intf_net -intf_net interconnect_M04_AXI [get_bd_intf_pins dma/S_AXI] [get_bd_intf_pins interconnect/M04_AXI]
   connect_bd_intf_net -intf_net mac_eth0_RGMII [get_bd_intf_ports phy0_rgmii] [get_bd_intf_pins macs/phy0_rgmii]
   connect_bd_intf_net -intf_net mac_eth1_RGMII [get_bd_intf_ports phy1_rgmii] [get_bd_intf_pins macs/phy1_rgmii]
   connect_bd_intf_net -intf_net mac_eth2_RGMII [get_bd_intf_ports phy2_rgmii] [get_bd_intf_pins macs/phy2_rgmii]
@@ -1478,9 +2357,11 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net macs_M_AXIS_ETH1 [get_bd_intf_pins macs/M_AXIS_ETH1] [get_bd_intf_pins rp_wrapper/S_AXIS_ETH1]
   connect_bd_intf_net -intf_net macs_M_AXIS_ETH2 [get_bd_intf_pins macs/M_AXIS_ETH2] [get_bd_intf_pins rp_wrapper/S_AXIS_ETH2]
   connect_bd_intf_net -intf_net macs_M_AXIS_ETH3 [get_bd_intf_pins macs/M_AXIS_ETH3] [get_bd_intf_pins rp_wrapper/S_AXIS_ETH3]
-  connect_bd_intf_net -intf_net pr_controller_m_axi_mem [get_bd_intf_pins ddr3/S_AXI_PRC] [get_bd_intf_pins pr_ctrl/m_axi_mem]
+  connect_bd_intf_net -intf_net pr_ctrl_m_axi_mem [get_bd_intf_pins bpi/S_AXI_PRC] [get_bd_intf_pins pr_ctrl/m_axi_mem]
+  connect_bd_intf_net -intf_net rp_wrapper_M_AXIS_DMA [get_bd_intf_pins dma/S_AXIS] [get_bd_intf_pins rp_wrapper/M_AXIS_DMA]
+  connect_bd_intf_net -intf_net rp_wrapper_M_AXIS_ETH0 [get_bd_intf_pins macs/S_AXIS_ETH0] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH0]
   connect_bd_intf_net -intf_net rp_wrapper_M_AXIS_ETH1 [get_bd_intf_pins macs/S_AXIS_ETH1] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH1]
-  connect_bd_intf_net -intf_net rp_wrapper_M_AXIS_ETH3 [get_bd_intf_pins macs/S_AXIS_ETH3] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH3]
+  connect_bd_intf_net -intf_net rp_wrapper_M_AXIS_ETH2 [get_bd_intf_pins macs/S_AXIS_ETH2] [get_bd_intf_pins rp_wrapper/M_AXIS_ETH2]
   connect_bd_intf_net -intf_net system_1 [get_bd_intf_ports system] [get_bd_intf_pins clocks/system]
 
   # Create port connections
@@ -1489,40 +2370,44 @@ proc create_root_design { parentCell } {
   connect_bd_net -net Net [get_bd_ports bpi_dq] [get_bd_pins bpi/bpi_dq]
   connect_bd_net -net aux_reset_in_0_1 [get_bd_ports pcie_perstn] [get_bd_pins pcie/pcie_perstn]
   connect_bd_net -net axi_pcie_0_axi_aclk_out [get_bd_pins dma/clk_axi] [get_bd_pins interconnect/clk] [get_bd_pins pcie/m_axi_aclk]
-  connect_bd_net -net clk_1 [get_bd_pins clocks/clk_100M] [get_bd_pins ddr3/s_axi_aclk] [get_bd_pins interconnect/clk_100M] [get_bd_pins pr_ctrl/clk]
+  connect_bd_net -net clk_1 [get_bd_pins bpi/clk_prc] [get_bd_pins clocks/clk_100M] [get_bd_pins interconnect/clk_100M] [get_bd_pins pr_ctrl/clk]
   connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins clocks/clk_125M] [get_bd_pins dma/clk_axis] [get_bd_pins dtb_rom/s_axi_aclk] [get_bd_pins interconnect/clk_125M] [get_bd_pins macs/gtx_clk] [get_bd_pins pr_ctrl/clk_rp] [get_bd_pins rp_wrapper/clk]
-  connect_bd_net -net clocks_clk_200M [get_bd_pins clocks/clk_200M] [get_bd_pins ddr3/clk] [get_bd_pins idelay_ctrl/ref_clk]
+  connect_bd_net -net clocks_clk_200M [get_bd_pins clocks/clk_200M] [get_bd_pins dma/clk_ddr] [get_bd_pins idelay_ctrl/ref_clk]
   connect_bd_net -net clocks_clk_50M [get_bd_pins bpi/clk] [get_bd_pins clocks/clk_50M] [get_bd_pins interconnect/clk_50M]
   connect_bd_net -net clocks_rst_200M [get_bd_pins clocks/rst_200M] [get_bd_pins idelay_ctrl/rst]
-  connect_bd_net -net clocks_rst_200M_n [get_bd_pins clocks/rst_200M_n] [get_bd_pins ddr3/rst_n]
   connect_bd_net -net clocks_rst_50M_n [get_bd_pins bpi/rst_n] [get_bd_pins clocks/rst_50M_n] [get_bd_pins interconnect/rst_50M_n]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins clocks/clk_125M_90] [get_bd_pins macs/gtx_clk90]
-  connect_bd_net -net ddr3_ready [get_bd_ports led_0] [get_bd_pins ddr3/ready]
+  connect_bd_net -net dma_led_0 [get_bd_ports led_0] [get_bd_pins dma/ddr_ready]
+  connect_bd_net -net dma_shutdown_ack [get_bd_pins dma/shutdown_ack] [get_bd_pins shutdown_concat/In2]
   connect_bd_net -net idelay_ctrl_rdy [get_bd_ports led_1] [get_bd_pins idelay_ctrl/rdy]
+  connect_bd_net -net interconnect_shutdown_ack [get_bd_pins interconnect/shutdown_ack] [get_bd_pins shutdown_concat/In1]
   connect_bd_net -net macs_clk_rx0 [get_bd_pins macs/clk_rx0] [get_bd_pins rp_wrapper/clk_rx0]
   connect_bd_net -net macs_clk_rx1 [get_bd_pins macs/clk_rx1] [get_bd_pins rp_wrapper/clk_rx1]
   connect_bd_net -net macs_clk_rx2 [get_bd_pins macs/clk_rx2] [get_bd_pins rp_wrapper/clk_rx2]
   connect_bd_net -net macs_clk_rx3 [get_bd_pins macs/clk_rx3] [get_bd_pins rp_wrapper/clk_rx3]
+  connect_bd_net -net macs_shutdown_ack [get_bd_pins macs/shutdown_ack] [get_bd_pins shutdown_concat/In0]
   connect_bd_net -net pcie_axi_pcie_rst_n [get_bd_ports led_2] [get_bd_pins dma/rst_axi_n] [get_bd_pins interconnect/rst_n] [get_bd_pins pcie/m_axi_aresetn]
   connect_bd_net -net pr_controller_vsm_vs_rm_decouple [get_bd_pins dma/decouple] [get_bd_pins interconnect/decouple] [get_bd_pins macs/decouple] [get_bd_pins pr_ctrl/decouple]
   connect_bd_net -net pr_ctrl_rp_active_st [get_bd_ports led_3] [get_bd_pins pr_ctrl/rp_active_st]
-  connect_bd_net -net pr_ctrl_rp_shutdown_req [get_bd_pins pr_ctrl/rp_shutdown_req] [get_bd_pins rp_wrapper/shutdown_req]
+  connect_bd_net -net pr_ctrl_rp_shutdown_req [get_bd_pins dma/shutdown_req] [get_bd_pins interconnect/shutdown_req] [get_bd_pins macs/shutdown_req] [get_bd_pins pr_ctrl/shutdown_req]
   connect_bd_net -net pr_ctrl_rst_rp_n [get_bd_pins pr_ctrl/rst_rp_n] [get_bd_pins rp_wrapper/rst_prc_n]
-  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins clocks/rst_125M_n] [get_bd_pins dma/rst_axis_n] [get_bd_pins dtb_rom/s_axi_aresetn] [get_bd_pins interconnect/rst_125M_n] [get_bd_pins macs/gtx_rst_n] [get_bd_pins rp_wrapper/rst_pcie_n]
+  connect_bd_net -net reset_sys_clk_peripheral_aresetn [get_bd_ports phy0_rstn] [get_bd_ports phy1_rstn] [get_bd_ports phy2_rstn] [get_bd_ports phy3_rstn] [get_bd_pins clocks/rst_125M_n] [get_bd_pins dma/rst_axis_n] [get_bd_pins dtb_rom/s_axi_aresetn] [get_bd_pins interconnect/rst_125M_n] [get_bd_pins macs/gtx_rst_n] [get_bd_pins rp_wrapper/rst_n]
   connect_bd_net -net rp_active_1 [get_bd_pins pr_ctrl/rp_active] [get_bd_pins rp_wrapper/active]
-  connect_bd_net -net rp_shutdown_ack_1 [get_bd_pins pr_ctrl/rp_shutdown_ack] [get_bd_pins rp_wrapper/shutdown_ack]
+  connect_bd_net -net rp_wrapper_fifo_empty [get_bd_pins dma/ext_fifo_empty] [get_bd_pins rp_wrapper/fifo_empty]
   connect_bd_net -net rp_wrapper_irq [get_bd_pins dma/irq] [get_bd_pins pcie/irq]
-  connect_bd_net -net rst_100M_n_1 [get_bd_pins clocks/rst_100M_n] [get_bd_pins ddr3/s_axi_aresetn] [get_bd_pins interconnect/rst_100M_n] [get_bd_pins pr_ctrl/rst_n]
+  connect_bd_net -net rst_100M_n_1 [get_bd_pins bpi/rst_prc_n] [get_bd_pins clocks/rst_100M_n] [get_bd_pins interconnect/rst_100M_n] [get_bd_pins pr_ctrl/rst_n]
+  connect_bd_net -net rst_ddr_n_1 [get_bd_pins clocks/rst_200M_n] [get_bd_pins dma/rst_ddr_n]
   connect_bd_net -net rst_n_1 [get_bd_ports rst_n] [get_bd_pins clocks/rst_n] [get_bd_pins pcie/rst_n]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins pr_ctrl/shutdown_ack] [get_bd_pins shutdown_concat/dout]
 
   # Create address segments
   create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces dma/dma/M_AXI] [get_bd_addr_segs pcie/axi_bridge/S_AXI/BAR0] SEG_axi_bridge_BAR0
-  create_bd_addr_seg -range 0x08000000 -offset 0x80000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs bpi/controller/S_AXI/S_AXI_ADDR] SEG_bpi_controller_S_AXI_ADDR
+  create_bd_addr_seg -range 0x08000000 -offset 0x40000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs bpi/controller/S_AXI/S_AXI_ADDR] SEG_bpi_controller_S_AXI_ADDR
   create_bd_addr_seg -range 0x00001000 -offset 0x00000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] SEG_controller_Mem0
-  create_bd_addr_seg -range 0x00400000 -offset 0x00400000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs ddr3/controller/memmap/memaddr] SEG_controller_memaddr
-  create_bd_addr_seg -range 0x00001000 -offset 0x00002000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00001000 -offset 0x00001000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/pr_controller/s_axi_reg/Reg] SEG_pr_controller_Reg
-  create_bd_addr_seg -range 0x00400000 -offset 0x40000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] SEG_rp_wrapper_reg0
+  create_bd_addr_seg -range 0x00001000 -offset 0x00001000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
+  create_bd_addr_seg -range 0x00001000 -offset 0x00002000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/pr_controller/s_axi_reg/Reg] SEG_pr_controller_Reg
+  create_bd_addr_seg -range 0x00400000 -offset 0x80000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] SEG_rp_wrapper_reg0
+  create_bd_addr_seg -range 0x10000000 -offset 0x00000000 [get_bd_addr_spaces dma/fifo_chain/fifo_1/M_AXI] [get_bd_addr_segs dma/ddr3/controller/memmap/memaddr] SEG_controller_memaddr
 
 
   # Restore current instance

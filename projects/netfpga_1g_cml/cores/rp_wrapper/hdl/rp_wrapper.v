@@ -2,12 +2,11 @@
 module rp_wrapper
 (
 	input wire clk,
+	input wire rst_n,
 	input wire rst_prc_n,
-	input wire rst_pcie_n,
 
-	input wire shutdown_req,
-	output wire shutdown_ack,
 	output wire active,
+	output wire fifo_empty,
 
 	// ETH0
 
@@ -79,28 +78,20 @@ module rp_wrapper
 	// S_AXI_PCIE
 
 	input wire [21:0] s_axi_pcie_araddr,
-	input wire [1:0] s_axi_pcie_arburst,
-	input wire [7:0] s_axi_pcie_arlen,
-	input wire [2:0] s_axi_pcie_arsize,
 	input wire s_axi_pcie_arvalid,
 	output wire s_axi_pcie_arready,
 
 	output wire [63:0] s_axi_pcie_rdata,
 	output wire [1:0] s_axi_pcie_rresp,
-	output wire s_axi_pcie_rlast,
 	output wire s_axi_pcie_rvalid,
 	input wire s_axi_pcie_rready,
 
 	input wire [21:0] s_axi_pcie_awaddr,
-	input wire [1:0] s_axi_pcie_awburst,
-	input wire [7:0] s_axi_pcie_awlen,
-	input wire [2:0] s_axi_pcie_awsize,
 	input wire s_axi_pcie_awvalid,
 	output wire s_axi_pcie_awready,
 
 	input wire [63:0] s_axi_pcie_wdata,
 	input wire [7:0] s_axi_pcie_wstrb,
-	input wire s_axi_pcie_wlast,
 	input wire s_axi_pcie_wvalid,
 	output wire s_axi_pcie_wready,
 

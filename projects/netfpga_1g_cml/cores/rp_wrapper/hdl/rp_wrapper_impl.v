@@ -2,12 +2,11 @@
 module rp_wrapper
 (
 	input wire clk,
+	input wire rst_n,
 	input wire rst_prc_n,
-	input wire rst_pcie_n,
 
-	input wire shutdown_req,
-	output wire shutdown_ack,
 	output wire active,
+	output wire fifo_empty,
 
 	// ETH0
 
@@ -79,28 +78,20 @@ module rp_wrapper
 	// S_AXI_PCIE
 
 	input wire [21:0] s_axi_pcie_araddr,
-	input wire [1:0] s_axi_pcie_arburst,
-	input wire [7:0] s_axi_pcie_arlen,
-	input wire [2:0] s_axi_pcie_arsize,
 	input wire s_axi_pcie_arvalid,
 	output wire s_axi_pcie_arready,
 
 	output wire [63:0] s_axi_pcie_rdata,
 	output wire [1:0] s_axi_pcie_rresp,
-	output wire s_axi_pcie_rlast,
 	output wire s_axi_pcie_rvalid,
 	input wire s_axi_pcie_rready,
 
 	input wire [21:0] s_axi_pcie_awaddr,
-	input wire [1:0] s_axi_pcie_awburst,
-	input wire [7:0] s_axi_pcie_awlen,
-	input wire [2:0] s_axi_pcie_awsize,
 	input wire s_axi_pcie_awvalid,
 	output wire s_axi_pcie_awready,
 
 	input wire [63:0] s_axi_pcie_wdata,
 	input wire [7:0] s_axi_pcie_wstrb,
-	input wire s_axi_pcie_wlast,
 	input wire s_axi_pcie_wvalid,
 	output wire s_axi_pcie_wready,
 
@@ -111,12 +102,11 @@ module rp_wrapper
 	bd_reconfig_region U0
 	(
 		.clk(clk),
+		.rst_n(rst_n),
 		.rst_prc_n(rst_prc_n),
-		.rst_pcie_n(rst_pcie_n),
 
-		.shutdown_req(shutdown_req),
-		.shutdown_ack(shutdown_ack),
 		.active(active),
+		.fifo_empty(fifo_empty),
 
 		// ETH0
 
@@ -188,40 +178,22 @@ module rp_wrapper
 		// S_AXI_PCIE
 
 		.S_AXI_PCIE_araddr(s_axi_pcie_araddr),
-		.S_AXI_PCIE_arburst(s_axi_pcie_arburst),
-		.S_AXI_PCIE_arlen(s_axi_pcie_arlen),
-		.S_AXI_PCIE_arsize(s_axi_pcie_arsize),
 		.S_AXI_PCIE_arprot(3'd0),
-		.S_AXI_PCIE_arcache(4'd0),
-		.S_AXI_PCIE_arid(1'b0),
-		.S_AXI_PCIE_arlock(1'b0),
-		.S_AXI_PCIE_arqos(4'd0),
-		.S_AXI_PCIE_arregion(4'd0),
 		.S_AXI_PCIE_arvalid(s_axi_pcie_arvalid),
 		.S_AXI_PCIE_arready(s_axi_pcie_arready),
 
 		.S_AXI_PCIE_rdata(s_axi_pcie_rdata),
 		.S_AXI_PCIE_rresp(s_axi_pcie_rresp),
-		.S_AXI_PCIE_rlast(s_axi_pcie_rlast),
 		.S_AXI_PCIE_rvalid(s_axi_pcie_rvalid),
 		.S_AXI_PCIE_rready(s_axi_pcie_rready),
 
 		.S_AXI_PCIE_awaddr(s_axi_pcie_awaddr),
-		.S_AXI_PCIE_awburst(s_axi_pcie_awburst),
-		.S_AXI_PCIE_awlen(s_axi_pcie_awlen),
-		.S_AXI_PCIE_awsize(s_axi_pcie_awsize),
 		.S_AXI_PCIE_awprot(3'd0),
-		.S_AXI_PCIE_awcache(4'd0),
-		.S_AXI_PCIE_awid(1'b0),
-		.S_AXI_PCIE_awlock(1'b0),
-		.S_AXI_PCIE_awqos(4'd0),
-		.S_AXI_PCIE_awregion(4'd0),
 		.S_AXI_PCIE_awvalid(s_axi_pcie_awvalid),
 		.S_AXI_PCIE_awready(s_axi_pcie_awready),
 
 		.S_AXI_PCIE_wdata(s_axi_pcie_wdata),
 		.S_AXI_PCIE_wstrb(s_axi_pcie_wstrb),
-		.S_AXI_PCIE_wlast(s_axi_pcie_wlast),
 		.S_AXI_PCIE_wvalid(s_axi_pcie_wvalid),
 		.S_AXI_PCIE_wready(s_axi_pcie_wready),
 
