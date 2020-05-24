@@ -68,11 +68,13 @@ module pr_shutdown_axis
 				in_transmission <= 1'b0;
 			end
 
-			if(shutdown_req) begin
-				if(C_AXIS_HAS_TLAST) begin
-					shutdown <= ~in_transmission | (s_axis_tvalid & s_axis_tready & s_axis_tlast);
-				end else begin
-					shutdown <= ~s_axis_tvalid | ~s_axis_tready;
+			if(C_AXIS_HAS_TLAST) begin
+				if(~in_transmission | (s_axis_tvalid & s_axis_tready & s_axis_tlast)) begin
+					shutdown <= shutdown_req;
+				end
+			end else begin
+				if(~s_axis_tvalid | ~s_axis_tready) begin
+					shutdown <= shutdown_req;
 				end
 			end
 		end
