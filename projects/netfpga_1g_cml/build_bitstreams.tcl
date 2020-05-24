@@ -108,12 +108,14 @@ cd hw/dcp
 file mkdir impl
 file mkdir ../reports
 
-run_implementation static.dcp      rp_dual_tgen_detector.dcp impl/dual_tgen_detector.dcp ../reports/dual_tgen_detector impl/static.dcp impl/static_grey.dcp
+run_implementation static.dcp      rp_dual_detector.dcp      impl/dual_detector.dcp      ../reports/dual_detector      impl/static.dcp impl/static_grey.dcp
+run_implementation impl/static.dcp rp_dual_tgen_detector.dcp impl/dual_tgen_detector.dcp ../reports/dual_tgen_detector
 run_implementation impl/static.dcp rp_dual_tgen_latency.dcp  impl/dual_tgen_latency.dcp  ../reports/dual_tgen_latency
 run_implementation impl/static.dcp rp_quad_tgen.dcp          impl/quad_tgen.dcp          ../reports/quad_tgen
 
 # Verify if the implementation results are compatible
 
+pr_verify impl/static_grey.dcp impl/dual_detector.dcp
 pr_verify impl/static_grey.dcp impl/dual_tgen_detector.dcp
 pr_verify impl/static_grey.dcp impl/dual_tgen_latency.dcp
 pr_verify impl/static_grey.dcp impl/quad_tgen.dcp
@@ -124,6 +126,7 @@ close_project
 file mkdir ../bit
 
 gen_static_bitstream  impl/static_grey.dcp
+gen_partial_bitstream impl/dual_detector.dcp      dual_detector
 gen_partial_bitstream impl/dual_tgen_detector.dcp dual_tgen_detector
 gen_partial_bitstream impl/dual_tgen_latency.dcp  dual_tgen_latency
 gen_partial_bitstream impl/quad_tgen.dcp          quad_tgen
