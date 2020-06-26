@@ -7,16 +7,19 @@
 module bpi_flash_w
 #(
 	parameter C_AXI_WIDTH = 32,
+	parameter C_AXI_RD_FIFO_DEPTH = 128,
+	parameter C_AXI_WR_FIFO_DEPTH = 128,
+
 	parameter C_MEM_WIDTH = 16,
 	parameter C_MEM_SIZE = 134217728,
 
 	parameter C_INTERNAL_IOBUF = 1,
 
 	parameter C_ADDR_TO_CEL_TIME = 3,
-	parameter C_OEL_TO_OEH_TIME = 6,
+	parameter C_OEL_TO_DQ_TIME = 6,
 	parameter C_WEL_TO_DQ_TIME = 1,
 	parameter C_DQ_TO_WEH_TIME = 6,
-	parameter C_OEH_TO_DONE_TIME = 5
+	parameter C_IO_TO_IO_TIME = 5
 )
 (
 	input wire clk,
@@ -25,12 +28,15 @@ module bpi_flash_w
 	// S_AXI
 
 	input wire [$clog2(C_MEM_SIZE)-1:0] s_axi_awaddr,
-	input wire [2:0] s_axi_awprot,
+	input wire [7:0] s_axi_awlen,
+	input wire [2:0] s_axi_awsize,
+	input wire [1:0] s_axi_awburst,
 	input wire s_axi_awvalid,
 	output wire s_axi_awready,
 
 	input wire [C_AXI_WIDTH-1:0] s_axi_wdata,
 	input wire [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
+	input wire s_axi_wlast,
 	input wire s_axi_wvalid,
 	output wire s_axi_wready,
 
@@ -39,13 +45,16 @@ module bpi_flash_w
 	input wire s_axi_bready,
 
 	input wire [$clog2(C_MEM_SIZE)-1:0] s_axi_araddr,
-	input wire [2:0] s_axi_arprot,
+	input wire [7:0] s_axi_arlen,
+	input wire [2:0] s_axi_arsize,
+	input wire [1:0] s_axi_arburst,
 	input wire s_axi_arvalid,
 	output wire s_axi_arready,
 
 	output wire [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output wire [1:0] s_axi_rresp,
 	output wire s_axi_rvalid,
+	output wire s_axi_rlast,
 	input wire s_axi_rready,
 
 	// BPI
@@ -66,14 +75,17 @@ module bpi_flash_w
 	bpi_flash
 	#(
 		C_AXI_WIDTH,
+		C_AXI_RD_FIFO_DEPTH,
+		C_AXI_WR_FIFO_DEPTH,
+
 		C_MEM_WIDTH,
 		C_MEM_SIZE,
 
 		C_ADDR_TO_CEL_TIME,
-		C_OEL_TO_OEH_TIME,
+		C_OEL_TO_DQ_TIME,
 		C_WEL_TO_DQ_TIME,
 		C_DQ_TO_WEH_TIME,
-		C_OEH_TO_DONE_TIME
+		C_IO_TO_IO_TIME
 	)
 	U0
 	(
@@ -83,12 +95,15 @@ module bpi_flash_w
 		// S_AXI
 
 		.s_axi_awaddr(s_axi_awaddr),
-		.s_axi_awprot(s_axi_awprot),
+		.s_axi_awlen(s_axi_awlen),
+		.s_axi_awsize(s_axi_awsize),
+		.s_axi_awburst(s_axi_awburst),
 		.s_axi_awvalid(s_axi_awvalid),
 		.s_axi_awready(s_axi_awready),
 
 		.s_axi_wdata(s_axi_wdata),
 		.s_axi_wstrb(s_axi_wstrb),
+		.s_axi_wlast(s_axi_wlast),
 		.s_axi_wvalid(s_axi_wvalid),
 		.s_axi_wready(s_axi_wready),
 
@@ -97,13 +112,16 @@ module bpi_flash_w
 		.s_axi_bready(s_axi_bready),
 
 		.s_axi_araddr(s_axi_araddr),
-		.s_axi_arprot(s_axi_arprot),
+		.s_axi_arlen(s_axi_arlen),
+		.s_axi_arsize(s_axi_arsize),
+		.s_axi_arburst(s_axi_arburst),
 		.s_axi_arvalid(s_axi_arvalid),
 		.s_axi_arready(s_axi_arready),
 
 		.s_axi_rdata(s_axi_rdata),
 		.s_axi_rresp(s_axi_rresp),
 		.s_axi_rvalid(s_axi_rvalid),
+		.s_axi_rlast(s_axi_rlast),
 		.s_axi_rready(s_axi_rready),
 
 		// BPI

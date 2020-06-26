@@ -13,14 +13,17 @@
 module bpi_flash
 #(
 	parameter C_AXI_WIDTH = 32,
+	parameter C_AXI_RD_FIFO_DEPTH = 128,
+	parameter C_AXI_WR_FIFO_DEPTH = 128,
+
 	parameter C_MEM_WIDTH = 16,
 	parameter C_MEM_SIZE = 134217728,
 
 	parameter C_ADDR_TO_CEL_TIME = 3,
-	parameter C_OEL_TO_OEH_TIME = 6,
+	parameter C_OEL_TO_DQ_TIME = 6,
 	parameter C_WEL_TO_DQ_TIME = 1,
 	parameter C_DQ_TO_WEH_TIME = 6,
-	parameter C_OEH_TO_DONE_TIME = 5
+	parameter C_IO_TO_IO_TIME = 5
 )
 (
 	input logic clk,
@@ -29,12 +32,15 @@ module bpi_flash
 	// S_AXI
 
 	input logic [$clog2(C_MEM_SIZE)-1:0] s_axi_awaddr,
-	input logic [2:0] s_axi_awprot,
+	input logic [7:0] s_axi_awlen,
+	input logic [2:0] s_axi_awsize,
+	input logic [1:0] s_axi_awburst,
 	input logic s_axi_awvalid,
 	output logic s_axi_awready,
 
 	input logic [C_AXI_WIDTH-1:0] s_axi_wdata,
 	input logic [(C_AXI_WIDTH/8)-1:0] s_axi_wstrb,
+	input logic s_axi_wlast,
 	input logic s_axi_wvalid,
 	output logic s_axi_wready,
 
@@ -43,13 +49,16 @@ module bpi_flash
 	input logic s_axi_bready,
 
 	input logic [$clog2(C_MEM_SIZE)-1:0] s_axi_araddr,
-	input logic [2:0] s_axi_arprot,
+	input logic [7:0] s_axi_arlen,
+	input logic [2:0] s_axi_arsize,
+	input logic [1:0] s_axi_arburst,
 	input logic s_axi_arvalid,
 	output logic s_axi_arready,
 
 	output logic [C_AXI_WIDTH-1:0] s_axi_rdata,
 	output logic [1:0] s_axi_rresp,
 	output logic s_axi_rvalid,
+	output logic s_axi_rlast,
 	input logic s_axi_rready,
 
 	// BPI
@@ -64,205 +73,403 @@ module bpi_flash
 	output logic bpi_oe_n,
 	output logic bpi_we_n
 );
-	enum logic [1:0] {ST_WAIT_AXI, ST_READ_FLASH, ST_WRITE_FLASH, ST_DONE} state;
+	localparam C_MEM_ADDR_WIDTH = $clog2(8*C_MEM_SIZE/C_MEM_WIDTH);
+	localparam C_MEM_ADDR_ADJ_WIDTH = 8 * ((C_MEM_ADDR_WIDTH + 7) / 8);
 
-	logic read_req;
-	logic read_ready;
-	logic read_response;
-	logic [C_AXI_WIDTH-1:0] read_value;
-	logic [$clog2(C_MEM_SIZE)-1:0] read_addr;
+	logic mode;
+	logic read_active, write_active;
+	logic enable_read, enable_write;
+	logic [4:0] queued_read, queued_write;
+	logic [4:0] done_read, done_write;
 
-	logic write_req;
-	logic write_ready;
-	logic write_response;
-	logic [$clog2(C_MEM_SIZE)-1:0] write_addr;
-	logic [(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] write_strb;
-	logic [(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] write_strb_valid;
+	logic [C_MEM_ADDR_ADJ_WIDTH-1:0] s_axis_rd_rq_tdata;
+	logic [9:0] s_axis_rd_rq_tuser;
+	logic s_axis_rd_rq_tvalid, s_axis_rd_rq_tready;
 
-	logic req_valid, req_done, req_op;
-	logic [C_MEM_WIDTH-1:0] req_rdata;
-	logic [C_AXI_WIDTH-1:0] req_wdata;
-	logic [(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] req_strb;
-	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH)-1:0] req_addr;
+	logic [C_MEM_ADDR_ADJ_WIDTH-1:0] s_axis_wr_rq_tdata;
+	logic s_axis_wr_rq_tuser, s_axis_wr_rq_tvalid, s_axis_wr_rq_tready;
+
+	// Coordinator
+
+	enum logic [2:0] {ST_IDLE, ST_READ, ST_WRITE, ST_WR_TO_RD, ST_RD_TO_WR} state;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
-			state <= ST_WAIT_AXI;
+			state <= ST_IDLE;
 
-			read_ready <= 1'b0;
-			read_response <= 1'b0;
-			read_value <= '0;
-			read_addr <= '0;
-
-			write_ready <= 1'b0;
-			write_response <= 1'b0;
-
-			req_valid <= 1'b0;
-			req_op <= 1'b0;
-			req_wdata <= '0;
-			req_strb <= '0;
-			req_addr <= '0;
+			mode <= 1'b0;
+			enable_read <= 1'b0;
+			enable_write <= 1'b0;
 		end else begin
 			case(state)
-				ST_WAIT_AXI: begin
-					if(read_req) begin
-						state <= ST_READ_FLASH;
+				ST_IDLE: begin
+					enable_read <= 1'b0;
+					enable_write <= 1'b0;
 
-						req_addr <= s_axi_araddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)];
-						req_addr[$clog2(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] <= '0;
-
-						req_strb <= '1;
-						req_op <= 1'b0;
-						req_valid <= 1'b1;
-					end else if(write_req) begin
-						if(write_strb_valid == '1 && write_strb != '0) begin
-							state <= ST_WRITE_FLASH;
-
-							req_addr <= write_addr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)];
-							req_addr[$clog2(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] <= '0;
-
-							req_wdata <= s_axi_wdata;
-							req_strb <= write_strb;
-							req_op <= 1'b1;
-							req_valid <= write_strb[0];
-						end else begin
-							state <= ST_DONE;
-
-							write_ready <= 1'b1;
-							write_response <= 1'b0;
+					if(~read_active & ~write_active) begin
+						if(queued_write != 5'd0) begin
+							state <= ST_WRITE;
+							enable_write <= 1'b1;
+						end else if(queued_read != 5'd0) begin
+							state <= ST_READ;
+							enable_read <= 1'b1;
 						end
 					end
 				end
 
-				ST_READ_FLASH: begin
-					req_valid <= 1'b0;
+				ST_READ: begin
+					mode <= 1'b0;
+					enable_read <= 1'b1;
+					enable_write <= 1'b0;
 
-					if(req_done) begin
-						req_strb <= {1'b0, req_strb[(C_AXI_WIDTH/C_MEM_WIDTH)-1:1]};
-						read_value <= {req_rdata, read_value[C_AXI_WIDTH-1:C_MEM_WIDTH]};
+					if(queued_read == 5'd0) begin
+						state <= ST_IDLE;
+						enable_read <= 1'b0;
+					end
 
-						if(req_strb == 'd1) begin
-							state <= ST_DONE;
-
-							read_ready <= 1'b1;
-							read_response <= 1'b1;
-						end else begin
-							req_addr <= req_addr + 'd1;
-							req_valid <= 1'b1;
-						end
+					if(queued_write != 5'd0 && done_read >= 5'd16) begin
+						state <= ST_RD_TO_WR;
+						enable_read <= 1'b0;
 					end
 				end
 
-				ST_WRITE_FLASH: begin
-					req_valid <= 1'b0;
+				ST_WRITE: begin
+					mode <= 1'b1;
+					enable_read <= 1'b0;
+					enable_write <= 1'b1;
 
-					if(req_done | ~req_strb[0]) begin
-						req_strb <= {1'b0, req_strb[(C_AXI_WIDTH/C_MEM_WIDTH)-1:1]};
-						req_wdata <= {'0, req_wdata[C_AXI_WIDTH-1:C_MEM_WIDTH]};
+					if(queued_write == 5'd0) begin
+						state <= ST_IDLE;
+						enable_write <= 1'b0;
+					end
 
-						if(req_strb == 'd1) begin
-							state <= ST_DONE;
-
-							write_ready <= 1'b1;
-							write_response <= 1'b1;
-						end else begin
-							req_addr <= req_addr + 'd1;
-							req_valid <= req_strb[1];
-						end
+					if(queued_read != 5'd0 && done_write >= 5'd16) begin
+						state <= ST_WR_TO_RD;
+						enable_write <= 1'b0;
 					end
 				end
 
-				ST_DONE: begin
-					state <= ST_WAIT_AXI;
+				ST_RD_TO_WR: begin
+					enable_read <= 1'b0;
+					enable_write <= 1'b0;
 
-					read_ready <= 1'b0;
-					read_response <= 1'b0;
-					read_value <= '0;
+					if(~read_active & ~write_active) begin
+						state <= ST_WRITE;
+						mode <= 1'b1;
+						enable_write <= 1'b1;
+					end
+				end
 
-					write_ready <= 1'b0;
-					write_response <= 1'b0;
+				ST_WR_TO_RD: begin
+					enable_read <= 1'b0;
+					enable_write <= 1'b0;
+
+					if(~read_active & ~write_active) begin
+						state <= ST_READ;
+						mode <= 1'b0;
+						enable_read <= 1'b1;
+					end
+				end
+
+				default: begin
+					state <= ST_IDLE;
 				end
 			endcase
 		end
 	end
 
-	for(genvar i = 0; i < C_AXI_WIDTH/C_MEM_WIDTH; ++i) begin
-		always_comb begin
-			write_strb[i] = s_axi_wstrb[i*(C_MEM_WIDTH/8)];
-			write_strb_valid[i] = (s_axi_wstrb[(i+1)*(C_MEM_WIDTH/8)-1:i*(C_MEM_WIDTH/8)] == '0 || s_axi_wstrb[(i+1)*(C_MEM_WIDTH/8)-1:i*(C_MEM_WIDTH/8)] == '1);
+	// AR channel
+
+	always_ff @(posedge clk) begin
+		if(~rst_n) begin
+			done_read <= 5'd0;
+
+			s_axis_rd_rq_tdata <= '0;
+			s_axis_rd_rq_tuser <= 10'd0;
+			s_axis_rd_rq_tvalid <= 1'b0;
+
+			s_axi_arready <= 1'b0;
+		end else begin
+			if(queued_read <= 5'd15 && ~s_axis_rd_rq_tvalid) begin
+				s_axi_arready <= 1'b1;
+
+				if(s_axi_arready & s_axi_arvalid) begin
+					s_axis_rd_rq_tdata <= {'0, s_axi_araddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)]};
+					s_axis_rd_rq_tuser[9:2] <= s_axi_arlen;
+
+					if(s_axi_arsize >= $clog2(C_AXI_WIDTH/8)) begin
+						s_axis_rd_rq_tuser[1:0] <= 2'b10;
+					end else begin
+						s_axis_rd_rq_tuser[1:0] <= 2'b00;
+					end
+
+					// Unaligned access
+
+					if(s_axi_araddr[$clog2(C_MEM_WIDTH/8)-1:0] != '0) begin
+						s_axis_rd_rq_tuser[0] <= 1'b1;
+					end
+
+					// Invalid burst size
+
+					if(s_axi_arsize > $clog2(C_AXI_WIDTH/8)) begin
+						s_axis_rd_rq_tuser[0] <= 1'b1;
+					end
+
+					// Invalid burst mode
+
+					if(s_axi_arburst != 2'd1 && s_axi_arlen != 8'd0) begin
+						s_axis_rd_rq_tuser[0] <= 1'b1;
+					end
+
+					// Narrow burst
+
+					if(s_axi_arsize != $clog2(C_AXI_WIDTH/8) && s_axi_arlen != 8'd0) begin
+						s_axis_rd_rq_tuser[0] <= 1'b1;
+					end
+
+					s_axis_rd_rq_tvalid <= 1'b1;
+					s_axi_arready <= 1'b0;
+				end
+			end else begin
+				s_axi_arready <= 1'b0;
+			end
+
+			if(s_axis_rd_rq_tvalid & s_axis_rd_rq_tready) begin
+				s_axis_rd_rq_tvalid <= 1'b0;
+			end
+
+			if(s_axi_rvalid & s_axi_rready & s_axi_rlast) begin
+				if(done_read != '1) begin
+					done_read <= done_read + 5'd1;
+				end
+			end
+
+			if(state != ST_READ) begin
+				done_read <= 5'd0;
+			end
 		end
 	end
 
-	// AXI4-Lite
+	// AW channel
 
-	axi4_lite_slave_rw #($clog2(C_MEM_SIZE), C_AXI_WIDTH) U0
+	always_ff @(posedge clk) begin
+		if(~rst_n) begin
+			done_write <= 5'd0;
+
+			s_axis_wr_rq_tdata <= '0;
+			s_axis_wr_rq_tuser <= 10'd0;
+			s_axis_wr_rq_tvalid <= 1'b0;
+
+			s_axi_awready <= 1'b0;
+		end else begin
+			if(queued_write <= 5'd15 && ~s_axis_wr_rq_tvalid) begin
+				s_axi_awready <= 1'b1;
+
+				if(s_axi_awready & s_axi_awvalid) begin
+					s_axis_wr_rq_tdata <= {'0, s_axi_awaddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)]};
+					s_axis_wr_rq_tuser <= 1'b0;
+
+					// Unaligned access
+
+					if(s_axi_awaddr[$clog2(C_MEM_WIDTH/8)-1:0] != '0) begin
+						s_axis_wr_rq_tuser <= 1'b1;
+					end
+
+					// Invalid burst size
+
+					if(s_axi_awsize > $clog2(C_AXI_WIDTH/8)) begin
+						s_axis_wr_rq_tuser <= 1'b1;
+					end
+
+					// Invalid burst mode
+
+					if(s_axi_awburst != 2'd1 && s_axi_arlen != 8'd0) begin
+						s_axis_wr_rq_tuser <= 1'b1;
+					end
+
+					// Narrow burst
+
+					if(s_axi_awsize != $clog2(C_AXI_WIDTH/8) && s_axi_awlen != 8'd0) begin
+						s_axis_wr_rq_tuser <= 1'b1;
+					end
+
+					s_axis_wr_rq_tvalid <= 1'b1;
+					s_axi_awready <= 1'b0;
+				end
+			end else begin
+				s_axi_awready <= 1'b0;
+			end
+
+			if(s_axis_wr_rq_tvalid & s_axis_wr_rq_tready) begin
+				s_axis_wr_rq_tvalid <= 1'b0;
+			end
+
+			if(s_axi_bvalid & s_axi_bready) begin
+				if(done_write != '1) begin
+					done_write <= done_write + 5'd1;
+				end
+			end
+
+			if(state != ST_WRITE) begin
+				done_write <= 5'd0;
+			end
+		end
+	end
+
+	// Transaction FIFOs
+
+	logic [C_MEM_ADDR_ADJ_WIDTH-1:0] m_axis_rd_rq_tdata;
+	logic [9:0] m_axis_rd_rq_tuser;
+	logic m_axis_rd_rq_tvalid, m_axis_rd_rq_tready;
+
+	xpm_fifo_axis
+	#(
+		.CDC_SYNC_STAGES(2),
+		.CLOCKING_MODE("common_clock"),
+		.ECC_MODE("no_ecc"),
+		.FIFO_DEPTH(16),
+		.FIFO_MEMORY_TYPE("distributed"),
+		.PACKET_FIFO("false"),
+		.PROG_EMPTY_THRESH(10),
+		.PROG_FULL_THRESH(10),
+		.RD_DATA_COUNT_WIDTH(1),
+		.RELATED_CLOCKS(0),
+		.TDATA_WIDTH(C_MEM_ADDR_ADJ_WIDTH),
+		.TDEST_WIDTH(1),
+		.TID_WIDTH(1),
+		.TUSER_WIDTH(10),
+		.USE_ADV_FEATURES("0004"),
+		.WR_DATA_COUNT_WIDTH(5)
+	)
+	U0
 	(
-		.clk(clk),
-		.rst_n(rst_n),
+		.m_aclk(clk),
+		.s_aclk(clk),
+		.s_aresetn(rst_n),
 
-		.read_req(read_req),
+		.prog_full_axis(),
+		.prog_empty_axis(),
+		.wr_data_count_axis(queued_read),
 
-		.read_ready(read_ready),
-		.read_response(read_response),
-		.read_value(read_value),
+		.s_axis_tdata(s_axis_rd_rq_tdata),
+		.s_axis_tuser(s_axis_rd_rq_tuser),
+		.s_axis_tvalid(s_axis_rd_rq_tvalid),
+		.s_axis_tready(s_axis_rd_rq_tready),
 
-		.write_req(write_req),
-		.write_addr(write_addr),
+		.m_axis_tdata(m_axis_rd_rq_tdata),
+		.m_axis_tuser(m_axis_rd_rq_tuser),
+		.m_axis_tvalid(m_axis_rd_rq_tvalid),
+		.m_axis_tready(m_axis_rd_rq_tready),
 
-		.write_ready(write_ready),
-		.write_response(write_response),
+		.s_axis_tlast(1'b0),
+		.s_axis_tdest(1'b0),
+		.s_axis_tid(1'b0),
+		.s_axis_tkeep(1'b1),
+		.s_axis_tstrb(1'b1),
 
-		.s_axi_awaddr(s_axi_awaddr),
-		.s_axi_awprot(s_axi_awprot),
-		.s_axi_awvalid(s_axi_awvalid),
-		.s_axi_awready(s_axi_awready),
-
-		.s_axi_wdata(s_axi_wdata),
-		.s_axi_wstrb(s_axi_wstrb),
-		.s_axi_wvalid(s_axi_wvalid),
-		.s_axi_wready(s_axi_wready),
-
-		.s_axi_bresp(s_axi_bresp),
-		.s_axi_bvalid(s_axi_bvalid),
-		.s_axi_bready(s_axi_bready),
-
-		.s_axi_araddr(s_axi_araddr),
-		.s_axi_arprot(s_axi_arprot),
-		.s_axi_arvalid(s_axi_arvalid),
-		.s_axi_arready(s_axi_arready),
-
-		.s_axi_rdata(s_axi_rdata),
-		.s_axi_rresp(s_axi_rresp),
-		.s_axi_rvalid(s_axi_rvalid),
-		.s_axi_rready(s_axi_rready)
+		.injectdbiterr_axis(1'b0),
+		.injectsbiterr_axis(1'b0)
 	);
 
-	// Flash FSM
+	logic [C_MEM_ADDR_ADJ_WIDTH-1:0] m_axis_wr_rq_tdata;
+	logic m_axis_wr_rq_tuser, m_axis_wr_rq_tvalid, m_axis_wr_rq_tready;
 
-	bpi_flash_fsm
+	xpm_fifo_axis
+	#(
+		.CDC_SYNC_STAGES(2),
+		.CLOCKING_MODE("common_clock"),
+		.ECC_MODE("no_ecc"),
+		.FIFO_DEPTH(16),
+		.FIFO_MEMORY_TYPE("distributed"),
+		.PACKET_FIFO("false"),
+		.PROG_EMPTY_THRESH(10),
+		.PROG_FULL_THRESH(10),
+		.RD_DATA_COUNT_WIDTH(1),
+		.RELATED_CLOCKS(0),
+		.TDATA_WIDTH(C_MEM_ADDR_ADJ_WIDTH),
+		.TDEST_WIDTH(1),
+		.TID_WIDTH(1),
+		.TUSER_WIDTH(1),
+		.USE_ADV_FEATURES("0004"),
+		.WR_DATA_COUNT_WIDTH(5)
+	)
+	U1
+	(
+		.m_aclk(clk),
+		.s_aclk(clk),
+		.s_aresetn(rst_n),
+
+		.prog_full_axis(),
+		.prog_empty_axis(),
+		.wr_data_count_axis(queued_write),
+
+		.s_axis_tdata(s_axis_wr_rq_tdata),
+		.s_axis_tuser(s_axis_wr_rq_tuser),
+		.s_axis_tvalid(s_axis_wr_rq_tvalid),
+		.s_axis_tready(s_axis_wr_rq_tready),
+
+		.m_axis_tdata(m_axis_wr_rq_tdata),
+		.m_axis_tuser(m_axis_wr_rq_tuser),
+		.m_axis_tvalid(m_axis_wr_rq_tvalid),
+		.m_axis_tready(m_axis_wr_rq_tready),
+
+		.s_axis_tlast(1'b0),
+		.s_axis_tdest(1'b0),
+		.s_axis_tid(1'b0),
+		.s_axis_tkeep(1'b1),
+		.s_axis_tstrb(1'b1),
+
+		.injectdbiterr_axis(1'b0),
+		.injectsbiterr_axis(1'b0)
+	);
+
+	// IO FSMs
+
+	logic [C_MEM_WIDTH-1:0] m_axis_rd_tdata;
+	logic m_axis_rd_tvalid;
+
+	logic [C_MEM_ADDR_WIDTH-1:0] s_axis_rd_tdata;
+	logic s_axis_rd_tvalid, s_axis_rd_tready;
+
+	logic [C_MEM_WIDTH-1:0] s_axis_wr_tdata;
+	logic [C_MEM_ADDR_WIDTH-1:0] s_axis_wr_tdest;
+	logic s_axis_wr_tvalid, s_axis_wr_tready;
+
+	bpi_flash_ctrl
 	#(
 		C_MEM_WIDTH,
 		C_MEM_SIZE,
 
 		C_ADDR_TO_CEL_TIME,
-		C_OEL_TO_OEH_TIME,
+		C_OEL_TO_DQ_TIME,
 		C_WEL_TO_DQ_TIME,
 		C_DQ_TO_WEH_TIME,
-		C_OEH_TO_DONE_TIME
+		C_IO_TO_IO_TIME
 	)
-	U1
+	U2
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.req_valid(req_valid),
-		.req_done(req_done),
+		.mode(mode),
 
-		.req_addr(req_addr),
-		.req_op(req_op),
+		// M_AXIS_RD
 
-		.req_wdata(req_wdata[C_MEM_WIDTH-1:0]),
-		.req_rdata(req_rdata),
+		.m_axis_rd_tdata(m_axis_rd_tdata),
+		.m_axis_rd_tvalid(m_axis_rd_tvalid),
+
+		// S_AXIS_RD
+
+		.s_axis_rd_tdata(s_axis_rd_tdata),
+		.s_axis_rd_tvalid(s_axis_rd_tvalid),
+		.s_axis_rd_tready(s_axis_rd_tready),
+
+		// S_AXIS_WR
+
+		.s_axis_wr_tdata(s_axis_wr_tdata),
+		.s_axis_wr_tdest(s_axis_wr_tdest),
+		.s_axis_wr_tvalid(s_axis_wr_tvalid),
+		.s_axis_wr_tready(s_axis_wr_tready),
 
 		// BPI
 
@@ -275,5 +482,92 @@ module bpi_flash
 		.bpi_ce_n(bpi_ce_n),
 		.bpi_oe_n(bpi_oe_n),
 		.bpi_we_n(bpi_we_n)
+	);
+
+	bpi_flash_read_fsm
+	#(
+		C_AXI_WIDTH,
+		C_AXI_RD_FIFO_DEPTH,
+
+		C_MEM_WIDTH,
+		C_MEM_SIZE
+	)
+	U3
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.enable(enable_read),
+		.active(read_active),
+
+		// S_AXI
+
+		.s_axi_rdata(s_axi_rdata),
+		.s_axi_rresp(s_axi_rresp),
+		.s_axi_rvalid(s_axi_rvalid),
+		.s_axi_rlast(s_axi_rlast),
+		.s_axi_rready(s_axi_rready),
+
+		// S_AXIS_RQ
+
+		.s_axis_rq_tdata(m_axis_rd_rq_tdata[C_MEM_ADDR_WIDTH-1:0]),
+		.s_axis_rq_tuser(m_axis_rd_rq_tuser),
+		.s_axis_rq_tvalid(m_axis_rd_rq_tvalid),
+		.s_axis_rq_tready(m_axis_rd_rq_tready),
+
+		// S_AXIS_RD
+
+		.s_axis_rd_tdata(m_axis_rd_tdata),
+		.s_axis_rd_tvalid(m_axis_rd_tvalid),
+
+		// M_AXIS_RD
+
+		.m_axis_rd_tdata(s_axis_rd_tdata),
+		.m_axis_rd_tvalid(s_axis_rd_tvalid),
+		.m_axis_rd_tready(s_axis_rd_tready)
+	);
+
+	bpi_flash_write_fsm
+	#(
+		C_AXI_WIDTH,
+		C_AXI_WR_FIFO_DEPTH,
+
+		C_MEM_WIDTH,
+		C_MEM_SIZE
+	)
+	U4
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.enable(enable_write),
+		.enable_fifo(1'b1),
+		.active(write_active),
+
+		// S_AXI
+
+		.s_axi_wdata(s_axi_wdata),
+		.s_axi_wstrb(s_axi_wstrb),
+		.s_axi_wlast(s_axi_wlast),
+		.s_axi_wvalid(s_axi_wvalid),
+		.s_axi_wready(s_axi_wready),
+
+		.s_axi_bresp(s_axi_bresp),
+		.s_axi_bvalid(s_axi_bvalid),
+		.s_axi_bready(s_axi_bready),
+
+		// S_AXIS_RQ
+
+		.s_axis_rq_tdata(m_axis_wr_rq_tdata[C_MEM_ADDR_WIDTH-1:0]),
+		.s_axis_rq_tuser(m_axis_wr_rq_tuser),
+		.s_axis_rq_tvalid(m_axis_wr_rq_tvalid),
+		.s_axis_rq_tready(m_axis_wr_rq_tready),
+
+		// M_AXIS_WR
+
+		.m_axis_wr_tdata(s_axis_wr_tdata),
+		.m_axis_wr_tdest(s_axis_wr_tdest),
+		.m_axis_wr_tvalid(s_axis_wr_tvalid),
+		.m_axis_wr_tready(s_axis_wr_tready)
 	);
 endmodule
