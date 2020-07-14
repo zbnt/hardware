@@ -9,8 +9,13 @@ module axi_mm2s_w
 	parameter C_AXI_WIDTH = 64,
 	parameter C_AXI_ADDR_WIDTH = 64,
 	parameter C_AXI_MAX_BURST = 255,
+
 	parameter C_FIFO_SIZE = 256,
-	parameter C_FIFO_TYPE = "block"
+	parameter C_FIFO_TYPE = "block",
+
+	parameter C_VALUE_ARPROT = 3'd0,
+	parameter C_VALUE_ARCACHE = 4'b1111,
+	parameter C_VALUE_ARUSER = 4'b1111
 )
 (
 	input wire clk,
@@ -33,6 +38,10 @@ module axi_mm2s_w
 	output wire [C_AXI_ADDR_WIDTH-1:0] m_axi_araddr,
 	output wire [7:0] m_axi_arlen,
 	output wire [2:0] m_axi_arsize,
+	output wire [1:0] m_axi_arburst,
+	output wire [2:0] m_axi_arprot,
+	output wire [3:0] m_axi_aruser,
+	output wire [3:0] m_axi_arcache,
 	output wire m_axi_arvalid,
 	input wire m_axi_arready,
 
@@ -50,6 +59,11 @@ module axi_mm2s_w
 	output wire m_axis_tvalid,
 	input wire m_axis_tready
 );
+	assign m_axi_arprot = C_VALUE_ARPROT;
+	assign m_axi_aruser = C_VALUE_ARUSER;
+	assign m_axi_arcache = C_VALUE_ARCACHE;
+	assign m_axi_arburst = 2'd1;
+
 	axi_mm2s
 	#(
 		.C_AXI_WIDTH(C_AXI_WIDTH),
