@@ -63,7 +63,7 @@ module mux_big_impl
 
 			for(genvar j = 0; j < C_INPUTS/C_DIVIDER; j++) begin
 				always_comb begin
-					new_values[j] = values_in[i*C_DIVIDER + j];
+					new_values[j] = values_in[i*C_INPUTS/C_DIVIDER + j];
 				end
 			end
 
