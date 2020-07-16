@@ -223,6 +223,7 @@ module axi_mm2s_io
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state_rd_s1 <= ST_RD1_IDLE;
+			response <= 2'd0;
 
 			rd_data <= '0;
 			rd_offset <= '0;
@@ -246,7 +247,7 @@ module axi_mm2s_io
 				ST_RD1_WAIT_REQ: begin
 					response <= 2'd0;
 
-					rd_ignore_first <= (rd_bytes_in >= C_AXI_WIDTH/8);
+					rd_ignore_first <= (rd_bytes_in >= C_AXI_WIDTH/8 && rd_offset != '0);
 
 					if(m_axi_arready & m_axi_arvalid) begin
 						state_rd_s1 <= ST_RD1_FETCH_WORD;
@@ -304,7 +305,8 @@ module axi_mm2s_io
 
 	logic [2*C_AXI_WIDTH-1:0] rd_data_sr;
 	logic [(C_AXI_WIDTH/8)-1:0] rd_mask;
-	logic [15:0] rd_bytes_out;
+	logic [$clog2(C_AXI_WIDTH/8)-1:0] rd_bits_mask;
+	logic [16:0] rd_bytes_out;
 	logic rd_first, rd_second;
 
 	logic rd_s2_last, rd_s2_valid;
@@ -315,7 +317,8 @@ module axi_mm2s_io
 
 			rd_data_sr <= '0;
 			rd_mask <= '0;
-			rd_bytes_out <= 16'd0;
+			rd_bits_mask <= '0;
+			rd_bytes_out <= 17'd0;
 			rd_first <= 1'b0;
 			rd_second <= 1'b0;
 
@@ -329,7 +332,8 @@ module axi_mm2s_io
 					if(trigger & ~busy) begin
 						state_rd_s2 <= ST_RD2_WAIT_REQ;
 
-						rd_bytes_out <= bytes_to_read;
+						rd_bytes_out <= {1'b0, bytes_to_read} + start_addr[$clog2(C_AXI_WIDTH/8)-1:0];
+						rd_bits_mask <= bytes_to_read[$clog2(C_AXI_WIDTH/8)-1:0];
 					end
 				end
 
@@ -352,7 +356,7 @@ module axi_mm2s_io
 								state_rd_s2 <= ST_RD2_WAIT_END;
 							end
 
-							if(rd_first) begin
+							if(rd_first | ~rd_ignore_first) begin
 								rd_data_sr <= {'0, rd_data};
 							end else if(rd_second) begin
 								rd_data_sr <= {rd_data, rd_data_sr[C_AXI_WIDTH-1:0]};
@@ -368,7 +372,7 @@ module axi_mm2s_io
 					rd_mask[0] <= 1'b1;
 
 					for(int i = 1; i < C_AXI_WIDTH/8; i++) begin
-						rd_mask[i] <= (rd_bytes_out >= i);
+						rd_mask[i] <= (rd_bits_mask >= i);
 					end
 				end
 
@@ -389,10 +393,12 @@ module axi_mm2s_io
 	// R-channel - Stage 3: Realignment
 
 	logic [C_AXI_WIDTH-1:0] rd_muxed_values[0:C_AXI_WIDTH/8-1];
+	logic [(C_AXI_WIDTH/8)-1:0] rd_mask_final;
 
 	for(genvar i = 0; i < C_AXI_WIDTH/8; i++) begin
 		always_comb begin
 			rd_muxed_values[i] = rd_data_sr[8*i+C_AXI_WIDTH-1:8*i];
+			rd_mask_final[i] = rd_mask[i] | ~rd_s2_last;
 		end
 	end
 
@@ -425,7 +431,7 @@ module axi_mm2s_io
 		.rst(~rst_n),
 		.enable(s_axis_tready | ~s_axis_tvalid),
 
-		.data_in({rd_mask, rd_s2_last, rd_s2_valid}),
+		.data_in({rd_mask_final, rd_s2_last, rd_s2_valid}),
 		.data_out({s_axis_tstrb, s_axis_tlast, s_axis_tvalid})
 	);
 
