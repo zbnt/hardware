@@ -49,7 +49,7 @@ module axi_s2mm_io
 	input logic s_axis_tvalid,
 	output logic s_axis_tready
 );
-	logic req_finished, wr_finished;
+	logic req_finished;
 	logic [16-$clog2(C_AXI_WIDTH/8):0] req_beats_total, resp_beats_total;
 
 	always_ff @(posedge clk) begin
@@ -58,7 +58,7 @@ module axi_s2mm_io
 		end else if(~busy) begin
 			busy <= trigger;
 		end else begin
-			busy <= ~req_finished | ~wr_finished | m_axi_bready;
+			busy <= (~req_finished || resp_beats_total <= req_beats_total);
 		end
 	end
 
@@ -69,6 +69,9 @@ module axi_s2mm_io
 	logic [C_AXI_WIDTH-1:0] m_axis_tdata;
 	logic [(C_AXI_WIDTH/8)-1:0] m_axis_tstrb;
 	logic m_axis_tlast, m_axis_tvalid, m_axis_tready;
+
+	logic [7:0] s_axis_len_tdata;
+	logic s_axis_len_tvalid, s_axis_len_tready;
 
 	logic [15:0] req_bytes;
 	logic [11:0] req_bytes_4k;
@@ -84,6 +87,8 @@ module axi_s2mm_io
 			req_bytes <= 16'd0;
 			req_beats_total <= '0;
 
+			s_axis_len_tvalid <= 1'b0;
+
 			m_axi_awaddr <= '0;
 			m_axi_awlen <= 8'd0;
 			m_axi_awsize <= 3'd0;
@@ -95,6 +100,8 @@ module axi_s2mm_io
 					m_axi_awlen <= 8'd0;
 					m_axi_awsize <= 3'd0;
 					m_axi_awvalid <= 1'b0;
+
+					s_axis_len_tvalid <= 1'b0;
 
 					if(~busy) begin
 						req_finished <= 1'b0;
@@ -177,17 +184,24 @@ module axi_s2mm_io
 					end
 
 					m_axi_awvalid <= 1'b1;
+					s_axis_len_tvalid <= 1'b1;
 				end
 
 				ST_REQ_SET_ADDR: begin
-					if(m_axi_awready) begin
+					if(~m_axi_awvalid & ~s_axis_len_tvalid) begin
 						state_req <= ST_REQ_SET_SIZE;
+					end
 
+					if(m_axi_awready & m_axi_awvalid) begin
 						m_axi_awaddr <= {m_axi_awaddr[C_AXI_ADDR_WIDTH-1:$clog2(C_AXI_WIDTH/8)] + m_axi_awlen + 'd1, {($clog2(C_AXI_WIDTH/8)){1'b0}}};
 						{req_finished, req_bytes} <= req_bytes - ({m_axi_awlen + 'd1, {($clog2(C_AXI_WIDTH/8)){1'b0}}} - m_axi_awaddr[$clog2(C_AXI_WIDTH/8)-1:0]);
 						req_beats_total <= req_beats_total + 'd1;
 
 						m_axi_awvalid <= 1'b0;
+					end
+
+					if(s_axis_len_tready & s_axis_len_tvalid) begin
+						s_axis_len_tvalid <= 1'b0;
 					end
 				end
 			endcase
@@ -199,6 +213,8 @@ module axi_s2mm_io
 
 		req_bytes_4k = 12'hFFF - m_axi_awaddr[11:0];
 		req_beats_4k = req_bytes_4k[11:$clog2(C_AXI_WIDTH/8)];
+
+		s_axis_len_tdata = m_axi_awlen;
 	end
 
 	// B-channel
@@ -237,33 +253,20 @@ module axi_s2mm_io
 		end
 	end
 
-	// W-channel - Finished flag
-
-	always_ff @(posedge clk) begin
-		if(~rst_n) begin
-			wr_finished <= 1'b0;
-		end else begin
-			if(~busy) begin
-				wr_finished <= 1'b0;
-			end
-
-			if(m_axi_wready & m_axi_wvalid & m_axi_wlast) begin
-				wr_finished <= 1'b1;
-			end
-		end
-	end
-
 	// W-channel - Stage 1: Read from AXIS
 
-	enum logic [2:0] {ST_WR1_IDLE, ST_WR1_WAIT_REQ, ST_WR1_FETCH_WORD, ST_WR1_EXTRA_WORD, ST_WR1_WAIT_END} state_wr_s1;
+	enum logic [2:0] {ST_WR1_IDLE, ST_WR1_WAIT_LEN, ST_WR1_FETCH_WORD, ST_WR1_EXTRA_WORD, ST_WR1_END} state_wr_s1;
+
+	logic [7:0] m_axis_len_tdata;
+	logic m_axis_len_tvalid, m_axis_len_tready;
 
 	logic [C_AXI_WIDTH-1:0] wr_data;
 	logic [C_AXI_WIDTH/8-1:0] wr_mask;
 	logic [$clog2(C_AXI_WIDTH/8)-1:0] wr_offset;
+	logic [7:0] wr_length;
 	logic wr_extra;
 
-	logic [C_AXI_WIDTH/8-1:0] wr_s1_user;
-	logic wr_s1_last, wr_s1_valid;
+	logic wr_s1_stream_end, wr_s1_burst_last, wr_s1_valid;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -272,81 +275,92 @@ module axi_s2mm_io
 			wr_data <= '0;
 			wr_mask <= '0;
 			wr_offset <= '0;
+			wr_length <= '0;
 			wr_extra <= 1'b0;
 
-			wr_s1_user <= '0;
-			wr_s1_last <= 1'b0;
+			wr_s1_stream_end <= 1'b0;
+			wr_s1_burst_last <= 1'b0;
 			wr_s1_valid <= 1'b0;
 		end else begin
 			case(state_wr_s1)
 				ST_WR1_IDLE: begin
-					wr_s1_user <= '0;
-					wr_s1_last <= 1'b0;
+					wr_s1_stream_end <= 1'b0;
+					wr_s1_burst_last <= 1'b0;
 					wr_s1_valid <= 1'b0;
 
 					if(trigger & ~busy) begin
-						state_wr_s1 <= ST_WR1_WAIT_REQ;
+						state_wr_s1 <= ST_WR1_WAIT_LEN;
 
 						wr_offset <= start_addr[$clog2(C_AXI_WIDTH/8)-1:0];
-						wr_extra <= (bytes_to_write >= (C_AXI_WIDTH/8 - start_addr[$clog2(C_AXI_WIDTH/8)-1:0]));
+
+						if(start_addr[$clog2(C_AXI_WIDTH/8)-1:0] == '0) begin
+							wr_extra <= (bytes_to_write[$clog2(C_AXI_WIDTH/8)-1:0] != '1);
+						end else begin
+							wr_extra <= (bytes_to_write[$clog2(C_AXI_WIDTH/8)-1:0] > {$clog2(C_AXI_WIDTH/8){1'b1}} - start_addr[$clog2(C_AXI_WIDTH/8)-1:0]);
+						end
 					end
 				end
 
-				ST_WR1_WAIT_REQ: begin
-					if(m_axi_awready & m_axi_awvalid) begin
-						state_wr_s1 <= ST_WR1_FETCH_WORD;
-					end
+				ST_WR1_WAIT_LEN: begin
+					if(m_axi_wready | ~m_axi_wvalid) begin
+						if(m_axis_len_tvalid) begin
+							state_wr_s1 <= ST_WR1_FETCH_WORD;
+							wr_length <= m_axis_len_tdata;
+						end
 
-					if(wr_offset == '0) begin
-						wr_extra <= 1'b0;
+						wr_s1_stream_end <= 1'b0;
+						wr_s1_burst_last <= 1'b0;
+						wr_s1_valid <= 1'b0;
 					end
 				end
 
 				ST_WR1_FETCH_WORD: begin
 					if(m_axi_wready | ~m_axi_wvalid) begin
-						if(m_axis_tvalid & m_axis_tlast) begin
-							if(~wr_extra) begin
-								state_wr_s1 <= ST_WR1_WAIT_END;
-							end else begin
-								state_wr_s1 <= ST_WR1_EXTRA_WORD;
+						if(m_axis_tvalid) begin
+							if(m_axis_tlast) begin
+								if(~wr_extra) begin
+									state_wr_s1 <= ST_WR1_END;
+									wr_s1_burst_last <= 1'b1;
+								end else begin
+									state_wr_s1 <= ST_WR1_EXTRA_WORD;
+									wr_s1_burst_last <= 1'b0;
+								end
+							end else if(wr_length == '0) begin
+								state_wr_s1 <= ST_WR1_WAIT_LEN;
+								wr_s1_burst_last <= 1'b1;
 							end
-						end
 
-						for(int i = 0; i < C_AXI_WIDTH/8; ++i) begin
-							if(i + 1 < C_AXI_WIDTH/8) begin
-								wr_s1_user[i] = m_axis_tlast & m_axis_tstrb[i] & ~m_axis_tstrb[i+1];
-							end else begin
-								wr_s1_user[i] = m_axis_tlast & m_axis_tstrb[i];
-							end
+							wr_length <= wr_length - 8'd1;
 						end
 
 						wr_data <= m_axis_tdata;
 						wr_mask <= m_axis_tstrb;
-						wr_s1_last <= m_axis_tlast & ~wr_extra;
+						wr_s1_stream_end <= m_axis_tlast;
 						wr_s1_valid <= m_axis_tvalid;
 					end
 				end
 
 				ST_WR1_EXTRA_WORD: begin
 					if(m_axi_wready | ~m_axi_wvalid) begin
-						state_wr_s1 <= ST_WR1_WAIT_END;
+						state_wr_s1 <= ST_WR1_END;
 
 						wr_data <= '0;
 						wr_mask <= '0;
-						wr_s1_user <= '0;
-						wr_s1_last <= 1'b1;
+						wr_s1_burst_last <= 1'b1;
+						wr_s1_stream_end <= 1'b1;
 						wr_s1_valid <= 1'b1;
 					end
 				end
 
-				ST_WR1_WAIT_END: begin
-					wr_data <= '0;
-					wr_mask <= '0;
-					wr_s1_last <= 1'b0;
-					wr_s1_valid <= 1'b0;
-
-					if(m_axi_wready & m_axi_wvalid & m_axi_wlast) begin
+				ST_WR1_END: begin
+					if(m_axi_wready | ~m_axi_wvalid) begin
 						state_wr_s1 <= ST_WR1_IDLE;
+
+						wr_data <= '0;
+						wr_mask <= '0;
+						wr_s1_stream_end <= 1'b0;
+						wr_s1_burst_last <= 1'b0;
+						wr_s1_valid <= 1'b0;
 					end
 				end
 
@@ -358,6 +372,12 @@ module axi_s2mm_io
 	end
 
 	always_comb begin
+		if(state_wr_s1 == ST_WR1_WAIT_LEN) begin
+			m_axis_len_tready = m_axi_wready | ~m_axi_wvalid;
+		end else begin
+			m_axis_len_tready = 1'b0;
+		end
+
 		if(state_wr_s1 == ST_WR1_FETCH_WORD) begin
 			m_axis_tready = m_axi_wready | ~m_axi_wvalid;
 		end else begin
@@ -367,12 +387,12 @@ module axi_s2mm_io
 
 	// W-channel - Stage 2: Add data and mask to shift-registers
 
-	enum logic [1:0] {ST_WR2_IDLE, ST_WR2_WAIT_REQ, ST_WR2_FETCH_WORD, ST_WR2_WAIT_END} state_wr_s2;
+	enum logic [1:0] {ST_WR2_IDLE, ST_WR2_WAIT_REQ, ST_WR2_FETCH_WORD, ST_WR2_END} state_wr_s2;
 
 	logic [2*C_AXI_WIDTH-1:0] wr_data_sr;
-	logic [C_AXI_WIDTH/4-1:0] wr_mask_sr, wr_last_sr;
+	logic [C_AXI_WIDTH/4-1:0] wr_mask_sr;
 
-	logic wr_s2_valid;
+	logic wr_s2_last, wr_s2_valid;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -380,15 +400,15 @@ module axi_s2mm_io
 
 			wr_data_sr <= '0;
 			wr_mask_sr <= '0;
-			wr_last_sr <= '0;
 
+			wr_s2_last <= 1'b0;
 			wr_s2_valid <= 1'b0;
 		end else begin
 			case(state_wr_s2)
 				ST_WR2_IDLE: begin
 					wr_data_sr <= '0;
 					wr_mask_sr <= '0;
-					wr_last_sr <= '0;
+					wr_s2_last <= 1'b0;
 					wr_s2_valid <= 1'b0;
 
 					if(trigger & ~busy) begin
@@ -405,27 +425,23 @@ module axi_s2mm_io
 				ST_WR2_FETCH_WORD: begin
 					if(m_axi_wready | ~m_axi_wvalid) begin
 						if(wr_s1_valid) begin
-							if(wr_s1_last) begin
-								state_wr_s2 <= ST_WR2_WAIT_END;
+							if(wr_s1_stream_end & wr_s1_burst_last) begin
+								state_wr_s2 <= ST_WR2_END;
 							end
 
 							wr_data_sr <= {wr_data, wr_data_sr[2*C_AXI_WIDTH-1:C_AXI_WIDTH]};
 							wr_mask_sr <= {wr_mask, wr_mask_sr[C_AXI_WIDTH/4-1:C_AXI_WIDTH/8]};
-							wr_last_sr <= {wr_s1_user, wr_last_sr[C_AXI_WIDTH/4-1:C_AXI_WIDTH/8]};
 						end
 
+						wr_s2_last <= wr_s1_burst_last;
 						wr_s2_valid <= wr_s1_valid;
 					end
 				end
 
-				ST_WR2_WAIT_END: begin
+				ST_WR2_END: begin
 					if(m_axi_wready | ~m_axi_wvalid) begin
-						wr_last_sr <= '0;
-						wr_s2_valid <= 1'b0;
-					end
-
-					if(m_axi_wready & m_axi_wvalid & m_axi_wlast) begin
 						state_wr_s2 <= ST_WR2_IDLE;
+						wr_s2_valid <= 1'b0;
 					end
 				end
 			endcase
@@ -436,13 +452,11 @@ module axi_s2mm_io
 
 	logic [C_AXI_WIDTH-1:0] wr_muxed_values[0:C_AXI_WIDTH/8-1];
 	logic [C_AXI_WIDTH/8-1:0] wr_muxed_masks[0:C_AXI_WIDTH/8-1];
-	logic wr_muxed_lasts[0:C_AXI_WIDTH/8-1];
 
 	for(genvar i = 0; i < C_AXI_WIDTH/8; i++) begin
 		always_comb begin
 			wr_muxed_values[i] = wr_data_sr[2*C_AXI_WIDTH-8*i-1:C_AXI_WIDTH-8*i];
 			wr_muxed_masks[i] = wr_mask_sr[C_AXI_WIDTH/4-i-1:C_AXI_WIDTH/8-i];
-			wr_muxed_lasts[i] = |wr_last_sr[C_AXI_WIDTH/4-i-1:C_AXI_WIDTH/8-i];
 		end
 	end
 
@@ -480,40 +494,70 @@ module axi_s2mm_io
 		.value_out(m_axi_wstrb)
 	);
 
-	mux_big
-	#(
-		.C_WIDTH(1),
-		.C_INPUTS(C_AXI_WIDTH/8),
-		.C_DIVIDER(4)
-	)
-	U2
-	(
-		.clk(clk),
-		.rst_n(rst_n),
-		.enable(m_axi_wready | ~m_axi_wvalid),
-
-		.selector(wr_offset),
-		.values_in(wr_muxed_lasts),
-		.value_out(m_axi_wlast)
-	);
-
 	reg_slice
 	#(
-		.C_WIDTH(1),
+		.C_WIDTH(2),
 		.C_NUM_STAGES(($clog2(C_AXI_WIDTH/8) + 2) / 2 - 1),
 		.C_USE_ENABLE(1)
 	)
-	U3
+	U2
 	(
 		.clk(clk),
 		.rst(~rst_n),
 		.enable(m_axi_wready | ~m_axi_wvalid),
 
-		.data_in({wr_s2_valid}),
-		.data_out({m_axi_wvalid})
+		.data_in({wr_s2_last, wr_s2_valid}),
+		.data_out({m_axi_wlast, m_axi_wvalid})
 	);
 
-	// FIFO
+	// FIFOs
+
+	xpm_fifo_axis
+	#(
+		.CDC_SYNC_STAGES(2),
+		.CLOCKING_MODE("common_clock"),
+		.ECC_MODE("no_ecc"),
+		.FIFO_DEPTH(16),
+		.FIFO_MEMORY_TYPE("distributed"),
+		.PACKET_FIFO("false"),
+		.PROG_EMPTY_THRESH(10),
+		.PROG_FULL_THRESH(10),
+		.RD_DATA_COUNT_WIDTH(1),
+		.RELATED_CLOCKS(0),
+		.TDATA_WIDTH(8),
+		.TDEST_WIDTH(1),
+		.TID_WIDTH(1),
+		.TUSER_WIDTH(1),
+		.USE_ADV_FEATURES("1000"),
+		.WR_DATA_COUNT_WIDTH(1)
+	)
+	U3
+	(
+		.m_aclk(clk),
+		.s_aclk(clk),
+		.s_aresetn(rst_n),
+
+		.prog_full_axis(),
+		.prog_empty_axis(),
+
+		.s_axis_tdata(s_axis_len_tdata),
+		.s_axis_tvalid(s_axis_len_tvalid),
+		.s_axis_tready(s_axis_len_tready),
+
+		.m_axis_tdata(m_axis_len_tdata),
+		.m_axis_tvalid(m_axis_len_tvalid),
+		.m_axis_tready(m_axis_len_tready),
+
+		.s_axis_tstrb(1'b0),
+		.s_axis_tlast(1'b0),
+		.s_axis_tdest(1'b0),
+		.s_axis_tid(1'b0),
+		.s_axis_tkeep(1'b1),
+		.s_axis_tuser(1'b0),
+
+		.injectdbiterr_axis(1'b0),
+		.injectsbiterr_axis(1'b0)
+	);
 
 	if(C_FIFO_TYPE != "none") begin
 		xpm_fifo_axis
