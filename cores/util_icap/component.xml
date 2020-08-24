@@ -45,14 +45,6 @@
         </spirit:portMap>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>clk</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>clk</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
             <spirit:name>csib</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
@@ -356,12 +348,12 @@
         <xilinx:taxonomy>/BaseIP</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>ICAP</xilinx:displayName>
-      <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-04-15T01:14:07Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>2</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-08-24T13:14:53Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="166a0edc"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="9cbbbf17"/>
       <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="a7b2f6a5"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="af720176"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="0c1bfea6"/>
