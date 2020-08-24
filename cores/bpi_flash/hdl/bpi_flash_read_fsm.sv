@@ -56,7 +56,7 @@ module bpi_flash_read_fsm
 	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH)-1:0] curr_addr, curr_end;
 	logic [C_AXI_WIDTH-1:0] curr_buffer;
 	logic [7:0] curr_len;
-	logic curr_burst, curr_unaligned, curr_end_overflow, curr_fifo_overflow;
+	logic curr_burst, curr_unaligned, curr_fifo_overflow;
 
 	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH)-1:0] queued_addr;
 	logic [7:0] queued_len;
@@ -81,7 +81,6 @@ module bpi_flash_read_fsm
 			curr_len <= '0;
 			curr_burst <= 1'b0;
 			curr_unaligned <= 1'b0;
-			curr_end_overflow <= 1'b0;
 			curr_fifo_overflow <= 1'b0;
 
 			queued_addr <= '0;
@@ -147,7 +146,6 @@ module bpi_flash_read_fsm
 
 						curr_addr <= queued_addr;
 						curr_len <= queued_len;
-						{curr_end_overflow, curr_end} <= queued_addr + queued_len + 'd1;
 
 						queued_valid <= 1'b0;
 						s_axis_rq_tready <= 1'b0;
@@ -176,7 +174,6 @@ module bpi_flash_read_fsm
 
 						curr_addr <= s_axis_rq_tdata;
 						curr_len <= s_axis_rq_tuser[9:2];
-						{curr_end_overflow, curr_end} <= s_axis_rq_tdata + s_axis_rq_tuser[9:2] + 'd1;
 
 						s_axis_rq_tready <= 1'b0;
 					end
@@ -246,7 +243,7 @@ module bpi_flash_read_fsm
 					// Try to prefetch another request if we haven't done so already, but only if the active request is aligned
 					// to C_AXI_WIDTH and doesn't end beyond the memory limit
 
-					if(~queued_valid & ~curr_end_overflow & ~curr_unaligned) begin
+					if(~queued_valid & ~curr_unaligned) begin
 						s_axis_rq_tready <= 1'b1;
 
 						if(s_axis_rq_tready & s_axis_rq_tvalid) begin
@@ -266,41 +263,29 @@ module bpi_flash_read_fsm
 					// Request data from memory
 
 					if(~m_axis_rd_tvalid & ~s_axis_rd_tvalid & ~s_fifo_tvalid) begin
-						if(~overflow & ~overflow_q) begin
-							m_axis_rd_tdata <= curr_addr;
-							m_axis_rd_tvalid <= 1'b1;
-						end else begin
-							s_fifo_tdata <= '0;
-							s_fifo_tvalid <= 1'b1;
-
-							if(curr_len == 8'd0) begin
-								s_fifo_tlast <= 1'b1;
-							end else begin
-								s_fifo_tlast <= 1'b0;
-								curr_len <= curr_len - 8'd1;
-							end
-						end
+						m_axis_rd_tdata <= curr_addr;
+						m_axis_rd_tvalid <= 1'b1;
 					end
 
 					// Receive a single mem-word
 
-					if(s_axis_rd_tvalid & m_axis_rd_tvalid & m_axis_rd_tready) begin
-						count_1h <= {count_1h[(C_AXI_WIDTH/C_MEM_WIDTH)-2:0], count_1h[(C_AXI_WIDTH/C_MEM_WIDTH)-1]};
+					if(s_axis_rd_tvalid & ~overflow) begin
+						if(~s_fifo_tvalid | s_fifo_tready) begin
+							count_1h <= {count_1h[(C_AXI_WIDTH/C_MEM_WIDTH)-2:0], count_1h[(C_AXI_WIDTH/C_MEM_WIDTH)-1]};
 
-						{overflow, curr_addr} <= curr_addr + 'd1;
+							{overflow, curr_addr} <= curr_addr + 'd1;
 
-						// HACK: double-loop required in order to avoid synthesis error
+							// HACK: double-loop required in order to avoid synthesis error
 
-						for(int i = 0; i < C_AXI_WIDTH/C_MEM_WIDTH; ++i) begin
-							for(int j = 0; j < C_MEM_WIDTH; ++j) begin
-								if(count_1h[i]) begin
-									curr_buffer[C_MEM_WIDTH*i + j] <= s_axis_rd_tdata[j];
+							for(int i = 0; i < C_AXI_WIDTH/C_MEM_WIDTH; ++i) begin
+								for(int j = 0; j < C_MEM_WIDTH; ++j) begin
+									if(count_1h[i]) begin
+										s_fifo_tdata[C_MEM_WIDTH*i + j] <= s_axis_rd_tdata[j];
+									end
 								end
 							end
-						end
 
-						if(count_1h[(C_AXI_WIDTH/C_MEM_WIDTH)-1] | overflow) begin
-							if(~s_fifo_tvalid | s_fifo_tready) begin
+							if(count_1h[(C_AXI_WIDTH/C_MEM_WIDTH)-1]) begin
 								if(curr_len == 8'd0) begin
 									// We're done with this request
 									s_fifo_tlast <= 1'b1;
@@ -308,7 +293,6 @@ module bpi_flash_read_fsm
 									if(queued_valid & queued_combine) begin
 										// Don't stop the data burst, we can combine with the queued request
 										curr_len <= queued_len;
-										{curr_end_overflow, curr_end} <= queued_addr + queued_len + 'd1;
 										queued_valid <= 1'b0;
 									end else begin
 										m_axis_rd_tvalid <= 1'b0;
@@ -318,36 +302,30 @@ module bpi_flash_read_fsm
 									curr_len <= curr_len - 8'd1;
 								end
 
-								s_fifo_tdata <= {s_axis_rd_tdata, curr_buffer[C_AXI_WIDTH-1:C_MEM_WIDTH]};
 								s_fifo_tvalid <= 1'b1;
 							end else begin
-								// The FIFO is full, stop bursting until we can store the axi-word we just read
-								curr_fifo_overflow <= 1'b1;
-								m_axis_rd_tvalid <= 1'b0;
+								s_fifo_tvalid <= 1'b0;
 							end
-
-							if(overflow) begin
-								// We went beyond the end of the memory, stop bursting
-								m_axis_rd_tvalid <= 1'b0;
-							end
+						end else begin
+							// The FIFO is full, stop bursting until we can store the axi-word we just read
+							curr_fifo_overflow <= 1'b1;
+							m_axis_rd_tvalid <= 1'b0;
 						end
+					end
+
+					if(overflow & ~s_fifo_tvalid) begin
+						state <= ST_EXEC_ERROR;
+						m_axis_rd_tvalid <= 1'b0;
 					end
 
 					// Store the complete axi-word in FIFO
 
 					if(s_fifo_tvalid & s_fifo_tready) begin
 						if(curr_fifo_overflow) begin
-							s_fifo_tdata <= curr_buffer;
-
-							if(curr_len == 8'd0) begin
-								s_fifo_tlast <= 1'b1;
-							end else begin
-								s_fifo_tlast <= 1'b0;
-								curr_len <= curr_len - 8'd1;
-							end
-
 							curr_fifo_overflow <= 1'b0;
-						end else begin
+						end
+
+						if(curr_fifo_overflow | overflow) begin
 							s_fifo_tvalid <= 1'b0;
 						end
 
