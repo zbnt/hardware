@@ -183,59 +183,57 @@ module bpi_flash
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			done_read <= 5'd0;
+			queued_read <= 5'd0;
 
 			s_axis_rd_rq_tdata <= '0;
 			s_axis_rd_rq_tuser <= 10'd0;
 			s_axis_rd_rq_tvalid <= 1'b0;
-
-			s_axi_arready <= 1'b0;
 		end else begin
-			if(queued_read <= 5'd15 && ~s_axis_rd_rq_tvalid) begin
-				s_axi_arready <= 1'b1;
+			if(s_axi_arvalid & s_axi_arready) begin
+				s_axis_rd_rq_tdata <= {'0, s_axi_araddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)]};
+				s_axis_rd_rq_tuser[9:2] <= s_axi_arlen;
 
-				if(s_axi_arready & s_axi_arvalid) begin
-					s_axis_rd_rq_tdata <= {'0, s_axi_araddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)]};
-					s_axis_rd_rq_tuser[9:2] <= s_axi_arlen;
-
-					if(s_axi_arsize >= $clog2(C_AXI_WIDTH/8)) begin
-						s_axis_rd_rq_tuser[1:0] <= 2'b10;
-					end else begin
-						s_axis_rd_rq_tuser[1:0] <= 2'b00;
-					end
-
-					// Unaligned access
-
-					if(s_axi_araddr[$clog2(C_MEM_WIDTH/8)-1:0] != '0) begin
-						s_axis_rd_rq_tuser[0] <= 1'b1;
-					end
-
-					// Invalid burst size
-
-					if(s_axi_arsize > $clog2(C_AXI_WIDTH/8)) begin
-						s_axis_rd_rq_tuser[0] <= 1'b1;
-					end
-
-					// Invalid burst mode
-
-					if(s_axi_arburst != 2'd1 && s_axi_arlen != 8'd0) begin
-						s_axis_rd_rq_tuser[0] <= 1'b1;
-					end
-
-					// Narrow burst
-
-					if(s_axi_arsize != $clog2(C_AXI_WIDTH/8) && s_axi_arlen != 8'd0) begin
-						s_axis_rd_rq_tuser[0] <= 1'b1;
-					end
-
-					s_axis_rd_rq_tvalid <= 1'b1;
-					s_axi_arready <= 1'b0;
+				if(s_axi_arsize >= $clog2(C_AXI_WIDTH/8)) begin
+					s_axis_rd_rq_tuser[1:0] <= 2'b10;
+				end else begin
+					s_axis_rd_rq_tuser[1:0] <= 2'b00;
 				end
-			end else begin
-				s_axi_arready <= 1'b0;
+
+				// Unaligned access
+
+				if(s_axi_araddr[$clog2(C_MEM_WIDTH/8)-1:0] != '0) begin
+					s_axis_rd_rq_tuser[0] <= 1'b1;
+				end
+
+				// Invalid burst size
+
+				if(s_axi_arsize > $clog2(C_AXI_WIDTH/8)) begin
+					s_axis_rd_rq_tuser[0] <= 1'b1;
+				end
+
+				// Invalid burst mode
+
+				if(s_axi_arburst != 2'd1 && s_axi_arlen != 8'd0) begin
+					s_axis_rd_rq_tuser[0] <= 1'b1;
+				end
+
+				// Narrow burst
+
+				if(s_axi_arsize != $clog2(C_AXI_WIDTH/8) && s_axi_arlen != 8'd0) begin
+					s_axis_rd_rq_tuser[0] <= 1'b1;
+				end
 			end
 
-			if(s_axis_rd_rq_tvalid & s_axis_rd_rq_tready) begin
-				s_axis_rd_rq_tvalid <= 1'b0;
+			if(s_axi_arready) begin
+				s_axis_rd_rq_tvalid <= s_axi_arvalid;
+			end
+
+			if((s_axi_arvalid & s_axi_arready) ^ (m_axis_rd_rq_tvalid & m_axis_rd_rq_tready)) begin
+				if(s_axi_arvalid & s_axi_arready) begin
+					queued_read <= queued_read + 5'd1;
+				end else begin
+					queued_read <= queued_read - 5'd1;
+				end
 			end
 
 			if(s_axi_rvalid & s_axi_rready & s_axi_rlast) begin
@@ -250,58 +248,60 @@ module bpi_flash
 		end
 	end
 
+	always_comb begin
+		s_axi_arready = s_axis_rd_rq_tready & ~queued_read[4];
+	end
+
 	// AW channel
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			done_write <= 5'd0;
+			queued_write <= 5'd0;
 
 			s_axis_wr_rq_tdata <= '0;
 			s_axis_wr_rq_tuser <= 10'd0;
 			s_axis_wr_rq_tvalid <= 1'b0;
-
-			s_axi_awready <= 1'b0;
 		end else begin
-			if(queued_write <= 5'd15 && ~s_axis_wr_rq_tvalid) begin
-				s_axi_awready <= 1'b1;
+			if(s_axi_awvalid & s_axi_awready) begin
+				s_axis_wr_rq_tdata <= {'0, s_axi_awaddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)]};
+				s_axis_wr_rq_tuser <= 1'b0;
 
-				if(s_axi_awready & s_axi_awvalid) begin
-					s_axis_wr_rq_tdata <= {'0, s_axi_awaddr[$clog2(C_MEM_SIZE)-1:$clog2(C_MEM_WIDTH/8)]};
-					s_axis_wr_rq_tuser <= 1'b0;
+				// Unaligned access
 
-					// Unaligned access
-
-					if(s_axi_awaddr[$clog2(C_MEM_WIDTH/8)-1:0] != '0) begin
-						s_axis_wr_rq_tuser <= 1'b1;
-					end
-
-					// Invalid burst size
-
-					if(s_axi_awsize > $clog2(C_AXI_WIDTH/8)) begin
-						s_axis_wr_rq_tuser <= 1'b1;
-					end
-
-					// Invalid burst mode
-
-					if(s_axi_awburst != 2'd1 && s_axi_arlen != 8'd0) begin
-						s_axis_wr_rq_tuser <= 1'b1;
-					end
-
-					// Narrow burst
-
-					if(s_axi_awsize != $clog2(C_AXI_WIDTH/8) && s_axi_awlen != 8'd0) begin
-						s_axis_wr_rq_tuser <= 1'b1;
-					end
-
-					s_axis_wr_rq_tvalid <= 1'b1;
-					s_axi_awready <= 1'b0;
+				if(s_axi_awaddr[$clog2(C_MEM_WIDTH/8)-1:0] != '0) begin
+					s_axis_wr_rq_tuser <= 1'b1;
 				end
-			end else begin
-				s_axi_awready <= 1'b0;
+
+				// Invalid burst size
+
+				if(s_axi_awsize > $clog2(C_AXI_WIDTH/8)) begin
+					s_axis_wr_rq_tuser <= 1'b1;
+				end
+
+				// Invalid burst mode
+
+				if(s_axi_awburst != 2'd1 && s_axi_arlen != 8'd0) begin
+					s_axis_wr_rq_tuser <= 1'b1;
+				end
+
+				// Narrow burst
+
+				if(s_axi_awsize != $clog2(C_AXI_WIDTH/8) && s_axi_awlen != 8'd0) begin
+					s_axis_wr_rq_tuser <= 1'b1;
+				end
 			end
 
-			if(s_axis_wr_rq_tvalid & s_axis_wr_rq_tready) begin
-				s_axis_wr_rq_tvalid <= 1'b0;
+			if(s_axi_awready) begin
+				s_axis_wr_rq_tvalid <= s_axi_awvalid;
+			end
+
+			if((s_axi_awvalid & s_axi_awready) ^ (m_axis_wr_rq_tvalid & m_axis_wr_rq_tready)) begin
+				if(s_axi_awvalid & s_axi_awready) begin
+					queued_write <= queued_write + 5'd1;
+				end else begin
+					queued_write <= queued_write - 5'd1;
+				end
 			end
 
 			if(s_axi_bvalid & s_axi_bready) begin
@@ -314,6 +314,10 @@ module bpi_flash
 				done_write <= 5'd0;
 			end
 		end
+	end
+
+	always_comb begin
+		s_axi_awready = s_axis_wr_rq_tready & ~queued_write[4];
 	end
 
 	// Transaction FIFOs
@@ -338,8 +342,8 @@ module bpi_flash
 		.TDEST_WIDTH(1),
 		.TID_WIDTH(1),
 		.TUSER_WIDTH(10),
-		.USE_ADV_FEATURES("0004"),
-		.WR_DATA_COUNT_WIDTH(5)
+		.USE_ADV_FEATURES("0000"),
+		.WR_DATA_COUNT_WIDTH(1)
 	)
 	U0
 	(
@@ -349,11 +353,10 @@ module bpi_flash
 
 		.prog_full_axis(),
 		.prog_empty_axis(),
-		.wr_data_count_axis(queued_read),
 
 		.s_axis_tdata(s_axis_rd_rq_tdata),
 		.s_axis_tuser(s_axis_rd_rq_tuser),
-		.s_axis_tvalid(s_axis_rd_rq_tvalid),
+		.s_axis_tvalid(s_axis_rd_rq_tvalid & ~queued_read[4]),
 		.s_axis_tready(s_axis_rd_rq_tready),
 
 		.m_axis_tdata(m_axis_rd_rq_tdata),
@@ -390,8 +393,8 @@ module bpi_flash
 		.TDEST_WIDTH(1),
 		.TID_WIDTH(1),
 		.TUSER_WIDTH(1),
-		.USE_ADV_FEATURES("0004"),
-		.WR_DATA_COUNT_WIDTH(5)
+		.USE_ADV_FEATURES("0000"),
+		.WR_DATA_COUNT_WIDTH(1)
 	)
 	U1
 	(
@@ -401,11 +404,10 @@ module bpi_flash
 
 		.prog_full_axis(),
 		.prog_empty_axis(),
-		.wr_data_count_axis(queued_write),
 
 		.s_axis_tdata(s_axis_wr_rq_tdata),
 		.s_axis_tuser(s_axis_wr_rq_tuser),
-		.s_axis_tvalid(s_axis_wr_rq_tvalid),
+		.s_axis_tvalid(s_axis_wr_rq_tvalid & ~queued_write[4]),
 		.s_axis_tready(s_axis_wr_rq_tready),
 
 		.m_axis_tdata(m_axis_wr_rq_tdata),

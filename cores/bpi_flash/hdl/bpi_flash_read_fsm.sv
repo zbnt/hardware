@@ -53,12 +53,14 @@ module bpi_flash_read_fsm
 	logic [(C_AXI_WIDTH/C_MEM_WIDTH)-1:0] count_1h;
 	logic overflow, overflow_q;
 
-	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH)-1:0] curr_addr, curr_end;
+	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH)-1:0] curr_addr;
+	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH):0] curr_end;
 	logic [C_AXI_WIDTH-1:0] curr_buffer;
 	logic [7:0] curr_len;
 	logic curr_burst, curr_unaligned, curr_fifo_overflow;
 
 	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH)-1:0] queued_addr;
+	logic [$clog2(8*C_MEM_SIZE/C_MEM_WIDTH):0] queued_end;
 	logic [7:0] queued_len;
 	logic queued_error, queued_burst, queued_combine, queued_valid;
 
@@ -84,6 +86,7 @@ module bpi_flash_read_fsm
 			curr_fifo_overflow <= 1'b0;
 
 			queued_addr <= '0;
+			queued_end <= '0;
 			queued_len <= '0;
 			queued_error <= 1'b0;
 			queued_burst <= 1'b0;
@@ -146,6 +149,7 @@ module bpi_flash_read_fsm
 
 						curr_addr <= queued_addr;
 						curr_len <= queued_len;
+						curr_end <= queued_end;
 
 						queued_valid <= 1'b0;
 						s_axis_rq_tready <= 1'b0;
@@ -174,6 +178,7 @@ module bpi_flash_read_fsm
 
 						curr_addr <= s_axis_rq_tdata;
 						curr_len <= s_axis_rq_tuser[9:2];
+						curr_end <= s_axis_rq_tdata + {s_axis_rq_tuser[9:2] + 'd1, {$clog2(C_AXI_WIDTH/C_MEM_WIDTH){1'b0}}};
 
 						s_axis_rq_tready <= 1'b0;
 					end
@@ -248,13 +253,14 @@ module bpi_flash_read_fsm
 
 						if(s_axis_rq_tready & s_axis_rq_tvalid) begin
 							queued_addr <= s_axis_rq_tdata;
+							queued_end <= s_axis_rq_tdata + {s_axis_rq_tuser[9:2] + 'd1, {$clog2(C_AXI_WIDTH/C_MEM_WIDTH){1'b0}}};
 							queued_len <= s_axis_rq_tuser[9:2];
 							queued_burst <= s_axis_rq_tuser[1];
 							queued_error <= s_axis_rq_tuser[0];
 							queued_valid <= 1'b1;
 
 							// We can combine curr and queued if queued is a burst that starts right where curr ends
-							queued_combine <= (s_axis_rq_tdata == curr_end && s_axis_rq_tuser[1] && ~s_axis_rq_tuser[0]);
+							queued_combine <= ({1'b0, s_axis_rq_tdata} == curr_end && s_axis_rq_tuser[1] && ~s_axis_rq_tuser[0]);
 
 							s_axis_rq_tready <= 1'b0;
 						end
@@ -293,6 +299,7 @@ module bpi_flash_read_fsm
 									if(queued_valid & queued_combine) begin
 										// Don't stop the data burst, we can combine with the queued request
 										curr_len <= queued_len;
+										curr_end <= queued_end;
 										queued_valid <= 1'b0;
 									end else begin
 										m_axis_rd_tvalid <= 1'b0;
@@ -316,6 +323,7 @@ module bpi_flash_read_fsm
 					if(overflow & ~s_fifo_tvalid) begin
 						state <= ST_EXEC_ERROR;
 						m_axis_rd_tvalid <= 1'b0;
+						s_axis_rq_tready <= 1'b0;
 					end
 
 					// Store the complete axi-word in FIFO
@@ -332,6 +340,7 @@ module bpi_flash_read_fsm
 						if(s_fifo_tlast && curr_len == 8'd0) begin
 							// The request has been completed, go back to idle state
 							state <= ST_IDLE;
+							s_axis_rq_tready <= 1'b0;
 						end
 					end
 				end

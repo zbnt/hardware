@@ -380,7 +380,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>5c7ac1cf</spirit:value>
+            <spirit:value>ce0d4640</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -405,7 +405,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>5c7ac1cf</spirit:value>
+            <spirit:value>ce0d4640</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1347,14 +1347,14 @@
         <xilinx:taxonomy>/Embedded_Processing/Memory_and_Memory_Controller</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>BPI Flash</xilinx:displayName>
-      <xilinx:coreRevision>4</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-08-24T08:31:06Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>5</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-08-25T16:31:33Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="0f1b1de2"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="877129ed"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="d6ce32cf"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="6185612a"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="70e39dd6"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="67ccda3c"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="b4191ce6"/>
