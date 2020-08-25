@@ -291,7 +291,7 @@
   <spirit:addressSpaces>
     <spirit:addressSpace>
       <spirit:name>M_AXI</spirit:name>
-      <spirit:range spirit:format="long" spirit:resolve="dependent" spirit:dependency="pow(2,C_ADDR_WIDTH)" spirit:minimum="65536" spirit:rangeType="long">1</spirit:range>
+      <spirit:range spirit:resolve="dependent" spirit:dependency="pow(2,C_AXI_ADDR_WIDTH)" spirit:minimum="65536" spirit:rangeType="long">16777216T</spirit:range>
       <spirit:width spirit:format="long" spirit:resolve="dependent" spirit:dependency="C_AXI_WIDTH">64</spirit:width>
     </spirit:addressSpace>
   </spirit:addressSpaces>
@@ -1025,13 +1025,13 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>AXI Memory-Mapped to Stream</xilinx:displayName>
-      <xilinx:coreRevision>3</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-07-16T10:44:02Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>4</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-08-25T09:50:42Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="0c8c5099"/>
-      <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="ae15987b"/>
+      <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="cbeb0d50"/>
       <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="fdba1dfc"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="961d37bc"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="0edb4461"/>
