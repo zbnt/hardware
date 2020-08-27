@@ -342,7 +342,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>80c178d3</spirit:value>
+            <spirit:value>0c39a9c1</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -367,7 +367,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>80c178d3</spirit:value>
+            <spirit:value>0c39a9c1</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1083,14 +1083,14 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>AXI Stream to Memory-Mapped</xilinx:displayName>
-      <xilinx:coreRevision>3</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-08-25T09:53:59Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>4</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-08-27T04:17:34Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="d0d6560e"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="27c62895"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="83749c37"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="16a298f0"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="7ff82993"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="08226952"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="acc56587"/>

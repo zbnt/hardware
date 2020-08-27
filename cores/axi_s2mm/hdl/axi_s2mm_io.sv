@@ -58,7 +58,7 @@ module axi_s2mm_io
 		end else if(~busy) begin
 			busy <= trigger;
 		end else begin
-			busy <= (~req_finished || resp_beats_total <= req_beats_total);
+			busy <= (state_req != ST_REQ_IDLE || state_wr_s1 != ST_WR1_IDLE || state_wr_s2 != ST_WR2_IDLE);
 		end
 	end
 
