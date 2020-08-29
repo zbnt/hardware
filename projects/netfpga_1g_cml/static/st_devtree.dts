@@ -11,12 +11,12 @@
 	#size-cells = <1>;
 	compatible = "zbnt,netfpga_1g_cml";
 
-	st_amba {
+	st_axi {
 		compatible = "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		region = <0>;
+		region = <1>;
 
 		rom@0 {
 			compatible = "zbnt,static_dtb";
@@ -24,7 +24,7 @@
 		};
 
 		prc@1000 {
-			compatible = "xlnx,pr_controller";
+			compatible = "zbnt,pr_controller";
 			reg = <0x00001000 0x1000>;
 		};
 
@@ -32,14 +32,9 @@
 			compatible = "zbnt,circular_dma";
 			reg = <0x00002000 0x1000>;
 		};
-
-		ddr3@400000 {
-			compatible = "zbnt,pr_mem";
-			reg = <0x00400000 0x400000>;
-		};
 	};
 
-	rp_amba {
+	rp_axi {
 		compatible = "simple-bus";
 		region = <2>;
 	};
@@ -47,6 +42,6 @@
 	bpi16 {
 		compatible = "zbnt,cfg_mem";
 		size = <0x8000000>;
-		region = <4>;
+		region = <3>;
 	};
 };
