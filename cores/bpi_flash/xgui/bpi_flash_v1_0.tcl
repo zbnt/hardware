@@ -34,6 +34,11 @@ proc init_gui { IPINST } {
   set_property tooltip {Size of the memory, in bytes} ${C_MEM_SIZE}
 
   #Adding Group
+  set Alignment [ipgui::add_group $IPINST -name "Alignment" -parent ${Page_1}]
+  set C_READ_BURST_ALIGNMENT [ipgui::add_param $IPINST -name "C_READ_BURST_ALIGNMENT" -parent ${Alignment} -widget comboBox]
+  set_property tooltip {Alignment required for read bursts} ${C_READ_BURST_ALIGNMENT}
+
+  #Adding Group
   set Timing [ipgui::add_group $IPINST -name "Timing" -parent ${Page_1}]
   set C_ADDR_TO_CEL_TIME [ipgui::add_param $IPINST -name "C_ADDR_TO_CEL_TIME" -parent ${Timing}]
   set_property tooltip {Number of clock cycles between ADDR valid and CE_N low} ${C_ADDR_TO_CEL_TIME}
@@ -146,6 +151,15 @@ proc validate_PARAM_VALUE.C_OEL_TO_DQ_TIME { PARAM_VALUE.C_OEL_TO_DQ_TIME } {
 	return true
 }
 
+proc update_PARAM_VALUE.C_READ_BURST_ALIGNMENT { PARAM_VALUE.C_READ_BURST_ALIGNMENT } {
+	# Procedure called to update C_READ_BURST_ALIGNMENT when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_READ_BURST_ALIGNMENT { PARAM_VALUE.C_READ_BURST_ALIGNMENT } {
+	# Procedure called to validate C_READ_BURST_ALIGNMENT
+	return true
+}
+
 proc update_PARAM_VALUE.C_WEL_TO_DQ_TIME { PARAM_VALUE.C_WEL_TO_DQ_TIME } {
 	# Procedure called to update C_WEL_TO_DQ_TIME when any of the dependent parameters in the arguments change
 }
@@ -209,5 +223,10 @@ proc update_MODELPARAM_VALUE.C_AXI_RD_FIFO_DEPTH { MODELPARAM_VALUE.C_AXI_RD_FIF
 proc update_MODELPARAM_VALUE.C_AXI_WR_FIFO_DEPTH { MODELPARAM_VALUE.C_AXI_WR_FIFO_DEPTH PARAM_VALUE.C_AXI_WR_FIFO_DEPTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_AXI_WR_FIFO_DEPTH}] ${MODELPARAM_VALUE.C_AXI_WR_FIFO_DEPTH}
+}
+
+proc update_MODELPARAM_VALUE.C_READ_BURST_ALIGNMENT { MODELPARAM_VALUE.C_READ_BURST_ALIGNMENT PARAM_VALUE.C_READ_BURST_ALIGNMENT } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_READ_BURST_ALIGNMENT}] ${MODELPARAM_VALUE.C_READ_BURST_ALIGNMENT}
 }
 

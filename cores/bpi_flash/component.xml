@@ -380,7 +380,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ce0d4640</spirit:value>
+            <spirit:value>aa67245b</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -405,7 +405,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>ce0d4640</spirit:value>
+            <spirit:value>aa67245b</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -419,7 +419,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>76cc0a7d</spirit:value>
+            <spirit:value>9d2295c1</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1104,6 +1104,11 @@
         <spirit:displayName>C Axi Wr Fifo Depth</spirit:displayName>
         <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_AXI_WR_FIFO_DEPTH">128</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_READ_BURST_ALIGNMENT</spirit:name>
+        <spirit:displayName>C Read Burst Alignment</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_READ_BURST_ALIGNMENT">0</spirit:value>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
@@ -1148,6 +1153,15 @@
       <spirit:enumeration spirit:text="512MB">536870912</spirit:enumeration>
       <spirit:enumeration spirit:text="1GB">1073741824</spirit:enumeration>
     </spirit:choice>
+    <spirit:choice>
+      <spirit:name>choice_pairs_974215c5</spirit:name>
+      <spirit:enumeration spirit:text="1 word">0</spirit:enumeration>
+      <spirit:enumeration spirit:text="2 words">1</spirit:enumeration>
+      <spirit:enumeration spirit:text="4 words">2</spirit:enumeration>
+      <spirit:enumeration spirit:text="8 words">3</spirit:enumeration>
+      <spirit:enumeration spirit:text="16 words">4</spirit:enumeration>
+      <spirit:enumeration spirit:text="32 words">5</spirit:enumeration>
+    </spirit:choice>
   </spirit:choices>
   <spirit:fileSets>
     <spirit:fileSet>
@@ -1175,7 +1189,7 @@
       <spirit:file>
         <spirit:name>hdl/bpi_flash_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_e7220b5b</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_b561cd40</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1270,7 +1284,7 @@
       <spirit:file>
         <spirit:name>xgui/bpi_flash_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_76cc0a7d</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_9d2295c1</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1336,6 +1350,11 @@
       <spirit:displayName>Write FIFO depth</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_AXI_WR_FIFO_DEPTH" spirit:choiceRef="choice_list_20b440c9">128</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_READ_BURST_ALIGNMENT</spirit:name>
+      <spirit:displayName>Read burst</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_READ_BURST_ALIGNMENT" spirit:choiceRef="choice_pairs_974215c5">0</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
@@ -1347,17 +1366,17 @@
         <xilinx:taxonomy>/Embedded_Processing/Memory_and_Memory_Controller</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>BPI Flash</xilinx:displayName>
-      <xilinx:coreRevision>5</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-08-25T16:31:33Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>6</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-08-29T01:28:54Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="0f1b1de2"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="877129ed"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="6185612a"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="c2981f65"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="70e39dd6"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="67ccda3c"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="b4191ce6"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="782301bc"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="a78fecf6"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

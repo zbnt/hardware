@@ -12,6 +12,7 @@ module bpi_flash_w
 
 	parameter C_MEM_WIDTH = 16,
 	parameter C_MEM_SIZE = 134217728,
+	parameter C_READ_BURST_ALIGNMENT = 2,
 
 	parameter C_INTERNAL_IOBUF = 1,
 
@@ -80,6 +81,7 @@ module bpi_flash_w
 
 		C_MEM_WIDTH,
 		C_MEM_SIZE,
+		C_READ_BURST_ALIGNMENT,
 
 		C_ADDR_TO_CEL_TIME,
 		C_OEL_TO_DQ_TIME,

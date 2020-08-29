@@ -18,6 +18,7 @@ module bpi_flash
 
 	parameter C_MEM_WIDTH = 16,
 	parameter C_MEM_SIZE = 134217728,
+	parameter C_READ_BURST_ALIGNMENT = 2,
 
 	parameter C_ADDR_TO_CEL_TIME = 3,
 	parameter C_OEL_TO_DQ_TIME = 6,
@@ -75,6 +76,7 @@ module bpi_flash
 );
 	localparam C_MEM_ADDR_WIDTH = $clog2(8*C_MEM_SIZE/C_MEM_WIDTH);
 	localparam C_MEM_ADDR_ADJ_WIDTH = 8 * ((C_MEM_ADDR_WIDTH + 7) / 8);
+	localparam C_MAX_READ_LENGTH = 256 * (C_AXI_WIDTH/C_MEM_WIDTH);
 
 	logic mode;
 	logic read_active, write_active;
@@ -428,9 +430,10 @@ module bpi_flash
 	// IO FSMs
 
 	logic [C_MEM_WIDTH-1:0] m_axis_rd_tdata;
-	logic m_axis_rd_tvalid;
+	logic m_axis_rd_tlast, m_axis_rd_tvalid, m_axis_rd_tready;
 
 	logic [C_MEM_ADDR_WIDTH-1:0] s_axis_rd_tdata;
+	logic [$clog2(C_MAX_READ_LENGTH)-1:0] s_axis_rd_tuser;
 	logic s_axis_rd_tvalid, s_axis_rd_tready;
 
 	logic [C_MEM_WIDTH-1:0] s_axis_wr_tdata;
@@ -441,6 +444,9 @@ module bpi_flash
 	#(
 		C_MEM_WIDTH,
 		C_MEM_SIZE,
+
+		C_MAX_READ_LENGTH,
+		C_READ_BURST_ALIGNMENT,
 
 		C_ADDR_TO_CEL_TIME,
 		C_OEL_TO_DQ_TIME,
@@ -458,11 +464,14 @@ module bpi_flash
 		// M_AXIS_RD
 
 		.m_axis_rd_tdata(m_axis_rd_tdata),
+		.m_axis_rd_tlast(m_axis_rd_tlast),
 		.m_axis_rd_tvalid(m_axis_rd_tvalid),
+		.m_axis_rd_tready(m_axis_rd_tready),
 
 		// S_AXIS_RD
 
 		.s_axis_rd_tdata(s_axis_rd_tdata),
+		.s_axis_rd_tuser(s_axis_rd_tuser),
 		.s_axis_rd_tvalid(s_axis_rd_tvalid),
 		.s_axis_rd_tready(s_axis_rd_tready),
 
@@ -520,11 +529,14 @@ module bpi_flash
 		// S_AXIS_RD
 
 		.s_axis_rd_tdata(m_axis_rd_tdata),
+		.s_axis_rd_tlast(m_axis_rd_tlast),
 		.s_axis_rd_tvalid(m_axis_rd_tvalid),
+		.s_axis_rd_tready(m_axis_rd_tready),
 
 		// M_AXIS_RD
 
 		.m_axis_rd_tdata(s_axis_rd_tdata),
+		.m_axis_rd_tuser(s_axis_rd_tuser),
 		.m_axis_rd_tvalid(s_axis_rd_tvalid),
 		.m_axis_rd_tready(s_axis_rd_tready)
 	);
