@@ -53,11 +53,8 @@ if process.returncode != 0:
 	print("Error: dtc exited with code {0}".format(process.returncode))
 	exit(1)
 
-with open(input_path, "rb") as file_handle:
-	dtb_data = file_handle.read()
-
-	raw_data += len(dtb_data).to_bytes(2, byteorder="little")
-	raw_data += dtb_data
+raw_data += len(dtb_data).to_bytes(2, byteorder="little")
+raw_data += dtb_data
 
 if len(raw_data) > 32768:
 	print("Error: Compiled dts exceeds the limit of 32720 bytes".format(len(raw_data)))
