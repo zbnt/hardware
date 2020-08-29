@@ -29,10 +29,11 @@ proc run_implementation { static_dcp rp_dcp out_dcp reports_dir args } {
 
 	# Run implementation
 
-	opt_design
-	place_design
-	phys_opt_design
-	route_design
+	opt_design -directive ExploreWithRemap
+	place_design -directive Explore
+	phys_opt_design -directive Explore
+	route_design -directive NoTimingRelaxation -tns_cleanup
+	phys_opt_design -directive AggressiveExplore
 
 	# Generate reports
 
@@ -76,7 +77,6 @@ proc gen_static_bitstream { dcp } {
 
 	set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
 	write_bitstream -force -file ../bit/static.bit
-	write_cfgmem -force -format bin -size 128 -interface BPIx16 -checksum -file ../static.bin -loadbit { up 0x00000000 ../bit/static.bit }
 
 	close_project
 }
@@ -93,9 +93,77 @@ proc gen_partial_bitstream { dcp bitstream_name } {
 
 	file del ../rp_${bitstream_name}.bin
 	source [get_property REPOSITORY [get_ipdefs xilinx.com:ip:prc:1.3]]/xilinx/prc_v1_3/tcl/api.tcl
-	prc_v1_3::format_bin_for_icap -i ../bit/${bitstream_name}_pblock_pr_partial.bin -o ../rp_${bitstream_name}.bin
+	prc_v1_3::format_bin_for_icap -i ../bit/${bitstream_name}_pblock_pr_partial.bin -o ../bit/${bitstream_name}_icap.bin -bs 1
 
 	close_project
+}
+
+proc set_bitstream_offsets { dcp dcp_out args } {
+	open_checkpoint $dcp
+
+	# Get memory cells and initialize address/size tables
+
+	set address_mem {}
+	set size_mem {}
+	set total_size_mem {}
+
+	set address_table {}
+	set size_table {}
+	set total_size_table {}
+
+	for {set i 0} {$i < 32} {incr i} {
+		lappend address_mem [get_cells -of_objects [all_fanin -flat -pin_levels 1 [get_nets bd_static_i/pr_ctrl/pr_controller/U0/i_vsm_0/address_from_mem[$i]]] -filter {REF_NAME =~ RAM*S}]
+		lappend size_mem [get_cells -of_objects [all_fanin -flat -pin_levels 1 [get_nets bd_static_i/pr_ctrl/pr_controller/U0/i_vsm_0/size_from_mem[$i]]] -filter {REF_NAME =~ RAM*S}]
+		lappend total_size_mem [get_cells bd_static_i/pr_ctrl/memory/pr_copy/inst/U1/genblk1[$i].size_rom]
+		lappend address_table 0
+		lappend size_table 0
+		lappend total_size_table 0
+	}
+
+	# Calculate offsets for every bitstream
+
+	set address 0x01000000
+	set offset 0
+	set result {}
+	set i 0
+
+	foreach bitstream $args {
+		set bitsize [file size ../bit/${bitstream}_icap.bin]
+
+		set_table_entry address_table $i $offset
+		set_table_entry size_table $i $bitsize
+
+		lappend result up
+		lappend result [format "0x%08X" [expr $address/2]]
+		lappend result ../bit/${bitstream}_icap.bin
+
+		incr i
+		incr address $bitsize
+		incr offset $bitsize
+	}
+
+	# Apply changes
+
+	set_table_entry total_size_table 0 $offset
+
+	for {set i 0} {$i < 32} {incr i} {
+		set_property INIT [format "'h%X" [lindex $address_table $i]] [lindex $address_mem $i]
+		set_property INIT [format "'h%X" [lindex $size_table $i]] [lindex $size_mem $i]
+		set_property INIT [format "'h%X" [lindex $total_size_table $i]] [lindex $total_size_mem $i]
+	}
+
+	write_checkpoint -force $dcp_out
+
+	close_project
+	return $result
+}
+
+proc set_table_entry { table idx value } {
+	upvar $table t
+
+	for {set i 0} {$i < 32} {incr i} {
+		lset t $i [expr ([lindex $t $i] & ~(1 << $idx)) | (!!($value & (1 << $i)) << $idx) ]
+	}
 }
 
 # Change directory
@@ -113,20 +181,28 @@ run_implementation impl/static.dcp rp_dual_tgen_detector.dcp impl/dual_tgen_dete
 run_implementation impl/static.dcp rp_dual_tgen_latency.dcp  impl/dual_tgen_latency.dcp  ../reports/dual_tgen_latency
 run_implementation impl/static.dcp rp_quad_tgen.dcp          impl/quad_tgen.dcp          ../reports/quad_tgen
 
-# Verify if the implementation results are compatible
-
-pr_verify impl/static_grey.dcp impl/dual_detector.dcp
-pr_verify impl/static_grey.dcp impl/dual_tgen_detector.dcp
-pr_verify impl/static_grey.dcp impl/dual_tgen_latency.dcp
-pr_verify impl/static_grey.dcp impl/quad_tgen.dcp
-close_project
-
-# Generate bitstreams for every configuration
+# Generate partial bitstreams
 
 file mkdir ../bit
 
-gen_static_bitstream  impl/static_grey.dcp
 gen_partial_bitstream impl/dual_detector.dcp      dual_detector
 gen_partial_bitstream impl/dual_tgen_detector.dcp dual_tgen_detector
 gen_partial_bitstream impl/dual_tgen_latency.dcp  dual_tgen_latency
 gen_partial_bitstream impl/quad_tgen.dcp          quad_tgen
+
+# Update static design with partial bitstream sizes, generate bitstream
+
+set offsets [set_bitstream_offsets impl/static_grey.dcp impl/static_grey_with_sizes.dcp dual_detector dual_tgen_detector dual_tgen_latency quad_tgen]
+gen_static_bitstream impl/static_grey_with_sizes.dcp
+
+# Make sure the implementation results are compatible
+
+pr_verify impl/static_grey_with_sizes.dcp impl/dual_detector.dcp
+pr_verify impl/static_grey_with_sizes.dcp impl/dual_tgen_detector.dcp
+pr_verify impl/static_grey_with_sizes.dcp impl/dual_tgen_latency.dcp
+pr_verify impl/static_grey_with_sizes.dcp impl/quad_tgen.dcp
+close_project
+
+# Generate BPI memory image
+
+write_cfgmem -force -format bin -size 128 -interface BPIx16 -checksum -file ../netfpga_1g_cml.bin -loadbit { up 0x00000000 ../bit/static.bit } -loaddata $offsets
