@@ -12,7 +12,7 @@
 		target = <&fpga_full>;
 
 		__overlay__ {
-			firmware-name = "zbnt/zedboard/dual_tgen_latency.bin";
+			firmware-name = "zbnt/dual_tgen_latency.bin";
 		};
 	};
 
@@ -23,67 +23,74 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			udmabuf {
+			dmabuf0 {
 				compatible = "ikwzm,u-dma-buf";
-				device-name = "zbnt_dma";
+				device-name = "zbnt_dmabuf0";
 				minor-number = <0>;
 				size = <0x00010000>;
 				dma-coherent;
 			};
 
 			dma@40400000 {
-				compatible = "generic-uio";
+				compatible = "zbnt,message-dma", "generic-uio";
 				reg = <0x40400000 0x10000>;
 
-				interrupt-names = "s2mm_introut";
+				interrupt-names = "irq0";
 				interrupt-parent = <&intc>;
 				interrupts = <0 29 4>;
 			};
 
-			zbnt_timer@43c00000 {
-				compatible = "generic-uio";
+			timer@43c00000 {
+				compatible = "zbnt,simple-timer", "generic-uio";
 				reg = <0x43c00000 0x10000>;
 			};
 
-			zbnt_sc@43c10000 {
-				compatible = "generic-uio";
+			stats@43c10000 {
+				compatible = "zbnt,stats-collector", "generic-uio";
 				reg = <0x43c10000 0x10000>;
+
 				zbnt,ports = <0>;
 			};
 
-			zbnt_sc@43c20000 {
-				compatible = "generic-uio";
+			stats@43c20000 {
+				compatible = "zbnt,stats-collector", "generic-uio";
 				reg = <0x43c20000 0x10000>;
+
 				zbnt,ports = <1>;
 			};
 
-			zbnt_sc@43c30000 {
-				compatible = "generic-uio";
+			stats@43c30000 {
+				compatible = "zbnt,stats-collector", "generic-uio";
 				reg = <0x43c30000 0x10000>;
+
 				zbnt,ports = <2>;
 			};
 
-			zbnt_sc@43c40000 {
-				compatible = "generic-uio";
+			stats@43c40000 {
+				compatible = "zbnt,stats-collector", "generic-uio";
 				reg = <0x43c40000 0x10000>;
+
 				zbnt,ports = <3>;
 			};
 
-			zbnt_tg@43c50000 {
-				compatible = "generic-uio";
+			tgen@43c50000 {
+				compatible = "zbnt,traffic-generator", "generic-uio";
 				reg = <0x43c50000 0x10000>;
+
 				zbnt,ports = <0>;
 			};
 
-			zbnt_tg@43c60000 {
-				compatible = "generic-uio";
+			tgen@43c60000 {
+				compatible = "zbnt,traffic-generator", "generic-uio";
 				reg = <0x43c60000 0x10000>;
+
 				zbnt,ports = <1>;
 			};
 
-			zbnt_lm@43c70000 {
-				compatible = "generic-uio";
+			latency@43c70000 {
+				compatible = "zbnt,latency-measurer", "generic-uio";
 				reg = <0x43c70000 0x10000>;
+
 				zbnt,ports = <2 3>;
 			};
 		};
