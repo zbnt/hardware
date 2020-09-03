@@ -9,39 +9,22 @@
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
-	compatible = "zbnt,netfpga_1g_cml";
+	compatible = "zbnt,NetFPGA_1G_CML", "simple-bus";
 
-	st_axi {
-		compatible = "simple-bus";
-		#address-cells = <1>;
-		#size-cells = <1>;
-
-		region = <1>;
-
-		rom@0 {
-			compatible = "zbnt,static_dtb";
-			reg = <0x00000000 0x1000>;
-		};
-
-		prc@1000 {
-			compatible = "zbnt,pr_controller";
-			reg = <0x00001000 0x1000>;
-		};
-
-		dma@2000 {
-			compatible = "zbnt,circular_dma";
-			reg = <0x00002000 0x1000>;
-		};
+	rom@0 {
+		compatible = "zbnt,static-dtb";
+		reg = <0x00000000 0x1000>;
 	};
 
-	rp_axi {
-		compatible = "simple-bus";
-		region = <2>;
+	prc@1000 {
+		compatible = "zbnt,pr-controller";
+		reg = <0x00001000 0x1000>;
+
+		zbnt,bitstreams = "dual_detector", "dual_tgen_detector", "dual_tgen_latency", "quad_tgen";
 	};
 
-	bpi16 {
-		compatible = "zbnt,cfg_mem";
-		size = <0x8000000>;
-		region = <3>;
+	dma@2000 {
+		compatible = "zbnt,message-dma";
+		reg = <0x00002000 0x1000>;
 	};
 };

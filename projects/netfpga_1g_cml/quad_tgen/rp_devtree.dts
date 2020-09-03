@@ -14,60 +14,68 @@
 	zbnt,rp_name = "quad_tgen";
 
 	rom@0 {
-		compatible = "zbnt,rp_dtb";
+		compatible = "zbnt,rp-dtb";
 		reg = <0x00000000 0x1000>;
 	};
 
 	timer@2000 {
-		compatible = "zbnt,simple_timer";
+		compatible = "zbnt,simple-timer";
 		reg = <0x00002000 0x1000>;
 	};
 
 	stats@4000 {
-		compatible = "zbnt,stats_collector";
+		compatible = "zbnt,stats-collector";
 		reg = <0x00004000 0x1000>;
+
 		zbnt,ports = <0>;
 	};
 
 	stats@6000 {
-		compatible = "zbnt,stats_collector";
+		compatible = "zbnt,stats-collector";
 		reg = <0x00006000 0x1000>;
+
 		zbnt,ports = <1>;
 	};
 
 	stats@8000 {
-		compatible = "zbnt,stats_collector";
+		compatible = "zbnt,stats-collector";
 		reg = <0x00008000 0x1000>;
+
 		zbnt,ports = <2>;
 	};
 
 	stats@a000 {
-		compatible = "zbnt,stats_collector";
+		compatible = "zbnt,stats-collector";
 		reg = <0x0000a000 0x1000>;
+
 		zbnt,ports = <3>;
 	};
 
 	tgen@c000 {
-		compatible = "zbnt,traffic_generator";
+		compatible = "zbnt,traffic-generator";
 		reg = <0x0000c000 0x2000>;
+
 		zbnt,ports = <0>;
 	};
 
 	tgen@e000 {
-		compatible = "zbnt,traffic_generator";
+		compatible = "zbnt,traffic-generator";
 		reg = <0x0000e000 0x2000>;
+
 		zbnt,ports = <1>;
 	};
 
 	tgen@10000 {
-		compatible = "zbnt,traffic_generator";
+		compatible = "zbnt,traffic-generator";
 		reg = <0x00010000 0x2000>;
+
 		zbnt,ports = <2>;
 	};
 
 	tgen@12000 {
-		compatible = "zbnt,traffic_generator";
+		compatible = "zbnt,traffic-generator";
 		reg = <0x00012000 0x2000>;
+
 		zbnt,ports = <3>;
 	};
 };
