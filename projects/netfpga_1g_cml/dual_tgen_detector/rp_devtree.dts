@@ -13,11 +13,6 @@
 
 	zbnt,rp_name = "dual_tgen_detector";
 
-	rom@0 {
-		compatible = "zbnt,rp-dtb";
-		reg = <0x00000000 0x1000>;
-	};
-
 	timer@20000 {
 		compatible = "zbnt,simple-timer";
 		reg = <0x00020000 0x1000>;

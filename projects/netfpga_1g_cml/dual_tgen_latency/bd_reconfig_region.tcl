@@ -480,6 +480,8 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   set axi_interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect ]
   set_property -dict [ list \
    CONFIG.NUM_MI {9} \
+   CONFIG.S00_HAS_REGSLICE {1} \
+   CONFIG.STRATEGY {1} \
  ] $axi_interconnect
 
   # Create interface connections

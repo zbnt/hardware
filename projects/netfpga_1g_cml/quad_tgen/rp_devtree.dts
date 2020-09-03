@@ -13,11 +13,6 @@
 
 	zbnt,rp_name = "quad_tgen";
 
-	rom@0 {
-		compatible = "zbnt,rp-dtb";
-		reg = <0x00000000 0x1000>;
-	};
-
 	timer@2000 {
 		compatible = "zbnt,simple-timer";
 		reg = <0x00002000 0x1000>;

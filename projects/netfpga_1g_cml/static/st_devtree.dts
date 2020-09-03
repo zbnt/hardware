@@ -11,11 +11,6 @@
 	#size-cells = <1>;
 	compatible = "zbnt,NetFPGA_1G_CML", "simple-bus";
 
-	rom@0 {
-		compatible = "zbnt,static-dtb";
-		reg = <0x00000000 0x1000>;
-	};
-
 	prc@1000 {
 		compatible = "zbnt,pr-controller";
 		reg = <0x00001000 0x1000>;
