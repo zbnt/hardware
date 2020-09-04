@@ -17,7 +17,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>8c98e2be</spirit:value>
+            <spirit:value>3e0fe1b4</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -32,7 +32,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>8c98e2be</spirit:value>
+            <spirit:value>3e0fe1b4</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -55,6 +55,10 @@
         <spirit:name>hdl/axi4_lite/axi4_lite_slave_write.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
         <spirit:logicalName>common</spirit:logicalName>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/axis_fifo.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/bus_cdc.sv</spirit:name>
@@ -115,6 +119,10 @@
         <spirit:logicalName>common</spirit:logicalName>
       </spirit:file>
       <spirit:file>
+        <spirit:name>hdl/axis_fifo.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>hdl/bus_cdc.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
         <spirit:logicalName>common</spirit:logicalName>
@@ -167,12 +175,12 @@
       <xilinx:displayName>ZBNT Common Library Core</xilinx:displayName>
       <xilinx:hideInCatalogGUI>true</xilinx:hideInCatalogGUI>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>9</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-07-15T05:53:40Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>10</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-09-04T23:36:26Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="599ad174"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="f4ec6644"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="d15fb578"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
