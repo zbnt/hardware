@@ -6,7 +6,6 @@ module rp_wrapper
 	input wire rst_prc_n,
 
 	output wire active,
-	output wire fifo_empty,
 
 	// ETH0
 
@@ -106,7 +105,6 @@ module rp_wrapper
 		.rst_prc_n(rst_prc_n),
 
 		.active(active),
-		.fifo_empty(fifo_empty),
 
 		// ETH0
 

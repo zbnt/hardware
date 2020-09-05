@@ -133,10 +133,6 @@ xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
 oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1\
 oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1\
-xilinx.com:ip:xlconcat:2.1\
-xilinx.com:ip:util_vector_logic:2.0\
-xilinx.com:ip:util_reduced_logic:2.0\
-oscar-rc.dev:zbnt_hw:util_regslice:1.0\
 "
 
    set list_ips_missing ""
@@ -166,13 +162,13 @@ if { $bCheckIPsPassed != 1 } {
 ##################################################################
 
 
-# Hierarchical cell: test_empty
-proc create_hier_cell_test_empty { parentCell nameHier } {
+# Hierarchical cell: fifos_sc
+proc create_hier_cell_fifos_sc { parentCell nameHier } {
 
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_test_empty() - Empty argument(s)!"}
+     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_fifos_sc() - Empty argument(s)!"}
      return
   }
 
@@ -201,166 +197,220 @@ proc create_hier_cell_test_empty { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S00_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S01_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S02_AXIS
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S03_AXIS
 
   # Create pins
-  create_bd_pin -dir I clk
-  create_bd_pin -dir O -from 0 -to 0 fifo_empty
-  create_bd_pin -dir I -from 12 -to 0 occupancy0
-  create_bd_pin -dir I -from 12 -to 0 occupancy1
-  create_bd_pin -dir I -from 12 -to 0 occupancy2
-  create_bd_pin -dir I -from 12 -to 0 occupancy3
-  create_bd_pin -dir I -from 12 -to 0 occupancy4
-  create_bd_pin -dir I -from 7 -to 0 occupancy5
-  create_bd_pin -dir I -from 6 -to 0 occupancy6
-  create_bd_pin -dir I -from 6 -to 0 occupancy7
-  create_bd_pin -dir I -from 6 -to 0 occupancy8
-  create_bd_pin -dir I -from 6 -to 0 occupancy9
-  create_bd_pin -dir I rst_n
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir I -type rst rst_n
 
-  # Create instance: concat_0, and set properties
-  set concat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 concat_0 ]
+  # Create instance: fifo_sc_0, and set properties
+  set fifo_sc_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_sc_0 ]
   set_property -dict [ list \
-   CONFIG.NUM_PORTS {10} \
- ] $concat_0
+   CONFIG.Clock_Type_AXI {Common_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
+   CONFIG.Enable_Data_Counts_axis {false} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {false} \
+   CONFIG.synchronization_stages_axi {3} \
+ ] $fifo_sc_0
 
-  # Create instance: not_0, and set properties
-  set not_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 not_0 ]
+  # Create instance: fifo_sc_1, and set properties
+  set fifo_sc_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_sc_1 ]
   set_property -dict [ list \
-   CONFIG.C_OPERATION {not} \
-   CONFIG.C_SIZE {1} \
-   CONFIG.LOGO_FILE {data/sym_notgate.png} \
- ] $not_0
+   CONFIG.Clock_Type_AXI {Common_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
+   CONFIG.Enable_Data_Counts_axis {false} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {false} \
+   CONFIG.synchronization_stages_axi {3} \
+ ] $fifo_sc_1
 
-  # Create instance: or_0, and set properties
-  set or_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_0 ]
+  # Create instance: fifo_sc_2, and set properties
+  set fifo_sc_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_sc_2 ]
   set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {13} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_0
+   CONFIG.Clock_Type_AXI {Common_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
+   CONFIG.Enable_Data_Counts_axis {false} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {false} \
+   CONFIG.synchronization_stages_axi {3} \
+ ] $fifo_sc_2
 
-  # Create instance: or_1, and set properties
-  set or_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_1 ]
+  # Create instance: fifo_sc_3, and set properties
+  set fifo_sc_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_sc_3 ]
   set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {13} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_1
+   CONFIG.Clock_Type_AXI {Common_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
+   CONFIG.Enable_Data_Counts_axis {false} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {false} \
+   CONFIG.synchronization_stages_axi {3} \
+ ] $fifo_sc_3
 
-  # Create instance: or_2, and set properties
-  set or_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_2 ]
+  # Create instance: fifo_sc_4, and set properties
+  set fifo_sc_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_sc_4 ]
   set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {13} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_2
+   CONFIG.Clock_Type_AXI {Common_Clock} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {126} \
+   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
+   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
+   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
+   CONFIG.Enable_Data_Counts_axis {false} \
+   CONFIG.Enable_Safety_Circuit {true} \
+   CONFIG.Enable_TLAST {true} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
+   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
+   CONFIG.Full_Flags_Reset_Value {1} \
+   CONFIG.Full_Threshold_Assert_Value_axis {127} \
+   CONFIG.Full_Threshold_Assert_Value_rach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wach {15} \
+   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
+   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
+   CONFIG.Input_Depth_axis {128} \
+   CONFIG.Reset_Type {Asynchronous_Reset} \
+   CONFIG.TDATA_NUM_BYTES {16} \
+   CONFIG.TKEEP_WIDTH {16} \
+   CONFIG.TSTRB_WIDTH {16} \
+   CONFIG.TUSER_WIDTH {0} \
+   CONFIG.Use_Embedded_Registers_axis {false} \
+   CONFIG.synchronization_stages_axi {3} \
+ ] $fifo_sc_4
 
-  # Create instance: or_3, and set properties
-  set or_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_3 ]
+  # Create instance: switch_sc, and set properties
+  set switch_sc [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 switch_sc ]
   set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {13} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_3
+   CONFIG.ARB_ALGORITHM {3} \
+   CONFIG.ARB_ON_MAX_XFERS {0} \
+   CONFIG.ARB_ON_TLAST {1} \
+   CONFIG.HAS_TLAST {1} \
+   CONFIG.NUM_SI {4} \
+ ] $switch_sc
 
-  # Create instance: or_4, and set properties
-  set or_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_4 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {13} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_4
-
-  # Create instance: or_5, and set properties
-  set or_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_5 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {8} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_5
-
-  # Create instance: or_6, and set properties
-  set or_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_6 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {7} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_6
-
-  # Create instance: or_7, and set properties
-  set or_7 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_7 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {7} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_7
-
-  # Create instance: or_8, and set properties
-  set or_8 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_8 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {7} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_8
-
-  # Create instance: or_9, and set properties
-  set or_9 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_9 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {7} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_9
-
-  # Create instance: or_10, and set properties
-  set or_10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 or_10 ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {10} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $or_10
-
-  # Create instance: regslice_0, and set properties
-  set regslice_0 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_regslice:1.0 regslice_0 ]
-  set_property -dict [ list \
-   CONFIG.C_NUM_STAGES {1} \
-   CONFIG.C_WIDTH {10} \
- ] $regslice_0
-
-  # Create instance: regslice_1, and set properties
-  set regslice_1 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_regslice:1.0 regslice_1 ]
-  set_property -dict [ list \
-   CONFIG.C_NUM_STAGES {1} \
-   CONFIG.C_WIDTH {1} \
- ] $regslice_1
+  # Create interface connections
+  connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins M_AXIS] [get_bd_intf_pins fifo_sc_4/M_AXIS]
+  connect_bd_intf_net -intf_net S00_AXIS_1 [get_bd_intf_pins S00_AXIS] [get_bd_intf_pins fifo_sc_0/S_AXIS]
+  connect_bd_intf_net -intf_net S01_AXIS_1 [get_bd_intf_pins S01_AXIS] [get_bd_intf_pins fifo_sc_1/S_AXIS]
+  connect_bd_intf_net -intf_net S02_AXIS_1 [get_bd_intf_pins S02_AXIS] [get_bd_intf_pins fifo_sc_2/S_AXIS]
+  connect_bd_intf_net -intf_net S03_AXIS_1 [get_bd_intf_pins S03_AXIS] [get_bd_intf_pins fifo_sc_3/S_AXIS]
+  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins fifo_sc_0/M_AXIS] [get_bd_intf_pins switch_sc/S00_AXIS]
+  connect_bd_intf_net -intf_net fifo_1_M_AXIS [get_bd_intf_pins fifo_sc_1/M_AXIS] [get_bd_intf_pins switch_sc/S01_AXIS]
+  connect_bd_intf_net -intf_net fifo_2_M_AXIS [get_bd_intf_pins fifo_sc_2/M_AXIS] [get_bd_intf_pins switch_sc/S02_AXIS]
+  connect_bd_intf_net -intf_net fifo_3_M_AXIS [get_bd_intf_pins fifo_sc_3/M_AXIS] [get_bd_intf_pins switch_sc/S03_AXIS]
+  connect_bd_intf_net -intf_net switch_sc_M00_AXIS [get_bd_intf_pins fifo_sc_4/S_AXIS] [get_bd_intf_pins switch_sc/M00_AXIS]
 
   # Create port connections
-  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins regslice_0/clk] [get_bd_pins regslice_1/clk]
-  connect_bd_net -net concat_0_dout [get_bd_pins concat_0/dout] [get_bd_pins regslice_0/data_in]
-  connect_bd_net -net occupancy0_1 [get_bd_pins occupancy0] [get_bd_pins or_0/Op1]
-  connect_bd_net -net occupancy1_1 [get_bd_pins occupancy1] [get_bd_pins or_1/Op1]
-  connect_bd_net -net occupancy2_1 [get_bd_pins occupancy2] [get_bd_pins or_2/Op1]
-  connect_bd_net -net occupancy3_1 [get_bd_pins occupancy5] [get_bd_pins or_5/Op1]
-  connect_bd_net -net occupancy3_2 [get_bd_pins occupancy3] [get_bd_pins or_3/Op1]
-  connect_bd_net -net occupancy4_1 [get_bd_pins occupancy6] [get_bd_pins or_6/Op1]
-  connect_bd_net -net occupancy4_2 [get_bd_pins occupancy4] [get_bd_pins or_4/Op1]
-  connect_bd_net -net occupancy5_1 [get_bd_pins occupancy7] [get_bd_pins or_7/Op1]
-  connect_bd_net -net occupancy6_1 [get_bd_pins occupancy8] [get_bd_pins or_8/Op1]
-  connect_bd_net -net occupancy7_1 [get_bd_pins occupancy9] [get_bd_pins or_9/Op1]
-  connect_bd_net -net or_0_Res [get_bd_pins concat_0/In0] [get_bd_pins or_0/Res]
-  connect_bd_net -net or_1_Res [get_bd_pins concat_0/In1] [get_bd_pins or_1/Res]
-  connect_bd_net -net or_2_Res [get_bd_pins concat_0/In2] [get_bd_pins or_2/Res]
-  connect_bd_net -net or_3_Res [get_bd_pins concat_0/In3] [get_bd_pins or_3/Res]
-  connect_bd_net -net or_4_Res [get_bd_pins concat_0/In4] [get_bd_pins or_4/Res]
-  connect_bd_net -net or_5_Res [get_bd_pins concat_0/In5] [get_bd_pins or_5/Res]
-  connect_bd_net -net or_6_Res [get_bd_pins concat_0/In6] [get_bd_pins or_6/Res]
-  connect_bd_net -net or_7_Res [get_bd_pins concat_0/In7] [get_bd_pins or_7/Res]
-  connect_bd_net -net or_8_Res [get_bd_pins not_0/Op1] [get_bd_pins or_10/Res]
-  connect_bd_net -net or_8_Res1 [get_bd_pins concat_0/In8] [get_bd_pins or_8/Res]
-  connect_bd_net -net or_9_Res [get_bd_pins concat_0/In9] [get_bd_pins or_9/Res]
-  connect_bd_net -net regslice_0_data_out [get_bd_pins or_10/Op1] [get_bd_pins regslice_0/data_out]
-  connect_bd_net -net regslice_3_data_out [get_bd_pins fifo_empty] [get_bd_pins regslice_1/data_out]
-  connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins regslice_0/rst_n] [get_bd_pins regslice_1/rst_n]
-  connect_bd_net -net util_vector_logic_0_Res [get_bd_pins not_0/Res] [get_bd_pins regslice_1/data_in]
+  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins fifo_sc_0/s_aclk] [get_bd_pins fifo_sc_1/s_aclk] [get_bd_pins fifo_sc_2/s_aclk] [get_bd_pins fifo_sc_3/s_aclk] [get_bd_pins fifo_sc_4/s_aclk] [get_bd_pins switch_sc/aclk]
+  connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins fifo_sc_0/s_aresetn] [get_bd_pins fifo_sc_1/s_aresetn] [get_bd_pins fifo_sc_2/s_aresetn] [get_bd_pins fifo_sc_3/s_aresetn] [get_bd_pins fifo_sc_4/s_aresetn] [get_bd_pins switch_sc/aresetn]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -776,7 +826,6 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I clk
-  create_bd_pin -dir O -from 0 -to 0 fifo_empty
   create_bd_pin -dir I rst_n
 
   # Create instance: axis_regslice, and set properties
@@ -789,28 +838,29 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
   set fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_0 ]
   set_property -dict [ list \
    CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
    CONFIG.Empty_Threshold_Assert_Value_rach {14} \
    CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wach {14} \
    CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Data_Counts_axis {false} \
    CONFIG.Enable_Safety_Circuit {true} \
    CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
    CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
    CONFIG.Full_Threshold_Assert_Value_rach {15} \
    CONFIG.Full_Threshold_Assert_Value_wach {15} \
    CONFIG.Full_Threshold_Assert_Value_wrch {15} \
    CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Input_Depth_axis {4096} \
    CONFIG.Reset_Type {Asynchronous_Reset} \
    CONFIG.TDATA_NUM_BYTES {16} \
    CONFIG.TKEEP_WIDTH {16} \
@@ -824,28 +874,29 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
   set fifo_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_1 ]
   set_property -dict [ list \
    CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
    CONFIG.Empty_Threshold_Assert_Value_rach {14} \
    CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wach {14} \
    CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Data_Counts_axis {false} \
    CONFIG.Enable_Safety_Circuit {true} \
    CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
    CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
    CONFIG.Full_Threshold_Assert_Value_rach {15} \
    CONFIG.Full_Threshold_Assert_Value_wach {15} \
    CONFIG.Full_Threshold_Assert_Value_wrch {15} \
    CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Input_Depth_axis {4096} \
    CONFIG.Reset_Type {Asynchronous_Reset} \
    CONFIG.TDATA_NUM_BYTES {16} \
    CONFIG.TKEEP_WIDTH {16} \
@@ -859,28 +910,29 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
   set fifo_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_2 ]
   set_property -dict [ list \
    CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
    CONFIG.Empty_Threshold_Assert_Value_rach {14} \
    CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wach {14} \
    CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Data_Counts_axis {false} \
    CONFIG.Enable_Safety_Circuit {true} \
    CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
    CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
    CONFIG.Full_Threshold_Assert_Value_rach {15} \
    CONFIG.Full_Threshold_Assert_Value_wach {15} \
    CONFIG.Full_Threshold_Assert_Value_wrch {15} \
    CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Input_Depth_axis {4096} \
    CONFIG.Reset_Type {Asynchronous_Reset} \
    CONFIG.TDATA_NUM_BYTES {16} \
    CONFIG.TKEEP_WIDTH {16} \
@@ -894,28 +946,29 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
   set fifo_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_3 ]
   set_property -dict [ list \
    CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {62} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
    CONFIG.Empty_Threshold_Assert_Value_rach {14} \
    CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wach {14} \
    CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Data_Counts_axis {false} \
    CONFIG.Enable_Safety_Circuit {true} \
    CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
+   CONFIG.FIFO_Application_Type_axis {Packet_FIFO} \
+   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
    CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
    CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {63} \
+   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
    CONFIG.Full_Threshold_Assert_Value_rach {15} \
    CONFIG.Full_Threshold_Assert_Value_wach {15} \
    CONFIG.Full_Threshold_Assert_Value_wrch {15} \
    CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {64} \
+   CONFIG.Input_Depth_axis {4096} \
    CONFIG.Reset_Type {Asynchronous_Reset} \
    CONFIG.TDATA_NUM_BYTES {16} \
    CONFIG.TKEEP_WIDTH {16} \
@@ -929,83 +982,13 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
   set fifo_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_4 ]
   set_property -dict [ list \
    CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
+   CONFIG.Empty_Threshold_Assert_Value_axis {30} \
    CONFIG.Empty_Threshold_Assert_Value_rach {14} \
    CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wach {14} \
    CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
    CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {4096} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TDATA_NUM_BYTES {16} \
-   CONFIG.TKEEP_WIDTH {16} \
-   CONFIG.TSTRB_WIDTH {16} \
-   CONFIG.TUSER_WIDTH {0} \
-   CONFIG.Use_Embedded_Registers_axis {true} \
-   CONFIG.synchronization_stages_axi {3} \
- ] $fifo_4
-
-  # Create instance: fifo_5, and set properties
-  set fifo_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_5 ]
-  set_property -dict [ list \
-   CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {4096} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TDATA_NUM_BYTES {16} \
-   CONFIG.TKEEP_WIDTH {16} \
-   CONFIG.TSTRB_WIDTH {16} \
-   CONFIG.TUSER_WIDTH {0} \
-   CONFIG.Use_Embedded_Registers_axis {true} \
-   CONFIG.synchronization_stages_axi {3} \
- ] $fifo_5
-
-  # Create instance: fifo_6, and set properties
-  set fifo_6 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_6 ]
-  set_property -dict [ list \
-   CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {126} \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
+   CONFIG.Enable_Data_Counts_axis {false} \
    CONFIG.Enable_Safety_Circuit {true} \
    CONFIG.Enable_TLAST {true} \
    CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} \
@@ -1015,12 +998,12 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
    CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
    CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
    CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {127} \
+   CONFIG.Full_Threshold_Assert_Value_axis {31} \
    CONFIG.Full_Threshold_Assert_Value_rach {15} \
    CONFIG.Full_Threshold_Assert_Value_wach {15} \
    CONFIG.Full_Threshold_Assert_Value_wrch {15} \
    CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {128} \
+   CONFIG.Input_Depth_axis {32} \
    CONFIG.Reset_Type {Asynchronous_Reset} \
    CONFIG.TDATA_NUM_BYTES {16} \
    CONFIG.TKEEP_WIDTH {16} \
@@ -1028,112 +1011,10 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
    CONFIG.TUSER_WIDTH {0} \
    CONFIG.Use_Embedded_Registers_axis {false} \
    CONFIG.synchronization_stages_axi {3} \
- ] $fifo_6
+ ] $fifo_4
 
-  # Create instance: fifo_7, and set properties
-  set fifo_7 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_7 ]
-  set_property -dict [ list \
-   CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {4096} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TDATA_NUM_BYTES {16} \
-   CONFIG.TKEEP_WIDTH {16} \
-   CONFIG.TSTRB_WIDTH {16} \
-   CONFIG.TUSER_WIDTH {0} \
-   CONFIG.Use_Embedded_Registers_axis {false} \
-   CONFIG.synchronization_stages_axi {3} \
- ] $fifo_7
-
-  # Create instance: fifo_8, and set properties
-  set fifo_8 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_8 ]
-  set_property -dict [ list \
-   CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {4096} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TDATA_NUM_BYTES {16} \
-   CONFIG.TKEEP_WIDTH {16} \
-   CONFIG.TSTRB_WIDTH {16} \
-   CONFIG.TUSER_WIDTH {0} \
-   CONFIG.Use_Embedded_Registers_axis {false} \
-   CONFIG.synchronization_stages_axi {3} \
- ] $fifo_8
-
-  # Create instance: fifo_9, and set properties
-  set fifo_9 [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_9 ]
-  set_property -dict [ list \
-   CONFIG.Clock_Type_AXI {Common_Clock} \
-   CONFIG.Empty_Threshold_Assert_Value_axis {4094} \
-   CONFIG.Empty_Threshold_Assert_Value_rach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_rdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wach {14} \
-   CONFIG.Empty_Threshold_Assert_Value_wdch {1022} \
-   CONFIG.Empty_Threshold_Assert_Value_wrch {14} \
-   CONFIG.Enable_Data_Counts_axis {true} \
-   CONFIG.Enable_Safety_Circuit {true} \
-   CONFIG.Enable_TLAST {true} \
-   CONFIG.FIFO_Implementation_axis {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_rdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} \
-   CONFIG.FIFO_Implementation_wdch {Common_Clock_Block_RAM} \
-   CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} \
-   CONFIG.Full_Flags_Reset_Value {1} \
-   CONFIG.Full_Threshold_Assert_Value_axis {4095} \
-   CONFIG.Full_Threshold_Assert_Value_rach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wach {15} \
-   CONFIG.Full_Threshold_Assert_Value_wrch {15} \
-   CONFIG.INTERFACE_TYPE {AXI_STREAM} \
-   CONFIG.Input_Depth_axis {4096} \
-   CONFIG.Reset_Type {Asynchronous_Reset} \
-   CONFIG.TDATA_NUM_BYTES {16} \
-   CONFIG.TKEEP_WIDTH {16} \
-   CONFIG.TSTRB_WIDTH {16} \
-   CONFIG.TUSER_WIDTH {0} \
-   CONFIG.Use_Embedded_Registers_axis {true} \
-   CONFIG.synchronization_stages_axi {3} \
- ] $fifo_9
+  # Create instance: fifos_sc
+  create_hier_cell_fifos_sc $hier_obj fifos_sc
 
   # Create instance: switch_main, and set properties
   set switch_main [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 switch_main ]
@@ -1145,56 +1026,27 @@ proc create_hier_cell_dma_fifos { parentCell nameHier } {
    CONFIG.NUM_SI {5} \
  ] $switch_main
 
-  # Create instance: switch_sc, and set properties
-  set switch_sc [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 switch_sc ]
-  set_property -dict [ list \
-   CONFIG.ARB_ALGORITHM {3} \
-   CONFIG.ARB_ON_MAX_XFERS {0} \
-   CONFIG.ARB_ON_TLAST {1} \
-   CONFIG.HAS_TLAST {1} \
-   CONFIG.NUM_SI {4} \
- ] $switch_sc
-
-  # Create instance: test_empty
-  create_hier_cell_test_empty $hier_obj test_empty
-
   # Create interface connections
-  connect_bd_intf_net -intf_net S00_AXIS_1 [get_bd_intf_pins S00_AXIS] [get_bd_intf_pins fifo_0/S_AXIS]
-  connect_bd_intf_net -intf_net S01_AXIS_1 [get_bd_intf_pins S01_AXIS] [get_bd_intf_pins fifo_1/S_AXIS]
-  connect_bd_intf_net -intf_net S02_AXIS_1 [get_bd_intf_pins S02_AXIS] [get_bd_intf_pins fifo_2/S_AXIS]
-  connect_bd_intf_net -intf_net S03_AXIS_1 [get_bd_intf_pins S03_AXIS] [get_bd_intf_pins fifo_3/S_AXIS]
-  connect_bd_intf_net -intf_net S04_AXIS_1 [get_bd_intf_pins S04_AXIS] [get_bd_intf_pins fifo_5/S_AXIS]
-  connect_bd_intf_net -intf_net S05_AXIS_1 [get_bd_intf_pins S05_AXIS] [get_bd_intf_pins fifo_4/S_AXIS]
-  connect_bd_intf_net -intf_net S06_AXIS_1 [get_bd_intf_pins S06_AXIS] [get_bd_intf_pins fifo_7/S_AXIS]
-  connect_bd_intf_net -intf_net S07_AXIS_1 [get_bd_intf_pins S07_AXIS] [get_bd_intf_pins fifo_8/S_AXIS]
-  connect_bd_intf_net -intf_net fifo_0_M_AXIS [get_bd_intf_pins fifo_0/M_AXIS] [get_bd_intf_pins switch_sc/S00_AXIS]
-  connect_bd_intf_net -intf_net fifo_1_M_AXIS [get_bd_intf_pins fifo_1/M_AXIS] [get_bd_intf_pins switch_sc/S01_AXIS]
-  connect_bd_intf_net -intf_net fifo_2_M_AXIS [get_bd_intf_pins fifo_2/M_AXIS] [get_bd_intf_pins switch_sc/S02_AXIS]
-  connect_bd_intf_net -intf_net fifo_3_M_AXIS [get_bd_intf_pins fifo_3/M_AXIS] [get_bd_intf_pins switch_sc/S03_AXIS]
-  connect_bd_intf_net -intf_net fifo_4_M_AXIS [get_bd_intf_pins fifo_5/M_AXIS] [get_bd_intf_pins switch_main/S00_AXIS]
-  connect_bd_intf_net -intf_net fifo_5_M_AXIS [get_bd_intf_pins fifo_4/M_AXIS] [get_bd_intf_pins switch_main/S01_AXIS]
-  connect_bd_intf_net -intf_net fifo_6_M_AXIS1 [get_bd_intf_pins fifo_6/M_AXIS] [get_bd_intf_pins switch_main/S02_AXIS]
-  connect_bd_intf_net -intf_net fifo_7_M_AXIS [get_bd_intf_pins axis_regslice/S_AXIS] [get_bd_intf_pins fifo_9/M_AXIS]
-  connect_bd_intf_net -intf_net fifo_7_M_AXIS1 [get_bd_intf_pins fifo_7/M_AXIS] [get_bd_intf_pins switch_main/S03_AXIS]
-  connect_bd_intf_net -intf_net fifo_8_M_AXIS [get_bd_intf_pins fifo_8/M_AXIS] [get_bd_intf_pins switch_main/S04_AXIS]
+  connect_bd_intf_net -intf_net S00_AXIS_1 [get_bd_intf_pins S00_AXIS] [get_bd_intf_pins fifos_sc/S00_AXIS]
+  connect_bd_intf_net -intf_net S01_AXIS_1 [get_bd_intf_pins S01_AXIS] [get_bd_intf_pins fifos_sc/S01_AXIS]
+  connect_bd_intf_net -intf_net S02_AXIS_1 [get_bd_intf_pins S02_AXIS] [get_bd_intf_pins fifos_sc/S02_AXIS]
+  connect_bd_intf_net -intf_net S03_AXIS_1 [get_bd_intf_pins S03_AXIS] [get_bd_intf_pins fifos_sc/S03_AXIS]
+  connect_bd_intf_net -intf_net S04_AXIS_1 [get_bd_intf_pins S04_AXIS] [get_bd_intf_pins fifo_0/S_AXIS]
+  connect_bd_intf_net -intf_net S05_AXIS_1 [get_bd_intf_pins S05_AXIS] [get_bd_intf_pins fifo_1/S_AXIS]
+  connect_bd_intf_net -intf_net S06_AXIS_1 [get_bd_intf_pins S06_AXIS] [get_bd_intf_pins fifo_2/S_AXIS]
+  connect_bd_intf_net -intf_net S07_AXIS_1 [get_bd_intf_pins S07_AXIS] [get_bd_intf_pins fifo_3/S_AXIS]
+  connect_bd_intf_net -intf_net fifo_4_M_AXIS [get_bd_intf_pins fifo_0/M_AXIS] [get_bd_intf_pins switch_main/S00_AXIS]
+  connect_bd_intf_net -intf_net fifo_5_M_AXIS [get_bd_intf_pins fifo_1/M_AXIS] [get_bd_intf_pins switch_main/S01_AXIS]
+  connect_bd_intf_net -intf_net fifo_7_M_AXIS [get_bd_intf_pins axis_regslice/S_AXIS] [get_bd_intf_pins fifo_4/M_AXIS]
+  connect_bd_intf_net -intf_net fifo_7_M_AXIS1 [get_bd_intf_pins fifo_2/M_AXIS] [get_bd_intf_pins switch_main/S03_AXIS]
+  connect_bd_intf_net -intf_net fifo_8_M_AXIS [get_bd_intf_pins fifo_3/M_AXIS] [get_bd_intf_pins switch_main/S04_AXIS]
+  connect_bd_intf_net -intf_net fifos_sc_M_AXIS [get_bd_intf_pins fifos_sc/M_AXIS] [get_bd_intf_pins switch_main/S02_AXIS]
   connect_bd_intf_net -intf_net reg_slice_M_AXIS [get_bd_intf_pins M_AXIS] [get_bd_intf_pins axis_regslice/M_AXIS]
-  connect_bd_intf_net -intf_net switch_M00_AXIS [get_bd_intf_pins fifo_9/S_AXIS] [get_bd_intf_pins switch_main/M00_AXIS]
-  connect_bd_intf_net -intf_net switch_sc_M00_AXIS [get_bd_intf_pins fifo_6/S_AXIS] [get_bd_intf_pins switch_sc/M00_AXIS]
+  connect_bd_intf_net -intf_net switch_M00_AXIS [get_bd_intf_pins fifo_4/S_AXIS] [get_bd_intf_pins switch_main/M00_AXIS]
 
   # Create port connections
-  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins axis_regslice/aclk] [get_bd_pins fifo_0/s_aclk] [get_bd_pins fifo_1/s_aclk] [get_bd_pins fifo_2/s_aclk] [get_bd_pins fifo_3/s_aclk] [get_bd_pins fifo_4/s_aclk] [get_bd_pins fifo_5/s_aclk] [get_bd_pins fifo_6/s_aclk] [get_bd_pins fifo_7/s_aclk] [get_bd_pins fifo_8/s_aclk] [get_bd_pins fifo_9/s_aclk] [get_bd_pins switch_main/aclk] [get_bd_pins switch_sc/aclk] [get_bd_pins test_empty/clk]
-  connect_bd_net -net fifo_7_axis_data_count [get_bd_pins fifo_7/axis_data_count] [get_bd_pins test_empty/occupancy3]
-  connect_bd_net -net occupancy0_1 [get_bd_pins fifo_9/axis_data_count] [get_bd_pins test_empty/occupancy0]
-  connect_bd_net -net occupancy1_1 [get_bd_pins fifo_5/axis_data_count] [get_bd_pins test_empty/occupancy1]
-  connect_bd_net -net occupancy2_1 [get_bd_pins fifo_4/axis_data_count] [get_bd_pins test_empty/occupancy2]
-  connect_bd_net -net occupancy3_1 [get_bd_pins fifo_6/axis_data_count] [get_bd_pins test_empty/occupancy5]
-  connect_bd_net -net occupancy4_1 [get_bd_pins fifo_0/axis_data_count] [get_bd_pins test_empty/occupancy6]
-  connect_bd_net -net occupancy4_2 [get_bd_pins fifo_8/axis_data_count] [get_bd_pins test_empty/occupancy4]
-  connect_bd_net -net occupancy5_1 [get_bd_pins fifo_1/axis_data_count] [get_bd_pins test_empty/occupancy7]
-  connect_bd_net -net occupancy6_1 [get_bd_pins fifo_2/axis_data_count] [get_bd_pins test_empty/occupancy8]
-  connect_bd_net -net occupancy7_1 [get_bd_pins fifo_3/axis_data_count] [get_bd_pins test_empty/occupancy9]
-  connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins axis_regslice/aresetn] [get_bd_pins fifo_0/s_aresetn] [get_bd_pins fifo_1/s_aresetn] [get_bd_pins fifo_2/s_aresetn] [get_bd_pins fifo_3/s_aresetn] [get_bd_pins fifo_4/s_aresetn] [get_bd_pins fifo_5/s_aresetn] [get_bd_pins fifo_6/s_aresetn] [get_bd_pins fifo_7/s_aresetn] [get_bd_pins fifo_8/s_aresetn] [get_bd_pins fifo_9/s_aresetn] [get_bd_pins switch_main/aresetn] [get_bd_pins switch_sc/aresetn] [get_bd_pins test_empty/rst_n]
-  connect_bd_net -net test_empty_data_out_0 [get_bd_pins fifo_empty] [get_bd_pins test_empty/fifo_empty]
+  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins axis_regslice/aclk] [get_bd_pins fifo_0/s_aclk] [get_bd_pins fifo_1/s_aclk] [get_bd_pins fifo_2/s_aclk] [get_bd_pins fifo_3/s_aclk] [get_bd_pins fifo_4/s_aclk] [get_bd_pins fifos_sc/clk] [get_bd_pins switch_main/aclk]
+  connect_bd_net -net rst_n_1 [get_bd_pins rst_n] [get_bd_pins axis_regslice/aresetn] [get_bd_pins fifo_0/s_aresetn] [get_bd_pins fifo_1/s_aresetn] [get_bd_pins fifo_2/s_aresetn] [get_bd_pins fifo_3/s_aresetn] [get_bd_pins fifo_4/s_aresetn] [get_bd_pins fifos_sc/rst_n] [get_bd_pins switch_main/aresetn]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1385,7 +1237,6 @@ proc create_root_design { parentCell } {
    CONFIG.CLK_DOMAIN {bd_reconfig_region_mac_2_rx_clk} \
    CONFIG.FREQ_HZ {125000000} \
  ] $clk_rx3
-  set fifo_empty [ create_bd_port -dir O -from 0 -to 0 fifo_empty ]
   set rst_n [ create_bd_port -dir I -type rst rst_n ]
   set rst_prc_n [ create_bd_port -dir I -type rst rst_prc_n ]
 
@@ -1452,7 +1303,6 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_rx_a_1 [get_bd_ports clk_rx2] [get_bd_pins mitm_b/clk_rx_a]
   connect_bd_net -net clk_rx_b_1 [get_bd_ports clk_rx3] [get_bd_pins mitm_b/clk_rx_b]
   connect_bd_net -net clk_wiz_0_clk_125M [get_bd_ports clk] [get_bd_pins dma_fifos/clk] [get_bd_pins dtb_rom/s_axi_aclk] [get_bd_pins interconnect/clk] [get_bd_pins mitm_a/clk_tx] [get_bd_pins mitm_b/clk_tx] [get_bd_pins reset/slowest_sync_clk] [get_bd_pins simple_timer/clk]
-  connect_bd_net -net dma_fifos_data_out_0 [get_bd_ports fifo_empty] [get_bd_pins dma_fifos/fifo_empty]
   connect_bd_net -net reset_sys_clk_interconnect_aresetn [get_bd_pins dma_fifos/rst_n] [get_bd_pins dtb_rom/s_axi_aresetn] [get_bd_pins mitm_a/rst_n] [get_bd_pins mitm_b/rst_n] [get_bd_pins reset/peripheral_aresetn] [get_bd_pins simple_timer/rst_n]
   connect_bd_net -net rst_pcie_n_1 [get_bd_ports rst_n] [get_bd_pins reset/ext_reset_in]
   connect_bd_net -net rst_prc_n_1 [get_bd_ports rst_prc_n] [get_bd_pins reset/aux_reset_in]

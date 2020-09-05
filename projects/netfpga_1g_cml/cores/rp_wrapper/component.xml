@@ -657,7 +657,7 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.RST_N.POLARITY" spirit:choiceRef="choice_list_74b5137e">ACTIVE_LOW</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.RST_N.POLARITY" spirit:choiceRef="choice_list_9d8b0d81">ACTIVE_LOW</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
@@ -738,7 +738,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>b21cb5e2</spirit:value>
+            <spirit:value>dfe1e244</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -754,7 +754,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>b21cb5e2</spirit:value>
+            <spirit:value>dfe1e244</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -815,19 +815,6 @@
       </spirit:port>
       <spirit:port>
         <spirit:name>active</spirit:name>
-        <spirit:wire>
-          <spirit:direction>out</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>wire</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>fifo_empty</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -1775,7 +1762,7 @@
   </spirit:model>
   <spirit:choices>
     <spirit:choice>
-      <spirit:name>choice_list_74b5137e</spirit:name>
+      <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
     </spirit:choice>
@@ -1786,7 +1773,7 @@
       <spirit:file>
         <spirit:name>hdl/rp_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_b21cb5e2</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_dfe1e244</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1823,15 +1810,15 @@
       </xilinx:taxonomies>
       <xilinx:displayName>ZBNT Reconfigurable Partition</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>6</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-05-24T04:54:27Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>7</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-09-05T13:21:54Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="17b7d23a"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="914c543c"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="7ee951b6"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="a18d218b"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="a649f2c8"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="e852b638"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="e2696808"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="6c4e22b6"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
