@@ -84,12 +84,12 @@ module axis_fifo
 	logic [C_FIFO_WIDTH-1:0] m_data[0:6];
 
 	always_comb begin
-		m_data[1] = {'0, m_data[0][C_FIFO_WIDTH-1 : C_DATA_WIDTH                  ]};
-		m_data[2] = {'0, m_data[1][C_FIFO_WIDTH-1 : |C_HAS_STRB * (C_DATA_WIDTH/8)]};
-		m_data[3] = {'0, m_data[2][C_FIFO_WIDTH-1 : |C_HAS_KEEP * (C_DATA_WIDTH/8)]};
-		m_data[4] = {'0, m_data[3][C_FIFO_WIDTH-1 : |C_HAS_DEST * C_DEST_WIDTH    ]};
-		m_data[5] = {'0, m_data[4][C_FIFO_WIDTH-1 : |C_HAS_USER * C_USER_WIDTH    ]};
-		m_data[6] = {'0, m_data[5][C_FIFO_WIDTH-1 : |C_HAS_ID   * C_ID_WIDTH      ]};
+		m_data[1] = m_data[0] >> C_DATA_WIDTH;
+		m_data[2] = m_data[1] >> |C_HAS_STRB * (C_DATA_WIDTH/8);
+		m_data[3] = m_data[2] >> |C_HAS_KEEP * (C_DATA_WIDTH/8);
+		m_data[4] = m_data[3] >> |C_HAS_DEST * C_DEST_WIDTH;
+		m_data[5] = m_data[4] >> |C_HAS_USER * C_USER_WIDTH;
+		m_data[6] = m_data[5] >> |C_HAS_ID   * C_ID_WIDTH;
 
 		m_axis_tdata = m_data[0];
 		m_axis_tstrb = C_HAS_STRB ? m_data[1] : '1;

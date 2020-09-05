@@ -17,7 +17,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>3e0fe1b4</spirit:value>
+            <spirit:value>9f82e7e7</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -32,7 +32,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>3e0fe1b4</spirit:value>
+            <spirit:value>9f82e7e7</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -175,12 +175,12 @@
       <xilinx:displayName>ZBNT Common Library Core</xilinx:displayName>
       <xilinx:hideInCatalogGUI>true</xilinx:hideInCatalogGUI>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>10</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-09-04T23:36:26Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>11</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-09-05T01:21:22Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="f4ec6644"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="e8028ec5"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="d15fb578"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
