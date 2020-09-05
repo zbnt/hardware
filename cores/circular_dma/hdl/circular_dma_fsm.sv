@@ -156,7 +156,7 @@ module circular_dma_fsm
 
 	always_comb begin
 		if(state == ST_DATA_BURST) begin
-			if(~enable) begin
+			if(enable) begin
 				m_axi_wdata = s_axis_tdata;
 				m_axi_wvalid = s_axis_tvalid;
 				s_axis_tready = m_axi_wready;
