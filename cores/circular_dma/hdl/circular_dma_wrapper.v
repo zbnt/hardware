@@ -10,22 +10,26 @@ module circular_dma_w
 	parameter C_ADDR_WIDTH = 32,
 	parameter C_AXIS_WIDTH = 64,
 	parameter C_MAX_BURST = 16,
-	parameter C_AXIS_OCCUP_WIDTH = 16,
+
+	parameter C_FIFO_TYPE_0 = "block",
+	parameter C_FIFO_TYPE_1 = "none",
+	parameter C_FIFO_TYPE_2 = "none",
+	parameter C_FIFO_TYPE_3 = "none",
+
+	parameter C_FIFO_DEPTH_0 = 256,
+	parameter C_FIFO_DEPTH_1 = 256,
+	parameter C_FIFO_DEPTH_2 = 256,
+	parameter C_FIFO_DEPTH_3 = 256,
+
 	parameter C_VALUE_AWPROT = 3'd0,
 	parameter C_VALUE_AWCACHE = 4'b1111,
-	parameter C_VALUE_AWUSER = 4'b1111,
-	parameter C_IRQ_TYPE = 0
+	parameter C_VALUE_AWUSER = 4'b1111
 )
 (
 	input wire clk,
 	input wire rst_n,
 
 	output wire irq,
-	input wire irq_ack,
-
-	output wire fifo_flush_req,
-	input wire fifo_flush_ack,
-	input wire [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	// S_AXI
 
@@ -75,12 +79,12 @@ module circular_dma_w
 	input wire m_axi_bvalid,
 	output wire m_axi_bready,
 
-	// S_AXIS_S2MM
+	// S_AXIS
 
-	input wire [C_AXIS_WIDTH-1:0] s_axis_s2mm_tdata,
-	input wire s_axis_s2mm_tlast,
-	input wire s_axis_s2mm_tvalid,
-	output wire s_axis_s2mm_tready
+	input wire [C_AXIS_WIDTH-1:0] s_axis_tdata,
+	input wire s_axis_tlast,
+	input wire s_axis_tvalid,
+	output wire s_axis_tready
 );
 	assign m_axi_awsize = $clog2(C_AXIS_WIDTH/8);
 	assign m_axi_wstrb = {(C_AXIS_WIDTH/8){1'b1}};
@@ -95,8 +99,16 @@ module circular_dma_w
 		C_ADDR_WIDTH,
 		C_AXIS_WIDTH,
 		C_MAX_BURST,
-		C_AXIS_OCCUP_WIDTH,
-		C_IRQ_TYPE
+
+		C_FIFO_TYPE_0,
+		C_FIFO_TYPE_1,
+		C_FIFO_TYPE_2,
+		C_FIFO_TYPE_3,
+
+		C_FIFO_DEPTH_0,
+		C_FIFO_DEPTH_1,
+		C_FIFO_DEPTH_2,
+		C_FIFO_DEPTH_3
 	)
 	U0
 	(
@@ -104,11 +116,6 @@ module circular_dma_w
 		.rst_n(rst_n),
 
 		.irq(irq),
-		.irq_ack(irq_ack),
-
-		.fifo_flush_req(fifo_flush_req),
-		.fifo_flush_ack(fifo_flush_ack),
-		.fifo_occupancy(fifo_occupancy),
 
 		// S_AXI
 
@@ -152,11 +159,11 @@ module circular_dma_w
 		.m_axi_bvalid(m_axi_bvalid),
 		.m_axi_bready(m_axi_bready),
 
-		// S_AXIS_S2MM
+		// S_AXIS
 
-		.s_axis_s2mm_tdata(s_axis_s2mm_tdata),
-		.s_axis_s2mm_tlast(s_axis_s2mm_tlast),
-		.s_axis_s2mm_tvalid(s_axis_s2mm_tvalid),
-		.s_axis_s2mm_tready(s_axis_s2mm_tready)
+		.s_axis_tdata(s_axis_tdata),
+		.s_axis_tlast(s_axis_tlast),
+		.s_axis_tvalid(s_axis_tvalid),
+		.s_axis_tready(s_axis_tready)
 	);
 endmodule

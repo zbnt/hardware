@@ -47,6 +47,7 @@ module circular_dma_axi
 	output logic srst,
 	input logic [2:0] status_flags,
 
+	input logic fifo_ready,
 	output logic fifo_flush_req,
 	input logic fifo_flush_ack,
 
@@ -57,8 +58,7 @@ module circular_dma_axi
 	output logic [C_ADDR_WIDTH-1:0] mem_base,
 	output logic [31:0] mem_size,
 	input logic [31:0] bytes_written,
-	input logic [31:0] last_msg_end,
-	output logic [31:0] timeout
+	input logic [31:0] last_msg_end
 );
 	// Handle AXI4-Lite requests
 
@@ -127,7 +127,6 @@ module circular_dma_axi
 			fifo_flush_req <= 1'b0;
 			clear_irq <= 3'b0;
 			enable_irq <= 3'b0;
-			timeout <= 32'd125000000;
 
 			mem_base <= '0;
 			mem_size <= 32'd0;
@@ -163,10 +162,6 @@ module circular_dma_axi
 								mem_size <= (s_axi_wdata & write_mask) | (mem_size & ~write_mask);
 								mem_size[$clog2(C_BURST_BYTES)-1:0] <= 'd0;
 							end
-
-							3'd7: begin
-								timeout <= (s_axi_wdata & write_mask) | (timeout & ~write_mask);
-							end
 						endcase
 					end else if(C_AXI_WIDTH == 64) begin
 						case(write_addr[4:3])
@@ -185,10 +180,6 @@ module circular_dma_axi
 							2'd2: begin
 								mem_size <= (s_axi_wdata[31:0] & write_mask[31:0]) | (mem_size & ~write_mask[31:0]);
 								mem_size[$clog2(C_BURST_BYTES)-1:0] <= 'd0;
-							end
-
-							3'd3: begin
-								timeout <= (s_axi_wdata[63:32] & write_mask[63:32]) | (timeout & ~write_mask[63:32]);
 							end
 						endcase
 					end
@@ -224,21 +215,21 @@ module circular_dma_axi
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
-						3'd0: read_value = {12'd0, fifo_flush_ack, status_flags, 13'd0, fifo_flush_req, srst, enable};
+						3'd0: read_value = {11'd0, fifo_ready, fifo_flush_ack, status_flags, 13'd0, fifo_flush_req, srst, enable};
 						3'd1: read_value = {13'd0, enable_irq, 13'd0, irq};
 						3'd2: read_value = mem_base[31:0];
 						3'd3: read_value = (C_ADDR_WIDTH == 64) ? mem_base[63:32] : 32'd0;
 						3'd4: read_value = mem_size;
 						3'd5: read_value = bytes_written;
 						3'd6: read_value = last_msg_end;
-						3'd7: read_value = timeout;
+						3'd7: read_value = 32'd0;
 					endcase
 				end else if(C_AXI_WIDTH == 64) begin
 					case(s_axi_araddr[4:3])
-						2'd0: read_value = {13'd0, enable_irq, 13'd0, irq, 12'd0, fifo_flush_ack, status_flags, 13'd0, fifo_flush_req, srst, enable};
+						2'd0: read_value = {13'd0, enable_irq, 13'd0, irq, 11'd0, fifo_ready, fifo_flush_ack, status_flags, 13'd0, fifo_flush_req, srst, enable};
 						2'd1: read_value = (C_ADDR_WIDTH == 64) ? mem_base : {32'd0, mem_base};
 						2'd2: read_value = {bytes_written, mem_size};
-						2'd3: read_value = {timeout, last_msg_end};
+						2'd3: read_value = {32'd0, last_msg_end};
 					endcase
 				end
 			end else begin

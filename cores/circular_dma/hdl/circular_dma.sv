@@ -16,19 +16,22 @@ module circular_dma
 	parameter C_ADDR_WIDTH = 32,
 	parameter C_AXIS_WIDTH = 64,
 	parameter C_MAX_BURST = 16,
-	parameter C_AXIS_OCCUP_WIDTH = 16,
-	parameter C_IRQ_TYPE = 0
+
+	parameter C_FIFO_TYPE_0 = "block",
+	parameter C_FIFO_TYPE_1 = "none",
+	parameter C_FIFO_TYPE_2 = "none",
+	parameter C_FIFO_TYPE_3 = "none",
+
+	parameter C_FIFO_DEPTH_0 = 256,
+	parameter C_FIFO_DEPTH_1 = 256,
+	parameter C_FIFO_DEPTH_2 = 256,
+	parameter C_FIFO_DEPTH_3 = 256
 )
 (
 	input logic clk,
 	input logic rst_n,
 
 	output logic irq,
-	input logic irq_ack,
-
-	output logic fifo_flush_req,
-	input logic fifo_flush_ack,
-	input logic [C_AXIS_OCCUP_WIDTH-1:0] fifo_occupancy,
 
 	// S_AXI : AXI4-Lite slave interface (from PS)
 
@@ -72,69 +75,25 @@ module circular_dma
 	input logic m_axi_bvalid,
 	output logic m_axi_bready,
 
-	// S_AXIS_S2MM
+	// S_AXIS
 
-	input logic [C_AXIS_WIDTH-1:0] s_axis_s2mm_tdata,
-	input logic s_axis_s2mm_tlast,
-	input logic s_axis_s2mm_tvalid,
-	output logic s_axis_s2mm_tready
+	input logic [C_AXIS_WIDTH-1:0] s_axis_tdata,
+	input logic s_axis_tlast,
+	input logic s_axis_tvalid,
+	output logic s_axis_tready
 );
-	// Flush ACK
-
-	logic [4:0] flush_count;
-	logic flush_ack;
-
-	always_ff @(posedge clk) begin
-		if(~rst_n | ~fifo_flush_ack) begin
-			flush_ack <= 1'b0;
-			flush_count <= 5'd0;
-		end else begin
-			if(flush_count == 5'd31) begin
-				flush_ack <= 1'b1;
-			end else begin
-				flush_count <= flush_count + 5'd1;
-			end
-		end
-	end
-
 	// IRQ
 
-	if(C_IRQ_TYPE == 0) begin
-		// Level-triggered
-
-		always_ff @(posedge clk) begin
-			irq <= rst_n & (|bits_irq);
-		end
-	end else begin
-		// Edge-triggered
-
-		logic irq_sent;
-
-		always_ff @(posedge clk) begin
-			if(~rst_n) begin
-				irq <= 1'b0;
-				irq_sent <= 1'b0;
-			end else begin
-				irq <= 1'b0;
-
-				if(bits_irq != 'd0 && ~irq_sent) begin
-					irq <= 1'b1;
-					irq_sent <= 1'b1;
-				end
-
-				if(irq_ack) begin
-					irq_sent <= 1'b0;
-				end
-			end
-		end
+	always_ff @(posedge clk) begin
+		irq <= rst_n & (|bits_irq);
 	end
 
 	// Registers
 
-	logic enable, srst, flush_fifo, fifo_empty;
+	logic enable, srst, flush_req, flush_ack, fifo_ready;
 	logic [2:0] bits_irq, clear_irq, enable_irq;
 	logic [C_ADDR_WIDTH-1:0] mem_base;
-	logic [31:0] mem_size, bytes_written, last_msg_end, timeout;
+	logic [31:0] mem_size, bytes_written, last_msg_end;
 	logic [2:0] status_flags;
 
 	circular_dma_axi #(C_AXI_WIDTH, C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U0
@@ -170,7 +129,8 @@ module circular_dma
 		.srst(srst),
 		.status_flags(status_flags),
 
-		.fifo_flush_req(fifo_flush_req),
+		.fifo_ready(fifo_ready),
+		.fifo_flush_req(flush_req),
 		.fifo_flush_ack(flush_ack),
 
 		.irq(bits_irq),
@@ -180,22 +140,27 @@ module circular_dma
 		.mem_base(mem_base),
 		.mem_size(mem_size),
 		.bytes_written(bytes_written),
-		.last_msg_end(last_msg_end),
-		.timeout(timeout)
+		.last_msg_end(last_msg_end)
 	);
 
 	// FSM
 
-	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST, C_AXIS_OCCUP_WIDTH) U1
+	logic [C_AXIS_WIDTH-1:0] axis_fifo_tdata;
+	logic axis_fifo_tlast, axis_fifo_tvalid, axis_fifo_tready;
+
+	logic flush_active;
+	logic [$clog2(C_MAX_BURST+1)-1:0] fifo_occupancy;
+
+	circular_dma_fsm #(C_ADDR_WIDTH, C_AXIS_WIDTH, C_MAX_BURST) U1
 	(
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.fifo_flush_req(fifo_flush_req),
-		.fifo_flush_ack(flush_ack),
+		.flush_req(flush_active),
+		.flush_ack(flush_ack),
 		.fifo_occupancy(fifo_occupancy),
 
-		.enable(enable),
+		.enable(fifo_ready),
 		.clear_irq(clear_irq),
 		.enable_irq(enable_irq),
 		.irq(bits_irq),
@@ -205,7 +170,6 @@ module circular_dma
 		.mem_size(mem_size),
 		.bytes_written(bytes_written),
 		.last_msg_end(last_msg_end),
-		.timeout(timeout),
 
 		// M_AXI
 
@@ -223,11 +187,57 @@ module circular_dma
 		.m_axi_bvalid(m_axi_bvalid),
 		.m_axi_bready(m_axi_bready),
 
-		// S_AXIS_S2MM
+		// S_AXIS
 
-		.s_axis_s2mm_tdata(s_axis_s2mm_tdata),
-		.s_axis_s2mm_tlast(s_axis_s2mm_tlast),
-		.s_axis_s2mm_tvalid(s_axis_s2mm_tvalid),
-		.s_axis_s2mm_tready(s_axis_s2mm_tready)
+		.s_axis_tdata(axis_fifo_tdata),
+		.s_axis_tlast(axis_fifo_tlast),
+		.s_axis_tvalid(axis_fifo_tvalid),
+		.s_axis_tready(axis_fifo_tready)
+	);
+
+	// FIFOs
+
+	circular_dma_fifos
+	#(
+		.C_AXIS_WIDTH(C_AXIS_WIDTH),
+		.C_MAX_BURST(C_MAX_BURST),
+
+		.C_FIFO_TYPE_0(C_FIFO_TYPE_0),
+		.C_FIFO_TYPE_1(C_FIFO_TYPE_1),
+		.C_FIFO_TYPE_2(C_FIFO_TYPE_2),
+		.C_FIFO_TYPE_3(C_FIFO_TYPE_3),
+
+		.C_FIFO_DEPTH_0(C_FIFO_DEPTH_0),
+		.C_FIFO_DEPTH_1(C_FIFO_DEPTH_1),
+		.C_FIFO_DEPTH_2(C_FIFO_DEPTH_2),
+		.C_FIFO_DEPTH_3(C_FIFO_DEPTH_3)
+	)
+	U2
+	(
+		.clk(clk),
+		.rst_n(rst_n),
+
+		.enable(enable),
+		.flush_req(flush_req),
+
+		.ready(fifo_ready),
+		.flush_active(flush_active),
+		.flush_ack(flush_ack),
+
+		.occupancy(fifo_occupancy),
+
+		// S_AXIS
+
+		.s_axis_tdata(s_axis_tdata),
+		.s_axis_tlast(s_axis_tlast),
+		.s_axis_tvalid(s_axis_tvalid),
+		.s_axis_tready(s_axis_tready),
+
+		// M_AXIS
+
+		.m_axis_tdata(axis_fifo_tdata),
+		.m_axis_tlast(axis_fifo_tlast),
+		.m_axis_tvalid(axis_fifo_tvalid),
+		.m_axis_tready(axis_fifo_tready)
 	);
 endmodule
