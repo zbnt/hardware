@@ -563,6 +563,11 @@
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
+      <spirit:view>
+        <spirit:name>xilinx_implementation</spirit:name>
+        <spirit:displayName>Implementation</spirit:displayName>
+        <spirit:envIdentifier>:vivado.xilinx.com:implementation</spirit:envIdentifier>
+      </spirit:view>
     </spirit:views>
     <spirit:ports>
       <spirit:port>
@@ -1625,15 +1630,15 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Circular DMA</xilinx:displayName>
-      <xilinx:coreRevision>14</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-09-05T07:41:31Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>15</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-09-05T08:17:01Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="f1430a34"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="1425d607"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="509db1e2"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="fb76e757"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="217e8406"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="1bea5327"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="f0c6b29c"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="79b6be6b"/>
