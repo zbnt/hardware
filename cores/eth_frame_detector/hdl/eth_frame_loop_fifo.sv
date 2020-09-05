@@ -127,146 +127,121 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		endcase
 	end
 
-	xpm_fifo_axis
+	axis_fifo
 	#(
-		.CDC_SYNC_STAGES(2),
-		.CLOCKING_MODE("common_clock"),
-		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(C_LOOP_FIFO_B_SIZE),
-		.FIFO_MEMORY_TYPE("distributed"),
-		.PACKET_FIFO("false"),
-		.PROG_EMPTY_THRESH(10),
-		.PROG_FULL_THRESH(10),
-		.RD_DATA_COUNT_WIDTH(1),
-		.RELATED_CLOCKS(0),
-		.TDATA_WIDTH(8),
-		.TDEST_WIDTH(1),
-		.TID_WIDTH(1),
-		.TUSER_WIDTH(1),
-		.USE_ADV_FEATURES("1000"),
-		.WR_DATA_COUNT_WIDTH(1)
+		.C_DEPTH(C_LOOP_FIFO_B_SIZE),
+		.C_MEM_TYPE("distributed"),
+		.C_CDC_STAGES(0),
+
+		.C_DATA_WIDTH(8),
+		.C_DEST_WIDTH(1),
+		.C_USER_WIDTH(1),
+		.C_ID_WIDTH(1),
+
+		.C_HAS_STRB(0),
+		.C_HAS_KEEP(0),
+		.C_HAS_DEST(0),
+		.C_HAS_USER(0),
+		.C_HAS_ID(0),
+		.C_HAS_LAST(1),
+
+		.C_ENABLE_S_COUNT(0),
+		.C_ENABLE_M_COUNT(0),
+		.C_COUNT_WIDTH(1)
 	)
 	U0
 	(
-		.m_aclk(clk_tx),
-		.s_aclk(clk_tx),
-		.s_aresetn(rst_tx_n),
-
-		.prog_full_axis(),
-		.prog_empty_axis(),
+		.s_clk(clk_tx),
+		.s_rst_n(rst_tx_n),
 
 		.s_axis_tdata(axis_frame_b2d_tdata),
 		.s_axis_tlast(axis_frame_b2d_tlast),
 		.s_axis_tvalid(axis_frame_b2d_tvalid),
 		.s_axis_tready(axis_frame_b2d_tready),
 
+		.m_clk(clk_tx),
+
 		.m_axis_tdata(m_axis_frame_tdata),
 		.m_axis_tlast(m_axis_frame_tlast),
 		.m_axis_tvalid(m_axis_frame_tvalid),
-		.m_axis_tready(m_axis_frame_tready),
-
-		.s_axis_tuser(1'b0),
-		.s_axis_tdest(1'b0),
-		.s_axis_tid(1'b0),
-		.s_axis_tkeep(1'b1),
-		.s_axis_tstrb(1'b1),
-
-		.injectdbiterr_axis(1'b0),
-		.injectsbiterr_axis(1'b0)
+		.m_axis_tready(m_axis_frame_tready)
 	);
 
-	xpm_fifo_axis
+	axis_fifo
 	#(
-		.CDC_SYNC_STAGES(2),
-		.CLOCKING_MODE("independent_clock"),
-		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(C_LOOP_FIFO_A_SIZE),
-		.FIFO_MEMORY_TYPE("block"),
-		.PACKET_FIFO("false"),
-		.PROG_EMPTY_THRESH(10),
-		.PROG_FULL_THRESH(10),
-		.RD_DATA_COUNT_WIDTH(1),
-		.RELATED_CLOCKS(0),
-		.TDATA_WIDTH(8),
-		.TDEST_WIDTH(1),
-		.TID_WIDTH(1),
-		.TUSER_WIDTH(1),
-		.USE_ADV_FEATURES("1000"),
-		.WR_DATA_COUNT_WIDTH(1)
+		.C_DEPTH(C_LOOP_FIFO_A_SIZE),
+		.C_MEM_TYPE("block"),
+		.C_CDC_STAGES(2),
+
+		.C_DATA_WIDTH(8),
+		.C_DEST_WIDTH(1),
+		.C_USER_WIDTH(1),
+		.C_ID_WIDTH(1),
+
+		.C_HAS_STRB(0),
+		.C_HAS_KEEP(0),
+		.C_HAS_DEST(0),
+		.C_HAS_USER(0),
+		.C_HAS_ID(0),
+		.C_HAS_LAST(1),
+
+		.C_ENABLE_S_COUNT(0),
+		.C_ENABLE_M_COUNT(0),
+		.C_COUNT_WIDTH(1)
 	)
 	U1
 	(
-		.m_aclk(clk_tx),
-		.s_aclk(clk),
-		.s_aresetn(rst_n),
-
-		.prog_full_axis(),
-		.prog_empty_axis(),
+		.s_clk(clk),
+		.s_rst_n(rst_n),
 
 		.s_axis_tdata(s_axis_frame_tdata),
 		.s_axis_tlast(s_axis_frame_tlast),
 		.s_axis_tvalid(s_axis_frame_tvalid),
 		.s_axis_tready(s_axis_frame_tready),
 
+		.m_clk(clk_tx),
+
 		.m_axis_tdata(axis_frame_b2d_tdata),
 		.m_axis_tlast(axis_frame_b2d_tlast),
 		.m_axis_tvalid(axis_frame_b2d_tvalid),
-		.m_axis_tready(axis_frame_b2d_tready),
-
-		.s_axis_tuser(1'b0),
-		.s_axis_tdest(1'b0),
-		.s_axis_tid(1'b0),
-		.s_axis_tkeep(1'b1),
-		.s_axis_tstrb(1'b1),
-
-		.injectdbiterr_axis(1'b0),
-		.injectsbiterr_axis(1'b0)
+		.m_axis_tready(axis_frame_b2d_tready)
 	);
 
-	xpm_fifo_axis
+	axis_fifo
 	#(
-		.CDC_SYNC_STAGES(2),
-		.CLOCKING_MODE("independent_clock"),
-		.ECC_MODE("no_ecc"),
-		.FIFO_DEPTH(C_LOOP_FIFO_A_SIZE / 32),
-		.FIFO_MEMORY_TYPE("block"),
-		.PACKET_FIFO("false"),
-		.PROG_EMPTY_THRESH(10),
-		.PROG_FULL_THRESH(10),
-		.RD_DATA_COUNT_WIDTH(1),
-		.RELATED_CLOCKS(0),
-		.TDATA_WIDTH(48),
-		.TDEST_WIDTH(1),
-		.TID_WIDTH(1),
-		.TUSER_WIDTH(1),
-		.USE_ADV_FEATURES("1000"),
-		.WR_DATA_COUNT_WIDTH(1)
+		.C_DEPTH(C_LOOP_FIFO_A_SIZE / 32),
+		.C_MEM_TYPE("block"),
+		.C_CDC_STAGES(2),
+
+		.C_DATA_WIDTH(48),
+		.C_DEST_WIDTH(1),
+		.C_USER_WIDTH(1),
+		.C_ID_WIDTH(1),
+
+		.C_HAS_STRB(0),
+		.C_HAS_KEEP(0),
+		.C_HAS_DEST(0),
+		.C_HAS_USER(0),
+		.C_HAS_ID(0),
+		.C_HAS_LAST(0),
+
+		.C_ENABLE_S_COUNT(0),
+		.C_ENABLE_M_COUNT(0),
+		.C_COUNT_WIDTH(1)
 	)
 	U2
 	(
-		.m_aclk(clk_tx),
-		.s_aclk(clk),
-		.s_aresetn(rst_n),
-
-		.prog_full_axis(),
-		.prog_empty_axis(),
+		.s_clk(clk),
+		.s_rst_n(rst_n),
 
 		.s_axis_tdata(s_axis_ctl_tdata),
 		.s_axis_tvalid(s_axis_ctl_tvalid),
 		.s_axis_tready(s_axis_ctl_tready),
 
+		.m_clk(clk_tx),
+
 		.m_axis_tdata(m_axis_ctl_tdata),
 		.m_axis_tvalid(m_axis_ctl_tvalid),
-		.m_axis_tready(m_axis_ctl_tready),
-
-		.s_axis_tlast(1'b0),
-		.s_axis_tuser(1'b0),
-		.s_axis_tdest(1'b0),
-		.s_axis_tid(1'b0),
-		.s_axis_tkeep(1'b1),
-		.s_axis_tstrb(1'b1),
-
-		.injectdbiterr_axis(1'b0),
-		.injectsbiterr_axis(1'b0)
+		.m_axis_tready(m_axis_ctl_tready)
 	);
 endmodule
