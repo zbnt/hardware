@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module pr_shutdown_axis_w
+module axis_shutdown_w
 #(
 	parameter C_CDC_STAGES = 0,
 
@@ -19,7 +19,9 @@ module pr_shutdown_axis_w
 	parameter C_AXIS_HAS_TLAST = 1,
 	parameter C_AXIS_HAS_TID = 0,
 	parameter C_AXIS_HAS_TDEST = 0,
-	parameter C_AXIS_HAS_TUSER = 0
+	parameter C_AXIS_HAS_TUSER = 0,
+
+	parameter C_TREADY_IN_SHUTDOWN = 0
 )
 (
 	input wire clk,
@@ -55,7 +57,7 @@ module pr_shutdown_axis_w
 );
 	wire rst_n_cdc, req, ack;
 
-	pr_shutdown_axis
+	axis_shutdown
 	#(
 		C_AXIS_TDATA_WIDTH,
 		C_AXIS_TUSER_WIDTH,
@@ -68,7 +70,9 @@ module pr_shutdown_axis_w
 		C_AXIS_HAS_TLAST,
 		C_AXIS_HAS_TID,
 		C_AXIS_HAS_TDEST,
-		C_AXIS_HAS_TUSER
+		C_AXIS_HAS_TUSER,
+
+		C_TREADY_IN_SHUTDOWN
 	)
 	U0
 	(

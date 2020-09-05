@@ -2,7 +2,7 @@
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <spirit:vendor>oscar-rc.dev</spirit:vendor>
   <spirit:library>zbnt_hw</spirit:library>
-  <spirit:name>pr_shutdown_axis</spirit:name>
+  <spirit:name>axis_shutdown</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
@@ -240,14 +240,14 @@
         <spirit:displayName>Verilog Synthesis</spirit:displayName>
         <spirit:envIdentifier>verilogSource:vivado.xilinx.com:synthesis</spirit:envIdentifier>
         <spirit:language>verilog</spirit:language>
-        <spirit:modelName>pr_shutdown_axis_w</spirit:modelName>
+        <spirit:modelName>axis_shutdown_w</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_verilogsynthesis_view_fileset</spirit:localName>
         </spirit:fileSetRef>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>a310c0bb</spirit:value>
+            <spirit:value>a7769b8e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -256,14 +256,14 @@
         <spirit:displayName>Verilog Simulation</spirit:displayName>
         <spirit:envIdentifier>verilogSource:vivado.xilinx.com:simulation</spirit:envIdentifier>
         <spirit:language>verilog</spirit:language>
-        <spirit:modelName>pr_shutdown_axis_w</spirit:modelName>
+        <spirit:modelName>axis_shutdown_w</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_verilogbehavioralsimulation_view_fileset</spirit:localName>
         </spirit:fileSetRef>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>a310c0bb</spirit:value>
+            <spirit:value>a7769b8e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -277,7 +277,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>02538d95</spirit:value>
+            <spirit:value>5da6dd33</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -849,6 +849,11 @@
         <spirit:displayName>C Cdc Stages</spirit:displayName>
         <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_CDC_STAGES">0</spirit:value>
       </spirit:modelParameter>
+      <spirit:modelParameter spirit:dataType="integer">
+        <spirit:name>C_TREADY_IN_SHUTDOWN</spirit:name>
+        <spirit:displayName>C Tready In Shutdown</spirit:displayName>
+        <spirit:value spirit:format="bool" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_TREADY_IN_SHUTDOWN">false</spirit:value>
+      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
@@ -862,39 +867,39 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogsynthesis_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>hdl/pr_shutdown_axis.sv</spirit:name>
+        <spirit:name>hdl/axis_shutdown.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/pr_shutdown_axis_wrapper.v</spirit:name>
+        <spirit:name>hdl/axis_shutdown_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_153499e0</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_f361b241</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_verilogbehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>hdl/pr_shutdown_axis.sv</spirit:name>
+        <spirit:name>hdl/axis_shutdown.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/pr_shutdown_axis_wrapper.v</spirit:name>
+        <spirit:name>hdl/axis_shutdown_wrapper.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/pr_shutdown_axis_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/axis_shutdown_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_02538d95</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_5da6dd33</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_utilityxitfiles_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>gui/pr_shutdown_axis_v1_0.gtcl</spirit:name>
+        <spirit:name>gui/axis_shutdown_v1_0.gtcl</spirit:name>
         <spirit:userFileType>GTCL</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -986,26 +991,36 @@
       <spirit:displayName>Stages</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_CDC_STAGES" spirit:minimum="0" spirit:maximum="16" spirit:rangeType="long">0</spirit:value>
     </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>C_TREADY_IN_SHUTDOWN</spirit:name>
+      <spirit:displayName>Assert TREADY while in shutdown</spirit:displayName>
+      <spirit:value spirit:format="bool" spirit:resolve="user" spirit:id="PARAM_VALUE.C_TREADY_IN_SHUTDOWN">false</spirit:value>
+    </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
       <xilinx:supportedFamilies>
+        <xilinx:family xilinx:lifeCycle="Production">zynq</xilinx:family>
         <xilinx:family xilinx:lifeCycle="Production">kintex7</xilinx:family>
+        <xilinx:family xilinx:lifeCycle="Production">zynquplus</xilinx:family>
       </xilinx:supportedFamilies>
       <xilinx:taxonomies>
         <xilinx:taxonomy>/AXI_Infrastructure</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>AXIS Shutdown</xilinx:displayName>
-      <xilinx:coreRevision>3</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-05-24T07:50:18Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>2</xilinx:coreRevision>
+      <xilinx:upgrades>
+        <xilinx:canUpgradeFrom>oscar-rc.dev:zbnt_hw:pr_shutdown_axis:1.0</xilinx:canUpgradeFrom>
+      </xilinx:upgrades>
+      <xilinx:coreCreationDateTime>2020-09-05T04:58:05Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="8b84cb25"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="aa112ed6"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="64c86344"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="d179f626"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="7dbabbde"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="d82d327f"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="942328ee"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="581927dc"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

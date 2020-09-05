@@ -1,6 +1,6 @@
 
 # Loading additional proc with user specified bodies to compute parameter values.
-source [file join [file dirname [file dirname [info script]]] gui/pr_shutdown_axis_v1_0.gtcl]
+source [file join [file dirname [file dirname [info script]]] gui/axis_shutdown_v1_0.gtcl]
 
 # Definitional proc to organize widgets for parameters.
 proc init_gui { IPINST } {
@@ -31,6 +31,10 @@ proc init_gui { IPINST } {
   set_property tooltip {CDC} ${CDC}
   set C_CDC_STAGES [ipgui::add_param $IPINST -name "C_CDC_STAGES" -parent ${CDC}]
   set_property tooltip {Number of CDC stages} ${C_CDC_STAGES}
+
+  #Adding Group
+  set Behavior [ipgui::add_group $IPINST -name "Behavior" -parent ${Page_0}]
+  ipgui::add_param $IPINST -name "C_TREADY_IN_SHUTDOWN" -parent ${Behavior}
 
 
 
@@ -171,6 +175,15 @@ proc validate_PARAM_VALUE.C_CDC_STAGES { PARAM_VALUE.C_CDC_STAGES } {
 	return true
 }
 
+proc update_PARAM_VALUE.C_TREADY_IN_SHUTDOWN { PARAM_VALUE.C_TREADY_IN_SHUTDOWN } {
+	# Procedure called to update C_TREADY_IN_SHUTDOWN when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.C_TREADY_IN_SHUTDOWN { PARAM_VALUE.C_TREADY_IN_SHUTDOWN } {
+	# Procedure called to validate C_TREADY_IN_SHUTDOWN
+	return true
+}
+
 
 proc update_MODELPARAM_VALUE.C_AXIS_TDATA_WIDTH { MODELPARAM_VALUE.C_AXIS_TDATA_WIDTH PARAM_VALUE.C_AXIS_TDATA_WIDTH } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
@@ -230,5 +243,10 @@ proc update_MODELPARAM_VALUE.C_AXIS_HAS_TUSER { MODELPARAM_VALUE.C_AXIS_HAS_TUSE
 proc update_MODELPARAM_VALUE.C_CDC_STAGES { MODELPARAM_VALUE.C_CDC_STAGES PARAM_VALUE.C_CDC_STAGES } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.C_CDC_STAGES}] ${MODELPARAM_VALUE.C_CDC_STAGES}
+}
+
+proc update_MODELPARAM_VALUE.C_TREADY_IN_SHUTDOWN { MODELPARAM_VALUE.C_TREADY_IN_SHUTDOWN PARAM_VALUE.C_TREADY_IN_SHUTDOWN } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.C_TREADY_IN_SHUTDOWN}] ${MODELPARAM_VALUE.C_TREADY_IN_SHUTDOWN}
 }
 

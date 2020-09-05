@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module pr_shutdown_axis
+module axis_shutdown
 #(
 	parameter C_AXIS_TDATA_WIDTH = 32,
 	parameter C_AXIS_TUSER_WIDTH = 1,
@@ -17,7 +17,9 @@ module pr_shutdown_axis
 	parameter C_AXIS_HAS_TLAST = 1,
 	parameter C_AXIS_HAS_TID = 0,
 	parameter C_AXIS_HAS_TDEST = 0,
-	parameter C_AXIS_HAS_TUSER = 0
+	parameter C_AXIS_HAS_TUSER = 0,
+
+	parameter C_TREADY_IN_SHUTDOWN = 0
 )
 (
 	input logic clk,
@@ -100,7 +102,7 @@ module pr_shutdown_axis
 			m_axis_tid = '0;
 			m_axis_tlast = '0;
 			m_axis_tvalid = '0;
-			s_axis_tready = '0;
+			s_axis_tready = C_TREADY_IN_SHUTDOWN;
 		end
 	end
 endmodule
