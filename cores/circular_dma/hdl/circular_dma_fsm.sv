@@ -94,6 +94,7 @@ module circular_dma_fsm
 					if(~m_axi_awvalid) begin
 						if(~enable) begin
 							state <= ST_WAIT_ENABLE;
+							status_flags[0] <= 1'b0;
 						end else if(fifo_occupancy >= C_MAX_BURST) begin
 							m_axi_awlen <= C_MAX_BURST[7:0] - 8'd1;
 							m_axi_awvalid <= 1'b1;
