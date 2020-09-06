@@ -1622,6 +1622,7 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   # Create instance: interconnect, and set properties
   set interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 interconnect ]
   set_property -dict [ list \
+   CONFIG.ENABLE_ADVANCED_OPTIONS {1} \
    CONFIG.M00_HAS_REGSLICE {4} \
    CONFIG.M01_HAS_REGSLICE {4} \
    CONFIG.M02_HAS_REGSLICE {4} \
@@ -1636,14 +1637,16 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
    CONFIG.S02_HAS_DATA_FIFO {0} \
    CONFIG.S02_HAS_REGSLICE {4} \
    CONFIG.STRATEGY {1} \
+   CONFIG.XBAR_DATA_WIDTH {64} \
  ] $interconnect
 
   # Create instance: jtag_axi, and set properties
   set jtag_axi [ create_bd_cell -type ip -vlnv xilinx.com:ip:jtag_axi:1.2 jtag_axi ]
   set_property -dict [ list \
+   CONFIG.M_AXI_DATA_WIDTH {64} \
    CONFIG.M_HAS_BURST {0} \
-   CONFIG.RD_TXN_QUEUE_LENGTH {4} \
-   CONFIG.WR_TXN_QUEUE_LENGTH {4} \
+   CONFIG.RD_TXN_QUEUE_LENGTH {16} \
+   CONFIG.WR_TXN_QUEUE_LENGTH {16} \
  ] $jtag_axi
 
   # Create instance: shutdown, and set properties
