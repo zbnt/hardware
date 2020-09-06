@@ -269,11 +269,11 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 	always_comb begin
 		read_ready = 1'b0;
-		read_response = 1'b0;
+		read_response = 1'b1;
 		read_value = '0;
 
 		write_ready = 1'b0;
-		write_response = 1'b0;
+		write_response = 1'b1;
 
 		for(int i = 0; i < axi_width; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -285,7 +285,6 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			if(s_axi_araddr[12:5] == 8'd0) begin
 				// Register address
 				read_ready = 1'b1;
-				read_response = 1'b1;
 
 				if(axi_width == 32) begin
 					case(s_axi_araddr[4:2])
@@ -317,17 +316,14 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			end else if(s_axi_araddr[12:11] == 2'b01) begin
 				// DRAM address, frame
 				read_ready = mem_frame_rdone;
-				read_response = 1'b1;
 				read_value = mem_frame_rdata;
 			end else if(s_axi_araddr[12:8] == 5'b10000) begin
 				// DRAM address, pattern
 				read_ready = mem_pattern_rdone;
-				read_response = 1'b1;
 				read_value = mem_pattern_rdata;
 			end else begin
-				// Invalid address, mark as error
+				// Invalid address
 				read_ready = 1'b1;
-				read_response = 1'b0;
 			end
 		end
 
@@ -337,19 +333,15 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			if(write_addr[12:5] == 8'd0) begin
 				// Register address
 				write_ready = 1'b1;
-				write_response = 1'b1;
 			end else if(write_addr[12:11] == 2'b01) begin
 				// DRAM address
 				write_ready = mem_frame_wdone;
-				write_response = 1'b1;
 			end else if(write_addr[12:8] == 5'b10000) begin
 				// DRAM address, pattern
 				write_ready = mem_pattern_wdone;
-				write_response = 1'b1;
 			end else begin
-				// Invalid address, mark as error
+				// Invalid address
 				write_ready = 1'b1;
-				write_response = 1'b0;
 			end
 		end
 	end

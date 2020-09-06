@@ -240,11 +240,11 @@ module axi_dma_cfg
 
 	always_comb begin
 		read_ready = 1'b0;
-		read_response = 1'b0;
+		read_response = 1'b1;
 		read_value = '0;
 
 		write_ready = 1'b0;
-		write_response = 1'b0;
+		write_response = 1'b1;
 
 		for(int i = 0; i < C_AXI_WIDTH; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -253,10 +253,10 @@ module axi_dma_cfg
 		// Handle read requests
 
 		if(read_req) begin
+			read_ready = 1'b1;
+
 			if(s_axi_araddr <= 'd31) begin
 				// Register address
-				read_ready = 1'b1;
-				read_response = 1'b1;
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
@@ -277,10 +277,6 @@ module axi_dma_cfg
 						2'd3: read_value = {47'd0, sg_length};
 					endcase
 				end
-			end else begin
-				// Invalid address, mark as error
-				read_ready = 1'b1;
-				read_response = 1'b0;
 			end
 		end
 
@@ -292,8 +288,6 @@ module axi_dma_cfg
 			end else begin
 				write_ready = 1'b1;
 			end
-
-			write_response = (write_addr <= 'd31);
 		end
 	end
 endmodule

@@ -195,11 +195,11 @@ module circular_dma_axi
 
 	always_comb begin
 		read_ready = 1'b0;
-		read_response = 1'b0;
+		read_response = 1'b1;
 		read_value = '0;
 
 		write_ready = 1'b0;
-		write_response = 1'b0;
+		write_response = 1'b1;
 
 		for(int i = 0; i < C_AXI_WIDTH; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -208,10 +208,10 @@ module circular_dma_axi
 		// Handle read requests
 
 		if(read_req) begin
+			read_ready = 1'b1;
+
 			if(s_axi_araddr <= 12'd31) begin
 				// Register address
-				read_ready = 1'b1;
-				read_response = 1'b1;
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[4:2])
@@ -232,10 +232,6 @@ module circular_dma_axi
 						2'd3: read_value = {32'd0, last_msg_end};
 					endcase
 				end
-			end else begin
-				// Invalid address, mark as error
-				read_ready = 1'b1;
-				read_response = 1'b0;
 			end
 		end
 
@@ -243,7 +239,6 @@ module circular_dma_axi
 
 		if(write_req) begin
 			write_ready = 1'b1;
-			write_response = (write_addr <= 12'd31);
 		end
 	end
 endmodule

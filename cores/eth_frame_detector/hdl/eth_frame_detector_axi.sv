@@ -180,11 +180,11 @@ module eth_frame_detector_axi
 
 	always_comb begin
 		read_ready = 1'b0;
-		read_response = 1'b0;
+		read_response = 1'b1;
 		read_value = '0;
 
 		write_ready = 1'b0;
-		write_response = 1'b0;
+		write_response = 1'b1;
 
 		mem_a_rreq = 1'b0; mem_a_wreq = 1'b0;
 		mem_b_rreq = 1'b0; mem_b_wreq = 1'b0;
@@ -197,14 +197,11 @@ module eth_frame_detector_axi
 
 		if(read_req) begin
 			read_ready = 1'b1;
-			read_response = 1'b0;
 
 			case(s_axi_araddr[C_ADDR_WIDTH-1:C_ADDR_WIDTH-2])
 				2'd0: begin
 					if(s_axi_araddr <= 'd47) begin
 						// Register address
-						read_ready = 1'b1;
-						read_response = 1'b1;
 
 						if(C_AXI_WIDTH == 32) begin
 							case(s_axi_araddr[5:2])
@@ -237,7 +234,6 @@ module eth_frame_detector_axi
 				2'd1: begin
 					// MEM_A address
 					read_ready = mem_a_done;
-					read_response = 1'b1;
 					read_value = mem_a_rdata;
 					mem_a_rreq = 1'b1;
 				end
@@ -245,7 +241,6 @@ module eth_frame_detector_axi
 				2'd2: begin
 					// MEM_B address
 					read_ready = mem_b_done;
-					read_response = 1'b1;
 					read_value = mem_b_rdata;
 					mem_b_rreq = 1'b1;
 				end
@@ -256,28 +251,24 @@ module eth_frame_detector_axi
 
 		if(write_req) begin
 			write_ready = 1'b1;
-			write_response = 1'b0;
 
 			case(write_addr[C_ADDR_WIDTH-1:C_ADDR_WIDTH-2])
 				2'd0: begin
 					if(write_addr <= 'd47) begin
 						// Register address
 						write_ready = 1'b1;
-						write_response = 1'b1;
 					end
 				end
 
 				2'd1: begin
 					// MEM_A address
 					write_ready = mem_a_done;
-					write_response = 1'b1;
 					mem_a_wreq = 1'b1;
 				end
 
 				2'd2: begin
 					// MEM_B address
 					write_ready = mem_b_done;
-					write_response = 1'b1;
 					mem_b_wreq = 1'b1;
 				end
 			endcase

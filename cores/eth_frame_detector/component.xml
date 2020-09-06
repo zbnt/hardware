@@ -1058,7 +1058,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2ece43df</spirit:value>
+            <spirit:value>ca039eb3</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1083,7 +1083,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>efb7224d</spirit:value>
+            <spirit:value>8a6bbf42</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2848,17 +2848,17 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>Ethernet Frame Detector</xilinx:displayName>
-      <xilinx:coreRevision>30</xilinx:coreRevision>
+      <xilinx:coreRevision>31</xilinx:coreRevision>
       <xilinx:upgrades>
         <xilinx:canUpgradeFrom>oscar-rc.dev:zbnt_hw:eth_frame_detector:1.0</xilinx:canUpgradeFrom>
       </xilinx:upgrades>
-      <xilinx:coreCreationDateTime>2020-09-05T01:22:23Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2020-09-06T23:19:31Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="b882b4b6"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="c6bde302"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="95023be2"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="5324b857"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="37a03f7c"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="ff421375"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="688c1ff8"/>

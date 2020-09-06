@@ -147,11 +147,11 @@ module simple_timer_axi #(parameter data_width = 32)
 
 	always_comb begin
 		read_ready = 1'b0;
-		read_response = 1'b0;
+		read_response = 1'b1;
 		read_value = 32'd0;
 
 		write_ready = 1'b0;
-		write_response = 1'b0;
+		write_response = 1'b1;
 
 		for(int i = 0; i < data_width; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -162,9 +162,7 @@ module simple_timer_axi #(parameter data_width = 32)
 		if(read_req) begin
 			read_ready = 1'b1;
 
-			if(s_axi_araddr >= 12'd0 && s_axi_araddr <= 12'd23) begin
-				read_response = 1'b1;
-
+			if(s_axi_araddr <= 12'd23) begin
 				if(data_width == 32) begin
 					case(s_axi_araddr[4:2])
 						3'd0: read_value = {30'd0, srst, enable};
@@ -186,8 +184,6 @@ module simple_timer_axi #(parameter data_width = 32)
 						1'd1: read_value = {64'd0, current_count};
 					endcase
 				end
-			end else begin
-				read_response = 1'b0;
 			end
 		end
 
@@ -195,7 +191,6 @@ module simple_timer_axi #(parameter data_width = 32)
 
 		if(write_req) begin
 			write_ready = 1'b1;
-			write_response = write_addr >= 12'd0 && write_addr <= 12'd23;
 		end
 	end
 endmodule

@@ -187,11 +187,11 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 
 	always_comb begin
 		read_ready = 1'b0;
-		read_response = 1'b0;
+		read_response = 1'b1;
 		read_value = '0;
 
 		write_ready = 1'b0;
-		write_response = 1'b0;
+		write_response = 1'b1;
 
 		for(int i = 0; i < C_AXI_WIDTH; ++i) begin
 			write_mask[i] = s_axi_wstrb[i/8];
@@ -200,10 +200,10 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 		// Handle read requests
 
 		if(read_req) begin
+			read_ready = 1'b1;
+
 			if(s_axi_araddr <= 12'd71) begin
 				// Register address
-				read_ready = 1'b1;
-				read_response = 1'b1;
 
 				if(C_AXI_WIDTH == 32) begin
 					case(s_axi_araddr[6:2])
@@ -247,10 +247,6 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 						3'd4: read_value = {64'd0, rx_bad_reg};
 					endcase
 				end
-			end else begin
-				// Invalid address, mark as error
-				read_ready = 1'b1;
-				read_response = 1'b0;
 			end
 		end
 
@@ -258,7 +254,6 @@ module eth_stats_collector_axi #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LO
 
 		if(write_req) begin
 			write_ready = 1'b1;
-			write_response = (write_addr <= 12'd71);
 		end
 	end
 endmodule
