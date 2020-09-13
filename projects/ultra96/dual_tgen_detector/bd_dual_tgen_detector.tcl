@@ -911,6 +911,9 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create instance: tgen, and set properties
   set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
+  set_property -dict [ list \
+   CONFIG.C_AXI_WIDTH {64} \
+ ] $tgen
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
@@ -994,6 +997,9 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create instance: tgen, and set properties
   set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
+  set_property -dict [ list \
+   CONFIG.C_AXI_WIDTH {64} \
+ ] $tgen
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
