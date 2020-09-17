@@ -19,7 +19,7 @@
 	};
 
 	stats@40000 {
-		compatible = "zbnt,stats_collector";
+		compatible = "zbnt,stats-collector";
 		reg = <0x00040000 0x1000>;
 
 		zbnt,ports = <0>;
