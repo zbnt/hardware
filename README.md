@@ -1,11 +1,12 @@
+# zbnt/hardware
 
-# zbnt_hw
-
-HDL code for ZBNT, a set of network tools for Xilinx FPGAs/SoCs
+HDL code and block designs for ZBNT, a system for generating, capturing and modifying network traffic.
 
 ## Related projects
 
-* **Board software:** [zbnt_sw](https://github.com/zbnt/zbnt_sw)
+* **GUI:** [zbnt/gui](https://github.com/zbnt/gui)
+* **Server:** [zbnt/server](https://github.com/zbnt/server)
+* **Python client:** [zbnt/python-client](https://github.com/zbnt/python-client)
 
 ## Requirements
 
