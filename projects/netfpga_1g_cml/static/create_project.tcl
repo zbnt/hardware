@@ -16,12 +16,6 @@ set_property USED_IN_SYNTHESIS FALSE [get_files RGMII.xdc]
 set_property IP_REPO_PATHS {../../../cores ../cores} [current_fileset]
 update_ip_catalog -rebuild
 
-# Create empty coe file for dtb rom
-
-set coe_file [open vivado/dtb.coe w]
-puts $coe_file "memory_initialization_radix=16;\nmemory_initialization_vector=00;"
-close $coe_file
-
 # Create block diagram
 
 source bd_static.tcl

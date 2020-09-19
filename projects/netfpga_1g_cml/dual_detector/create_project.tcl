@@ -14,12 +14,6 @@ read_verilog ../cores/rp_wrapper/hdl/rp_wrapper_impl.v
 set_property IP_REPO_PATHS ../../../cores [current_fileset]
 update_ip_catalog -rebuild
 
-# Create empty coe file for dtb rom
-
-set coe_file [open vivado/dtb.coe w]
-puts $coe_file "memory_initialization_radix=16;\nmemory_initialization_vector=00;"
-close $coe_file
-
 # Create block diagram
 
 source bd_reconfig_region.tcl

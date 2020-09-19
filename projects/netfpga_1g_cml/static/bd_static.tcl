@@ -1755,8 +1755,8 @@ proc create_hier_cell_dtb_rom { parentCell nameHier } {
   # Create instance: mem, and set properties
   set mem [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 mem ]
   set_property -dict [ list \
-   CONFIG.Coe_File {../../../../../../dtb.coe} \
-   CONFIG.Load_Init_File {true} \
+   CONFIG.Coe_File {no_coe_file_loaded} \
+   CONFIG.Load_Init_File {false} \
    CONFIG.Memory_Type {Single_Port_ROM} \
    CONFIG.Port_A_Write_Rate {0} \
    CONFIG.Use_Byte_Write_Enable {false} \
