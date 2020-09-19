@@ -31,7 +31,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 	output logic s_axis_ctl_tready
 );
 	localparam C_TX_BUFFER_WIDTH = 176;
-	localparam C_TX_HEADER_SIZE = ((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 1)/C_AXIS_LOG_WIDTH) * (C_AXIS_LOG_WIDTH/8) - 8;
+	localparam C_TX_HEADER_SIZE = ((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 64 - 1)/C_AXIS_LOG_WIDTH) * (C_AXIS_LOG_WIDTH/8);
 	localparam C_TX_MAX_COUNT = ((C_TX_BUFFER_WIDTH + C_AXIS_LOG_WIDTH - 1)/C_AXIS_LOG_WIDTH) - 1;
 	localparam C_TX_COUNT_WIDTH = $clog2(C_TX_MAX_COUNT + 1);
 
