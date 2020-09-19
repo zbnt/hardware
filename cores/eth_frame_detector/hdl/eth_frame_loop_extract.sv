@@ -68,7 +68,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 	// Push values to FIFO
 
 	enum logic [1:0] {ST_WAIT_FIFO, ST_WRITE_FRAME, ST_WRITE_CTL, ST_OVERFLOW} state;
-	logic [C_AXIS_LOG_WIDTH-9:0] byte_sr;
+	logic [C_AXIS_LOG_WIDTH/8-1:0] count_1h;
 	logic [15:0] count;
 	logic in_frame;
 
@@ -82,16 +82,15 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 		if(~rst_n) begin
 			state <= ST_WAIT_FIFO;
 			in_frame <= 1'b0;
+
 			count <= 16'd0;
-			byte_sr <= '0;
+			count_1h <= 'd1;
 
 			overflow_count_cdc <= 64'd0;
 
-			s_axis_frame_tdata <= '0;
-			s_axis_frame_tvalid <= 1'b0;
-
 			s_axis_ctl_tdata <= '0;
 			s_axis_ctl_tvalid <= 1'b0;
+			s_axis_frame_tvalid <= 1'b0;
 		end else begin
 			if(s_axis_frame_tvalid & s_axis_frame_tready) begin
 				s_axis_frame_tvalid <= 1'b0;
@@ -108,6 +107,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 			case(state)
 				ST_WAIT_FIFO: begin
 					count <= 16'd0;
+					count_1h <= 'd1;
 
 					if(s_axis_frame_tready & s_axis_ctl_tready & ~in_frame & enable) begin
 						state <= ST_WRITE_FRAME;
@@ -117,18 +117,15 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 				ST_WRITE_FRAME: begin
 					if(s_axis_tvalid) begin
 						if(extract_byte != 'd0) begin
-							if(count[$clog2(C_AXIS_LOG_WIDTH/8)-1:0] == '1 || s_axis_tlast) begin
+							if(count_1h[C_AXIS_LOG_WIDTH/8-1] | s_axis_tlast) begin
 								if(s_axis_frame_tready) begin
 									if(s_axis_tlast) begin
 										state <= ST_WRITE_CTL;
 										s_axis_ctl_tdata <= {'0, script_match, count + 16'd1, current_time_cdc};
 										s_axis_ctl_tvalid <= 1'b1;
 									end
-
-									s_axis_frame_tdata <= {s_axis_tdata, byte_sr};
 								end else begin
 									state <= ST_OVERFLOW;
-									s_axis_frame_tdata <= {s_axis_tdata, byte_sr};
 									s_axis_ctl_tdata <= {'0, count + 16'd1, current_time_cdc};
 
 									if(s_axis_tlast) begin
@@ -136,22 +133,18 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 									end
 								end
 
-								byte_sr <= '0;
 								s_axis_frame_tvalid <= 1'b1;
-							end else begin
-								byte_sr <= {s_axis_tdata, byte_sr[C_AXIS_LOG_WIDTH-9:8]};
 							end
 
 							count <= count + 16'd1;
+							count_1h <= {count_1h[C_AXIS_LOG_WIDTH/8-2:0], count_1h[C_AXIS_LOG_WIDTH/8-1]};
 						end else if(s_axis_tlast) begin
 							state <= ST_WRITE_CTL;
 							s_axis_ctl_tdata <= {'0, script_match, count, current_time_cdc};
 							s_axis_ctl_tvalid <= 1'b1;
 
-							if(count[$clog2(C_AXIS_LOG_WIDTH/8)-1:0] != '0) begin
-								s_axis_frame_tdata <= {byte_sr, 8'd0};
+							if(~count_1h[0]) begin
 								s_axis_frame_tvalid <= 1'b1;
-								byte_sr <= '0;
 							end
 						end
 					end else if(~in_frame & ~enable) begin
@@ -177,6 +170,16 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 				overflow_count_cdc <= 64'd0;
 			end else if(state != ST_WRITE_FRAME && s_axis_tvalid && s_axis_tlast) begin
 				overflow_count_cdc <= overflow_count_cdc + 64'd1;
+			end
+		end
+	end
+
+	for(genvar i = 0; i < C_AXIS_LOG_WIDTH/8; ++i) begin
+		always_ff @(posedge clk) begin
+			if(~rst_n) begin
+				s_axis_frame_tdata[i*8+7:i*8] <= 8'd0;
+			end else if(state == ST_WRITE_FRAME && s_axis_tvalid && extract_byte != 'd0 && count_1h[i]) begin
+				s_axis_frame_tdata[i*8+7:i*8] <= s_axis_tdata;
 			end
 		end
 	end
