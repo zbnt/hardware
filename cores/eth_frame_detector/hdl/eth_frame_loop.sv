@@ -321,15 +321,13 @@ module eth_frame_loop
 	// AXIS log
 
 	if(C_AXIS_LOG_ENABLE) begin
-		localparam C_NUM_SCRIPTS_CEIL = (C_NUM_SCRIPTS <= 8 ? 8 : 16);
-
 		logic [C_AXIS_LOG_WIDTH-1:0] axis_logd_tdata;
 		logic axis_logd_tvalid, axis_logd_tready;
 
-		logic [C_NUM_SCRIPTS_CEIL+79:0] axis_logc_tdata;
+		logic [119:0] axis_logc_tdata;
 		logic axis_logc_tvalid, axis_logc_tready;
 
-		eth_frame_loop_extract #(C_NUM_SCRIPTS, C_NUM_SCRIPTS_CEIL, C_AXIS_LOG_WIDTH, C_EXTRACT_FIFO_SIZE) U8
+		eth_frame_loop_extract #(C_NUM_SCRIPTS, C_AXIS_LOG_WIDTH, C_EXTRACT_FIFO_SIZE) U8
 		(
 			.clk(s_axis_clk),
 			.rst_n(rst_n_s),
@@ -360,7 +358,7 @@ module eth_frame_loop
 			.m_axis_ctl_tready(axis_logc_tready)
 		);
 
-		eth_frame_detector_axis_log #(C_AXIS_LOG_WIDTH, C_DIRECTION_ID, C_NUM_SCRIPTS_CEIL) U9
+		eth_frame_detector_axis_log #(C_AXIS_LOG_WIDTH, C_DIRECTION_ID) U9
 		(
 			.clk(clk),
 			.rst_n(rst_n),

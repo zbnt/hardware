@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCRIPTS_CEIL = 8, parameter C_AXIS_LOG_WIDTH = 64, parameter C_EXTRACT_FIFO_SIZE = 2048)
+module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LOG_WIDTH = 64, parameter C_EXTRACT_FIFO_SIZE = 2048)
 (
 	input logic clk,
 	input logic rst_n,
@@ -30,7 +30,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 	// M_AXIS_CTL
 
-	output logic [C_NUM_SCRIPTS_CEIL+79:0] m_axis_ctl_tdata, // {C_NUM_SCRIPTS * {MATCHED}, SIZE, TIMESTAMP}
+	output logic [119:0] m_axis_ctl_tdata, // {8 * {MATCHED}, SIZE, NUMBER, TIMESTAMP}
 	output logic m_axis_ctl_tvalid,
 	input logic m_axis_ctl_tready
 );
@@ -70,21 +70,25 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 	enum logic [1:0] {ST_WAIT_FIFO, ST_WRITE_FRAME, ST_WRITE_CTL, ST_OVERFLOW} state;
 	logic [C_AXIS_LOG_WIDTH/8-1:0] count_1h;
 	logic [15:0] count;
+
 	logic in_frame;
+	logic [31:0] frame_number;
 
 	logic [C_AXIS_LOG_WIDTH-1:0] s_axis_frame_tdata;
 	logic s_axis_frame_tvalid, s_axis_frame_tready;
 
-	logic [C_NUM_SCRIPTS_CEIL+79:0] s_axis_ctl_tdata;
+	logic [119:0] s_axis_ctl_tdata;
 	logic s_axis_ctl_tvalid, s_axis_ctl_tready;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state <= ST_WAIT_FIFO;
-			in_frame <= 1'b0;
 
 			count <= 16'd0;
 			count_1h <= 'd1;
+
+			in_frame <= 1'b0;
+			frame_number <= 32'd0;
 
 			overflow_count_cdc <= 64'd0;
 
@@ -102,6 +106,10 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 			if(s_axis_tvalid) begin
 				in_frame <= ~s_axis_tlast;
+
+				if(s_axis_tlast && script_match != '0) begin
+					frame_number <= frame_number + 32'd1;
+				end
 			end
 
 			case(state)
@@ -121,12 +129,12 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 								if(s_axis_frame_tready) begin
 									if(s_axis_tlast) begin
 										state <= ST_WRITE_CTL;
-										s_axis_ctl_tdata <= {'0, script_match, count + 16'd1, current_time_cdc};
+										s_axis_ctl_tdata <= {'0, script_match, count + 16'd1, frame_number, current_time_cdc};
 										s_axis_ctl_tvalid <= 1'b1;
 									end
 								end else begin
 									state <= ST_OVERFLOW;
-									s_axis_ctl_tdata <= {'0, count + 16'd1, current_time_cdc};
+									s_axis_ctl_tdata <= {'0, count + 16'd1, frame_number, current_time_cdc};
 
 									if(s_axis_tlast) begin
 										overflow_count_cdc <= overflow_count_cdc + 64'd1;
@@ -140,7 +148,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 							count_1h <= {count_1h[C_AXIS_LOG_WIDTH/8-2:0], count_1h[C_AXIS_LOG_WIDTH/8-1]};
 						end else if(s_axis_tlast) begin
 							state <= ST_WRITE_CTL;
-							s_axis_ctl_tdata <= {'0, script_match, count, current_time_cdc};
+							s_axis_ctl_tdata <= {'0, script_match, count, frame_number, current_time_cdc};
 							s_axis_ctl_tvalid <= 1'b1;
 
 							if(~count_1h[0]) begin
@@ -212,11 +220,11 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_NUM_SCR
 
 	axis_fifo
 	#(
-		.C_DEPTH(C_EXTRACT_FIFO_SIZE / 32),
+		.C_DEPTH(C_EXTRACT_FIFO_SIZE / 64),
 		.C_MEM_TYPE("block"),
 		.C_CDC_STAGES(2),
 
-		.C_DATA_WIDTH(80 + C_NUM_SCRIPTS_CEIL)
+		.C_DATA_WIDTH(120)
 	)
 	U3
 	(
