@@ -82,12 +82,6 @@ module circular_dma
 	input logic s_axis_tvalid,
 	output logic s_axis_tready
 );
-	// IRQ
-
-	always_ff @(posedge clk) begin
-		irq <= rst_n & (|bits_irq);
-	end
-
 	// Registers
 
 	logic enable, srst, flush_req, flush_ack, fifo_ready;
@@ -142,6 +136,12 @@ module circular_dma
 		.bytes_written(bytes_written),
 		.last_msg_end(last_msg_end)
 	);
+
+	// IRQ
+
+	always_ff @(posedge clk) begin
+		irq <= rst_n & (|bits_irq) & ~(|clear_irq);
+	end
 
 	// FSM
 
