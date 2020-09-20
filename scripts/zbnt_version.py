@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 
-fallback_version = "2.0.0-beta.2"
+fallback_version = "2.0.0-beta.3"
 version_regex = re.compile(r"^v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(?P<prerel>[a-z]+\.[0-9]+))?(?:-(?P<commit>[0-9]+-g[a-f0-9]{7}))?(?P<dirty>-d)?$")
 
 def get_version():
