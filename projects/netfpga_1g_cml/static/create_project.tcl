@@ -23,9 +23,8 @@ read_verilog [make_wrapper -top -files [get_files bd_static.bd]]
 
 # Create synthesis run
 
-set_property -name "flow" -value "Vivado Synthesis 2018" -objects [get_runs synth_1]
+set_property -name "flow" -value "Vivado Synthesis 2021" -objects [get_runs synth_1]
 set_property -name "strategy" -value "Flow_PerfOptimized_high" -objects [get_runs synth_1]
-set_property -name "steps.synth_design.args.fanout_limit" -value "400" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.fsm_extraction" -value "one_hot" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.keep_equivalent_registers" -value "1" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.resource_sharing" -value "off" -objects [get_runs synth_1]

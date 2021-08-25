@@ -20,7 +20,7 @@ This repository includes block designs for the following boards:
 
 ### Software
 
-* [Vivado Design Suite 2018.3](https://www.xilinx.com/products/design-tools/vivado.html)
+* [Vivado Design Suite 2021.1](https://www.xilinx.com/products/design-tools/vivado.html)
 * Linux device tree compiler (dtc)
 * Python 3
 
@@ -41,7 +41,7 @@ git submodule update
 3. Add Vivado tools to PATH by sourcing the `settings64.sh` script in the installation directory:
 
 ```bash
-source /opt/Xilinx/Vivado/2018.3/settings64.sh
+source /opt/Xilinx/Vivado/2021.1/settings64.sh
 ```
 
 4. `cd` to the root directory of this repository and run `make`
@@ -55,9 +55,9 @@ make zedboard
 make ultra96
 make netfpga_1g_cml
 
-# Use the NUM_JOBS environment variable to control the number of parallel jobs
-# By default it will use one parallel job for each thread in your CPU
-# Reducing the number of parallel jobs also reduces the RAM usage
+# Use the NUM_JOBS environment variable to control the number of parallel synthesis jobs
+# By default it will use one for each CPU thread
+# Reducing this number also reduces the RAM usage
 NUM_JOBS=2 make zedboard
 ```
 

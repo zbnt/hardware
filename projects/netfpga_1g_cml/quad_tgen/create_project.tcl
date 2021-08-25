@@ -20,13 +20,11 @@ source bd_reconfig_region.tcl
 
 # Create synthesis run
 
-set_property -name "flow" -value "Vivado Synthesis 2018" -objects [get_runs synth_1]
+set_property -name "flow" -value "Vivado Synthesis 2021" -objects [get_runs synth_1]
 set_property -name "strategy" -value "Flow_PerfOptimized_high" -objects [get_runs synth_1]
-set_property -name "steps.synth_design.args.fanout_limit" -value "400" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.fsm_extraction" -value "one_hot" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.keep_equivalent_registers" -value "1" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.resource_sharing" -value "off" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.no_lc" -value "1" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.shreg_min_size" -value "5" -objects [get_runs synth_1]
-set_property -name "steps.synth_design.args.more options" -value "-mode out_of_context" -objects [get_runs synth_1]
 current_run -synthesis [get_runs synth_1]

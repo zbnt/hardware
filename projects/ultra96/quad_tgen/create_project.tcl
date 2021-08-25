@@ -3,7 +3,7 @@
 
 cd [file dirname [info script]]
 create_project -force zbnt_hw_quad_tgen -part xczu3eg-sbva484-1-e vivado
-set_property BOARD_PART em.avnet.com:ultra96v1:part0:1.2 [current_project]
+set_property BOARD_PART avnet.com:ultra96v1:part0:1.2 [current_project]
 set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
 
 # Load source files
@@ -22,9 +22,8 @@ read_verilog [make_wrapper -top -files [get_files bd_quad_tgen.bd]]
 
 # Create synthesis run
 
-set_property -name "flow" -value "Vivado Synthesis 2018" -objects [get_runs synth_1]
+set_property -name "flow" -value "Vivado Synthesis 2021" -objects [get_runs synth_1]
 set_property -name "strategy" -value "Flow_PerfOptimized_high" -objects [get_runs synth_1]
-set_property -name "steps.synth_design.args.fanout_limit" -value "400" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.fsm_extraction" -value "one_hot" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.keep_equivalent_registers" -value "1" -objects [get_runs synth_1]
 set_property -name "steps.synth_design.args.resource_sharing" -value "off" -objects [get_runs synth_1]
@@ -34,7 +33,7 @@ current_run -synthesis [get_runs synth_1]
 
 # Create implementation run
 
-set_property -name "flow" -value "Vivado Implementation 2018" -objects [get_runs impl_1]
+set_property -name "flow" -value "Vivado Implementation 2021" -objects [get_runs impl_1]
 set_property -name "strategy" -value "Performance_ExploreWithRemap" -objects [get_runs impl_1]
 set_property -name "steps.opt_design.args.directive" -value "ExploreWithRemap" -objects [get_runs impl_1]
 set_property -name "steps.place_design.args.directive" -value "Explore" -objects [get_runs impl_1]

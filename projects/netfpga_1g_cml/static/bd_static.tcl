@@ -20,12 +20,12 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2018.3
+set scripts_vivado_version 2021.1
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
    puts ""
-   catch {common::send_msg_id "BD_TCL-109" "ERROR" "This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Please run the script in Vivado <$scripts_vivado_version> then open the design in Vivado <$current_vivado_version>. Upgrade the design by running \"Tools => Report => Report IP Status...\", then run write_bd_tcl to create an updated script."}
+   catch {common::send_gid_msg -ssname BD::TCL -id 2041 -severity "ERROR" "This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Please run the script in Vivado <$scripts_vivado_version> then open the design in Vivado <$current_vivado_version>. Upgrade the design by running \"Tools => Report => Report IP Status...\", then run write_bd_tcl to create an updated script."}
 
    return 1
 }
@@ -76,10 +76,10 @@ if { ${design_name} eq "" } {
    #    4): Current design opened AND is empty AND names diff; design_name exists in project.
 
    if { $cur_design ne $design_name } {
-      common::send_msg_id "BD_TCL-001" "INFO" "Changing value of <design_name> from <$design_name> to <$cur_design> since current design is empty."
+      common::send_gid_msg -ssname BD::TCL -id 2001 -severity "INFO" "Changing value of <design_name> from <$design_name> to <$cur_design> since current design is empty."
       set design_name [get_property NAME $cur_design]
    }
-   common::send_msg_id "BD_TCL-002" "INFO" "Constructing design in IPI design <$cur_design>..."
+   common::send_gid_msg -ssname BD::TCL -id 2002 -severity "INFO" "Constructing design in IPI design <$cur_design>..."
 
 } elseif { ${cur_design} ne "" && $list_cells ne "" && $cur_design eq $design_name } {
    # USE CASES:
@@ -100,19 +100,19 @@ if { ${design_name} eq "" } {
    #    8) No opened design, design_name not in project.
    #    9) Current opened design, has components, but diff names, design_name not in project.
 
-   common::send_msg_id "BD_TCL-003" "INFO" "Currently there is no design <$design_name> in project, so creating one..."
+   common::send_gid_msg -ssname BD::TCL -id 2003 -severity "INFO" "Currently there is no design <$design_name> in project, so creating one..."
 
    create_bd_design $design_name
 
-   common::send_msg_id "BD_TCL-004" "INFO" "Making design <$design_name> as current_bd_design."
+   common::send_gid_msg -ssname BD::TCL -id 2004 -severity "INFO" "Making design <$design_name> as current_bd_design."
    current_bd_design $design_name
 
 }
 
-common::send_msg_id "BD_TCL-005" "INFO" "Currently the variable <design_name> is equal to \"$design_name\"."
+common::send_gid_msg -ssname BD::TCL -id 2005 -severity "INFO" "Currently the variable <design_name> is equal to \"$design_name\"."
 
 if { $nRet != 0 } {
-   catch {common::send_msg_id "BD_TCL-114" "ERROR" $errMsg}
+   catch {common::send_gid_msg -ssname BD::TCL -id 2006 -severity "ERROR" $errMsg}
    return $nRet
 }
 
@@ -127,23 +127,23 @@ xilinx.com:ip:util_idelay_ctrl:1.0\
 oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0\
 xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:clk_wiz:6.0\
-xilinx.com:ip:util_ds_buf:2.1\
+xilinx.com:ip:util_ds_buf:2.2\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:fifo_generator:13.2\
 oscar-rc.dev:zbnt_hw:util_irq2axis:1.0\
 oscar-rc.dev:zbnt_hw:circular_dma:1.1\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
-xilinx.com:ip:axi_firewall:1.0\
-xilinx.com:ip:pr_decoupler:1.0\
+xilinx.com:ip:axi_firewall:1.1\
+xilinx.com:ip:dfx_decoupler:1.0\
 xilinx.com:ip:jtag_axi:1.2\
-xilinx.com:ip:pr_axi_shutdown_manager:1.0\
+xilinx.com:ip:dfx_axi_shutdown_manager:1.0\
 xilinx.com:ip:axi_pcie:2.9\
 oscar-rc.dev:zbnt_hw:util_axis2msi:1.0\
 oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0\
 xilinx.com:ip:axi_gpio:2.0\
 oscar-rc.dev:zbnt_hw:util_icap:1.0\
-xilinx.com:ip:prc:1.3\
+xilinx.com:ip:dfx_controller:1.0\
 xilinx.com:ip:util_reduced_logic:2.0\
 xilinx.com:ip:axis_register_slice:1.1\
 oscar-rc.dev:zbnt_hw:axis_shutdown:1.0\
@@ -157,7 +157,7 @@ oscar-rc.dev:zbnt_hw:util_startup:1.0\
 "
 
    set list_ips_missing ""
-   common::send_msg_id "BD_TCL-006" "INFO" "Checking if the following IPs exist in the project's IP catalog: $list_check_ips ."
+   common::send_gid_msg -ssname BD::TCL -id 2011 -severity "INFO" "Checking if the following IPs exist in the project's IP catalog: $list_check_ips ."
 
    foreach ip_vlnv $list_check_ips {
       set ip_obj [get_ipdefs -all $ip_vlnv]
@@ -167,14 +167,14 @@ oscar-rc.dev:zbnt_hw:util_startup:1.0\
    }
 
    if { $list_ips_missing ne "" } {
-      catch {common::send_msg_id "BD_TCL-115" "ERROR" "The following IPs are not found in the IP Catalog:\n  $list_ips_missing\n\nResolution: Please add the repository containing the IP(s) to the project." }
+      catch {common::send_gid_msg -ssname BD::TCL -id 2012 -severity "ERROR" "The following IPs are not found in the IP Catalog:\n  $list_ips_missing\n\nResolution: Please add the repository containing the IP(s) to the project." }
       set bCheckIPsPassed 0
    }
 
 }
 
 if { $bCheckIPsPassed != 1 } {
-  common::send_msg_id "BD_TCL-1003" "WARNING" "Will not continue with creation of design due to the error(s) above."
+  common::send_gid_msg -ssname BD::TCL -id 2023 -severity "WARNING" "Will not continue with creation of design due to the error(s) above."
   return 3
 }
 
@@ -330,21 +330,21 @@ proc create_hier_cell_memory { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_memory() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_memory() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -360,8 +360,11 @@ proc create_hier_cell_memory { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:emc_rtl:1.0 bpi
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 ddr3
+
 
   # Create pins
   create_bd_pin -dir IO -from 15 -to 0 bpi_dq
@@ -442,7 +445,7 @@ proc create_hier_cell_memory { parentCell nameHier } {
   connect_bd_intf_net -intf_net pr_copy_M_AXI_SRC [get_bd_intf_pins bpi_axi_cc/S_AXI] [get_bd_intf_pins pr_copy/M_AXI_SRC]
 
   # Create port connections
-  connect_bd_net -net M00_ARESETN_1 [get_bd_pins ddr_interconnect/M00_ARESETN] [get_bd_pins ddr_reset/peripheral_aresetn]
+  connect_bd_net -net M00_ARESETN_1 [get_bd_pins ddr_controller/aresetn] [get_bd_pins ddr_interconnect/M00_ARESETN] [get_bd_pins ddr_reset/peripheral_aresetn]
   connect_bd_net -net Net [get_bd_pins bpi_dq] [get_bd_pins bpi_controller/bpi_dq_io]
   connect_bd_net -net clk_1 [get_bd_pins clk_ddr] [get_bd_pins ddr_controller/clk_ref_i] [get_bd_pins ddr_controller/sys_clk_i]
   connect_bd_net -net clk_2 [get_bd_pins clk] [get_bd_pins bpi_axi_cc/s_axi_aclk] [get_bd_pins ddr_interconnect/ACLK] [get_bd_pins ddr_interconnect/S00_ACLK] [get_bd_pins ddr_interconnect/S01_ACLK] [get_bd_pins pr_copy/clk]
@@ -451,7 +454,7 @@ proc create_hier_cell_memory { parentCell nameHier } {
   connect_bd_net -net ddr_controller_mmcm_locked [get_bd_pins ddr_controller/mmcm_locked] [get_bd_pins ddr_reset/dcm_locked]
   connect_bd_net -net ddr_controller_ui_clk [get_bd_pins ddr_controller/ui_clk] [get_bd_pins ddr_interconnect/M00_ACLK] [get_bd_pins ddr_reset/slowest_sync_clk]
   connect_bd_net -net rst_bpi_n_1 [get_bd_pins rst_bpi_n] [get_bd_pins bpi_axi_cc/m_axi_aresetn] [get_bd_pins bpi_controller/rst_n]
-  connect_bd_net -net rst_n_1 [get_bd_pins rst_ddr_n] [get_bd_pins ddr_controller/aresetn] [get_bd_pins ddr_controller/sys_rst] [get_bd_pins ddr_reset/ext_reset_in]
+  connect_bd_net -net rst_n_1 [get_bd_pins rst_ddr_n] [get_bd_pins ddr_controller/sys_rst] [get_bd_pins ddr_reset/ext_reset_in]
   connect_bd_net -net rst_n_2 [get_bd_pins rst_n] [get_bd_pins bpi_axi_cc/s_axi_aresetn] [get_bd_pins ddr_interconnect/ARESETN] [get_bd_pins ddr_interconnect/S00_ARESETN] [get_bd_pins ddr_interconnect/S01_ARESETN] [get_bd_pins pr_copy/rst_n]
 
   # Restore current instance
@@ -464,21 +467,21 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth3() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_eth3() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -494,8 +497,11 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
 
   # Create pins
   create_bd_pin -dir O -type clk clk_rx
@@ -527,9 +533,13 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
 
   # Create instance: tx_decoupler, and set properties
-  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 tx_decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
+MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
+{DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
+WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
@@ -599,21 +609,21 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth2() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_eth2() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -629,8 +639,11 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
 
   # Create pins
   create_bd_pin -dir O -type clk clk_rx
@@ -662,9 +675,13 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
 
   # Create instance: tx_decoupler, and set properties
-  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 tx_decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
+MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
+{DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
+WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
@@ -734,21 +751,21 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth1() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_eth1() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -764,8 +781,11 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
 
   # Create pins
   create_bd_pin -dir O -type clk clk_rx
@@ -797,9 +817,13 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
 
   # Create instance: tx_decoupler, and set properties
-  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 tx_decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
+MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
+{DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
+WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
@@ -869,21 +893,21 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_eth0() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_eth0() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -899,8 +923,11 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 RGMII
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
 
   # Create pins
   create_bd_pin -dir O -type clk clk_rx
@@ -932,9 +959,13 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
 
   # Create instance: tx_decoupler, and set properties
-  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 tx_decoupler ]
+  set tx_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 tx_decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0 WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
+MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
+{DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
+WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
@@ -1004,21 +1035,21 @@ proc create_hier_cell_axis_in { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_axis_in() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_axis_in() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1034,7 +1065,9 @@ proc create_hier_cell_axis_in { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
 
   # Create pins
   create_bd_pin -dir I -type clk clk
@@ -1044,9 +1077,13 @@ proc create_hier_cell_axis_in { parentCell nameHier } {
   create_bd_pin -dir I shutdown_req
 
   # Create instance: axis_decoupler, and set properties
-  set axis_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 axis_decoupler ]
+  set axis_decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 axis_decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis_dma {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 128} TLAST {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TUSER {PRESENT 0 WIDTH 0} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 16} TKEEP {PRESENT 0 WIDTH 16}}}} IPI_PROP_COUNT 0} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis_dma {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
+SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 128} TLAST {DECOUPLED 1 PRESENT 1\
+WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TUSER {PRESENT 0\
+WIDTH 0} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0\
+WIDTH 16} TKEEP {PRESENT 0 WIDTH 16}}}} IPI_PROP_COUNT 0}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis_dma} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -1108,21 +1145,21 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_pr_ctrl() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_pr_ctrl() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1138,8 +1175,11 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:emc_rtl:1.0 bpi
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 ddr3
+
 
   # Create pins
   create_bd_pin -dir IO -from 15 -to 0 bpi_dq
@@ -1164,9 +1204,10 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
  ] $decouple_cdc
 
   # Create instance: decoupler, and set properties
-  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
+  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {active {ID 0 VLNV xilinx.com:signal:data_rtl:1.0 SIGNALS {DATA {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 2} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {active {ID 0 VLNV xilinx.com:signal:data_rtl:1.0\
+SIGNALS {DATA {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 2}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {active} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -1192,9 +1233,21 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   create_hier_cell_memory $hier_obj memory
 
   # Create instance: pr_controller, and set properties
-  set pr_controller [ create_bd_cell -type ip -vlnv xilinx.com:ip:prc:1.3 pr_controller ]
+  set pr_controller [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_controller:1.0 pr_controller ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_AXI_LITE_IF 0 RESET_ACTIVE_LEVEL 0 CP_FIFO_DEPTH 32 CP_FIFO_TYPE lutram CDC_STAGES 6 VS {0 {ID 0 NAME 0 RM {dual_detector {ID 0 NAME dual_detector BS {0 {ID 0 ADDR 0 SIZE 0 CLEAR 0}} RESET_REQUIRED low RESET_DURATION 10 SHUTDOWN_REQUIRED hw} dual_tgen_detector {ID 1 NAME dual_tgen_detector BS {0 {ID 0 ADDR 0 SIZE 0 CLEAR 0}} SHUTDOWN_REQUIRED hw RESET_REQUIRED low RESET_DURATION 10} dual_tgen_latency {ID 2 NAME dual_tgen_latency BS {0 {ID 0 ADDR 0 SIZE 0 CLEAR 0}} SHUTDOWN_REQUIRED hw RESET_REQUIRED low RESET_DURATION 10} quad_tgen {ID 3 NAME quad_tgen BS {0 {ID 0 ADDR 0 SIZE 0 CLEAR 0}} SHUTDOWN_REQUIRED hw RESET_REQUIRED low RESET_DURATION 10}} POR_RM dual_detector START_IN_SHUTDOWN 0 SKIP_RM_STARTUP_AFTER_RESET 0 NUM_HW_TRIGGERS 4 NUM_TRIGGERS_ALLOCATED 4 TRIGGER_TO_RM {0 dual_detector 1 dual_tgen_detector 2 dual_tgen_latency 3 quad_tgen} HAS_AXIS_STATUS 1}} CP_FAMILY 7series DIRTY 2 CP_COMPRESSION 0} \
+   CONFIG.ALL_PARAMS {HAS_AXI_LITE_IF 0 RESET_ACTIVE_LEVEL 0 CP_FIFO_DEPTH 32 CP_FIFO_TYPE lutram\
+CDC_STAGES 6 VS {0 {ID 0 NAME 0 RM {dual_detector {ID 0 NAME dual_detector BS\
+{0 {ID 0 ADDR 0 SIZE 0 CLEAR 0}} RESET_REQUIRED low RESET_DURATION 10\
+SHUTDOWN_REQUIRED hw} dual_tgen_detector {ID 1 NAME dual_tgen_detector BS {0\
+{ID 0 ADDR 0 SIZE 0 CLEAR 0}} SHUTDOWN_REQUIRED hw RESET_REQUIRED low\
+RESET_DURATION 10} dual_tgen_latency {ID 2 NAME dual_tgen_latency BS {0 {ID 0\
+ADDR 0 SIZE 0 CLEAR 0}} SHUTDOWN_REQUIRED hw RESET_REQUIRED low RESET_DURATION\
+10} quad_tgen {ID 3 NAME quad_tgen BS {0 {ID 0 ADDR 0 SIZE 0 CLEAR 0}}\
+SHUTDOWN_REQUIRED hw RESET_REQUIRED low RESET_DURATION 10}} POR_RM\
+dual_detector START_IN_SHUTDOWN 0 SKIP_RM_STARTUP_AFTER_RESET 0 NUM_HW_TRIGGERS\
+4 NUM_TRIGGERS_ALLOCATED 4 TRIGGER_TO_RM {0 dual_detector 1 dual_tgen_detector\
+2 dual_tgen_latency 3 quad_tgen} HAS_AXIS_STATUS 1}} CP_FAMILY 7series DIRTY 2\
+CP_COMPRESSION 0}\
    CONFIG.GUI_CP_COMPRESSION {0} \
    CONFIG.GUI_CP_FIFO_TYPE {lutram} \
    CONFIG.GUI_HAS_AXI_LITE {false} \
@@ -1244,7 +1297,7 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins bpi] [get_bd_intf_pins memory/bpi]
   connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins ddr3] [get_bd_intf_pins memory/ddr3]
   connect_bd_intf_net -intf_net pr_controller_ICAP [get_bd_intf_pins icap/ICAP] [get_bd_intf_pins pr_controller/ICAP]
-  connect_bd_intf_net -intf_net pr_controller_m_axi_mem [get_bd_intf_pins memory/S_AXI] [get_bd_intf_pins pr_controller/m_axi_mem]
+  connect_bd_intf_net -intf_net pr_controller_m_axi_mem [get_bd_intf_pins memory/S_AXI] [get_bd_intf_pins pr_controller/M_AXI_MEM]
   connect_bd_intf_net -intf_net s_axi_reg_1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins gpio/S_AXI]
 
   # Create port connections
@@ -1279,21 +1332,21 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_pcie() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_pcie() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1309,9 +1362,13 @@ proc create_hier_cell_pcie { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 PCIE
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_IRQ
+
 
   # Create pins
   create_bd_pin -dir O -type clk m_axi_aclk
@@ -1363,7 +1420,7 @@ proc create_hier_cell_pcie { parentCell nameHier } {
   set axis2msi [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_axis2msi:1.0 axis2msi ]
 
   # Create instance: refclk_ibufds, and set properties
-  set refclk_ibufds [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_ibufds ]
+  set refclk_ibufds [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.2 refclk_ibufds ]
   set_property -dict [ list \
    CONFIG.C_BUF_TYPE {IBUFDSGTE} \
  ] $refclk_ibufds
@@ -1400,21 +1457,21 @@ proc create_hier_cell_macs { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_macs() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_macs() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1430,17 +1487,29 @@ proc create_hier_cell_macs { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_ETH0
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_ETH1
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_ETH2
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_ETH3
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH0
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH1
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH2
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH3
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy0_rgmii
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy1_rgmii
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy2_rgmii
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy3_rgmii
+
 
   # Create pins
   create_bd_pin -dir O -type clk clk_rx0
@@ -1455,9 +1524,25 @@ proc create_hier_cell_macs { parentCell nameHier } {
   create_bd_pin -dir I shutdown_req
 
   # Create instance: decoupler, and set properties
-  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
+  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {INTF {eth0 {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth1 {ID 1 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth2 {ID 2 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth3 {ID 3 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0 HAS_SIGNAL_STATUS 0} \
+   CONFIG.ALL_PARAMS {INTF {eth0 {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID\
+{PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER\
+{PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST\
+{PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth1\
+{ID 1 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH\
+1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH\
+1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0}\
+TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth2 {ID 2 VLNV\
+xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY\
+{PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST\
+{PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB\
+{PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth3 {ID 3 VLNV\
+xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY\
+{PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST\
+{PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB\
+{PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0\
+HAS_SIGNAL_STATUS 0}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {eth0} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -1544,21 +1629,21 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_interconnect() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_interconnect() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1574,10 +1659,15 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M00_AXI
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M01_AXI
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M02_AXI
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M03_AXI
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S00_AXI
+
 
   # Create pins
   create_bd_pin -dir I -type clk clk
@@ -1591,12 +1681,29 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
   create_bd_pin -dir I shutdown_req
 
   # Create instance: axi_firewall, and set properties
-  set axi_firewall [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_firewall:1.0 axi_firewall ]
+  set axi_firewall [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_firewall:1.1 axi_firewall ]
 
   # Create instance: decoupler, and set properties
-  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_decoupler:1.0 decoupler ]
+  set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 decoupler ]
   set_property -dict [ list \
-   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axi {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0 MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1} AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH 1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1 WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0 WIDTH 0} AWADDR {PRESENT 1 WIDTH 22} AWLEN {PRESENT 0 WIDTH 8} AWSIZE {PRESENT 0 WIDTH 3} AWBURST {PRESENT 0 WIDTH 2} AWLOCK {PRESENT 0 WIDTH 1} AWCACHE {PRESENT 0 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4} AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0} WDATA {PRESENT 1 WIDTH 64} WSTRB {PRESENT 1 WIDTH 8} WLAST {PRESENT 0 WIDTH 1} WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2} BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 22} ARLEN {PRESENT 0 WIDTH 8} ARSIZE {PRESENT 0 WIDTH 3} ARBURST {PRESENT 0 WIDTH 2} ARLOCK {PRESENT 0 WIDTH 1} ARCACHE {PRESENT 0 WIDTH 4} ARPROT {PRESENT 1 WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT 0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 64} RRESP {PRESENT 1 WIDTH 2} RLAST {PRESENT 0 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}} PROTOCOL axi4lite}} IPI_PROP_COUNT 2} \
+   CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axi {ID 0 VLNV xilinx.com:interface:aximm_rtl:1.0\
+MODE slave SIGNALS {ARVALID {PRESENT 1 WIDTH 1} ARREADY {PRESENT 1 WIDTH 1}\
+AWVALID {PRESENT 1 WIDTH 1} AWREADY {PRESENT 1 WIDTH 1} BVALID {PRESENT 1 WIDTH\
+1} BREADY {PRESENT 1 WIDTH 1} RVALID {PRESENT 1 WIDTH 1} RREADY {PRESENT 1\
+WIDTH 1} WVALID {PRESENT 1 WIDTH 1} WREADY {PRESENT 1 WIDTH 1} AWID {PRESENT 0\
+WIDTH 0} AWADDR {PRESENT 1 WIDTH 22} AWLEN {PRESENT 0 WIDTH 8} AWSIZE {PRESENT\
+0 WIDTH 3} AWBURST {PRESENT 0 WIDTH 2} AWLOCK {PRESENT 0 WIDTH 1} AWCACHE\
+{PRESENT 0 WIDTH 4} AWPROT {PRESENT 1 WIDTH 3} AWREGION {PRESENT 1 WIDTH 4}\
+AWQOS {PRESENT 1 WIDTH 4} AWUSER {PRESENT 0 WIDTH 0} WID {PRESENT 0 WIDTH 0}\
+WDATA {PRESENT 1 WIDTH 64} WSTRB {PRESENT 1 WIDTH 8} WLAST {PRESENT 0 WIDTH 1}\
+WUSER {PRESENT 0 WIDTH 0} BID {PRESENT 0 WIDTH 0} BRESP {PRESENT 1 WIDTH 2}\
+BUSER {PRESENT 0 WIDTH 0} ARID {PRESENT 0 WIDTH 0} ARADDR {PRESENT 1 WIDTH 22}\
+ARLEN {PRESENT 0 WIDTH 8} ARSIZE {PRESENT 0 WIDTH 3} ARBURST {PRESENT 0 WIDTH\
+2} ARLOCK {PRESENT 0 WIDTH 1} ARCACHE {PRESENT 0 WIDTH 4} ARPROT {PRESENT 1\
+WIDTH 3} ARREGION {PRESENT 1 WIDTH 4} ARQOS {PRESENT 1 WIDTH 4} ARUSER {PRESENT\
+0 WIDTH 0} RID {PRESENT 0 WIDTH 0} RDATA {PRESENT 1 WIDTH 64} RRESP {PRESENT 1\
+WIDTH 2} RLAST {PRESENT 0 WIDTH 1} RUSER {PRESENT 0 WIDTH 0}} PROTOCOL\
+axi4lite}} IPI_PROP_COUNT 2}\
    CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axi} \
    CONFIG.GUI_INTERFACE_PROTOCOL {axi4lite} \
@@ -1666,7 +1773,7 @@ proc create_hier_cell_interconnect { parentCell nameHier } {
  ] $jtag_axi
 
   # Create instance: shutdown, and set properties
-  set shutdown [ create_bd_cell -type ip -vlnv xilinx.com:ip:pr_axi_shutdown_manager:1.0 shutdown ]
+  set shutdown [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_axi_shutdown_manager:1.0 shutdown ]
   set_property -dict [ list \
    CONFIG.DP_AXI_ADDR_WIDTH {22} \
    CONFIG.DP_AXI_DATA_WIDTH {64} \
@@ -1708,21 +1815,21 @@ proc create_hier_cell_dtb_rom { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_dtb_rom() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_dtb_rom() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1738,6 +1845,7 @@ proc create_hier_cell_dtb_rom { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
 
   # Create pins
   create_bd_pin -dir I s_axi_aclk
@@ -1780,21 +1888,21 @@ proc create_hier_cell_dma { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_dma() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_dma() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1810,9 +1918,13 @@ proc create_hier_cell_dma { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_IRQ
+
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_PCIE
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_DMA
+
 
   # Create pins
   create_bd_pin -dir I clk_axis
@@ -1905,21 +2017,21 @@ proc create_hier_cell_clocks { parentCell nameHier } {
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_msg_id "BD_TCL-102" "ERROR" "create_hier_cell_clocks() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_clocks() - Empty argument(s)!"}
      return
   }
 
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -1935,6 +2047,7 @@ proc create_hier_cell_clocks { parentCell nameHier } {
 
   # Create interface pins
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 system
+
 
   # Create pins
   create_bd_pin -dir O -type clk clk_100M
@@ -1994,10 +2107,10 @@ proc create_hier_cell_clocks { parentCell nameHier } {
  ] $dcm
 
   # Create instance: input_bufds, and set properties
-  set input_bufds [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 input_bufds ]
+  set input_bufds [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.2 input_bufds ]
 
   # Create instance: input_bufg, and set properties
-  set input_bufg [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 input_bufg ]
+  set input_bufg [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.2 input_bufg ]
   set_property -dict [ list \
    CONFIG.C_BUF_TYPE {BUFG} \
  ] $input_bufg
@@ -2051,14 +2164,14 @@ proc create_root_design { parentCell } {
   # Get object for parentCell
   set parentObj [get_bd_cells $parentCell]
   if { $parentObj == "" } {
-     catch {common::send_msg_id "BD_TCL-100" "ERROR" "Unable to find parent cell <$parentCell>!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
      return
   }
 
   # Make sure parentObj is hier blk
   set parentType [get_property TYPE $parentObj]
   if { $parentType ne "hier" } {
-     catch {common::send_msg_id "BD_TCL-101" "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
      return
   }
 
@@ -2071,16 +2184,24 @@ proc create_root_design { parentCell } {
 
   # Create interface ports
   set bpi [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:emc_rtl:1.0 bpi ]
+
   set ddr3 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 ddr3 ]
+
   set pcie [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pcie ]
+
   set phy0_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy0_rgmii ]
+
   set phy1_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy1_rgmii ]
+
   set phy2_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy2_rgmii ]
+
   set phy3_rgmii [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:rgmii_rtl:1.0 phy3_rgmii ]
+
   set system [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 system ]
   set_property -dict [ list \
    CONFIG.FREQ_HZ {200000000} \
    ] $system
+
 
   # Create ports
   set bpi_dq [ create_bd_port -dir IO -from 15 -to 0 bpi_dq ]
@@ -2189,24 +2310,22 @@ proc create_root_design { parentCell } {
   connect_bd_net -net xlconcat_0_dout [get_bd_pins pr_ctrl/shutdown_ack] [get_bd_pins shutdown_concat/dout]
 
   # Create address segments
-  create_bd_addr_seg -range 0x000100000000 -offset 0x00000000 [get_bd_addr_spaces dma/msg_dma/M_AXI] [get_bd_addr_segs pcie/axi_bridge/S_AXI/BAR0] SEG_axi_bridge_BAR0
-  create_bd_addr_seg -range 0x00001000 -offset 0x80000000 [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs interconnect/axi_firewall/S_AXI_CTL/Control] SEG_axi_firewall_Control
-  create_bd_addr_seg -range 0x00001000 -offset 0x00000000 [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] SEG_controller_Mem0
-  create_bd_addr_seg -range 0x00001000 -offset 0x00001000 [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] SEG_gpio_Reg
-  create_bd_addr_seg -range 0x00001000 -offset 0x00002000 [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] SEG_msg_dma_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00400000 -offset 0x40000000 [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] SEG_rp_wrapper_reg0
-  create_bd_addr_seg -range 0x00001000 -offset 0x00000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] SEG_controller_Mem0
-  create_bd_addr_seg -range 0x00001000 -offset 0x00002000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] SEG_dma_S_AXI_ADDR
-  create_bd_addr_seg -range 0x00001000 -offset 0x00001000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] SEG_gpio_Reg
-  create_bd_addr_seg -range 0x00400000 -offset 0x40000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] SEG_rp_wrapper_reg0
-  create_bd_addr_seg -range 0x08000000 -offset 0x00000000 [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_SRC] [get_bd_addr_segs pr_ctrl/memory/bpi_controller/S_AXI/S_AXI_ADDR] SEG_bpi_controller_S_AXI_ADDR
-  create_bd_addr_seg -range 0x20000000 -offset 0x00000000 [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_DST] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] SEG_ddr_controller_memaddr
-  create_bd_addr_seg -range 0x20000000 -offset 0x00000000 [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_PRC] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] SEG_ddr_controller_memaddr
+  assign_bd_address -offset 0x00000000 -range 0x000100000000 -target_address_space [get_bd_addr_spaces dma/msg_dma/M_AXI] [get_bd_addr_segs pcie/axi_bridge/S_AXI/BAR0] -force
+  assign_bd_address -offset 0x80000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs interconnect/axi_firewall/S_AXI_CTL/Control] -force
+  assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] -force
+  assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] -force
+  assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
+  assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] -force
+  assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] -force
+  assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
+  assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] -force
+  assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] -force
+  assign_bd_address -offset 0x00000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_SRC] [get_bd_addr_segs pr_ctrl/memory/bpi_controller/S_AXI/S_AXI_ADDR] -force
+  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_DST] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] -force
+  assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_PRC] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] -force
 
   # Exclude Address Segments
-  create_bd_addr_seg -range 0x00001000 -offset 0x80000000 [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs interconnect/axi_firewall/S_AXI_CTL/Control] SEG_axi_firewall_Control
-  exclude_bd_addr_seg [get_bd_addr_segs pcie/axi_bridge/M_AXI/SEG_axi_firewall_Control]
-
+  exclude_bd_addr_seg -offset 0x80000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs interconnect/axi_firewall/S_AXI_CTL/Control]
 
 
   # Restore current instance

@@ -92,8 +92,8 @@ proc gen_partial_bitstream { dcp bitstream_name } {
 	# Convert to the correct format for writing to ICAP
 
 	file del ../rp_${bitstream_name}.bin
-	source [get_property REPOSITORY [get_ipdefs xilinx.com:ip:prc:1.3]]/xilinx/prc_v1_3/tcl/api.tcl
-	prc_v1_3::format_bin_for_icap -i ../bit/${bitstream_name}_pblock_pr_partial.bin -o ../bit/${bitstream_name}_icap.bin -bs 1
+	source [get_property REPOSITORY [get_ipdefs xilinx.com:ip:dfx_controller:1.0]]/xilinx/dfx_controller_v1_0/tcl/api.tcl
+	dfx_controller_v1_0::format_bin_for_icap -i ../bit/${bitstream_name}_pblock_pr_partial.bin -o ../bit/${bitstream_name}_icap.bin -bs 1
 
 	close_project
 }
