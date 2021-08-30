@@ -538,9 +538,10 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
-WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+{PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
+IPI_PROP_COUNT 0}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -549,6 +550,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
    CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_3 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
@@ -576,7 +578,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
-   CONFIG.C_CDC_STAGES {4} \
+   CONFIG.C_CDC_STAGES {0} \
  ] $tx_shutdown
 
   # Create interface connections
@@ -588,7 +590,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
 
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
   connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
@@ -680,9 +682,10 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
-WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+{PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
+IPI_PROP_COUNT 0}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -691,6 +694,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
    CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_3 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
@@ -718,7 +722,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
-   CONFIG.C_CDC_STAGES {4} \
+   CONFIG.C_CDC_STAGES {0} \
  ] $tx_shutdown
 
   # Create interface connections
@@ -730,7 +734,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
 
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
   connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
@@ -822,9 +826,10 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
-WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+{PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
+IPI_PROP_COUNT 0}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -833,6 +838,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
    CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_3 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
@@ -860,7 +866,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
-   CONFIG.C_CDC_STAGES {4} \
+   CONFIG.C_CDC_STAGES {0} \
  ] $tx_shutdown
 
   # Create interface connections
@@ -872,7 +878,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
 
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
   connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
@@ -964,9 +970,10 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0\
-WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+{PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
+IPI_PROP_COUNT 0}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -975,6 +982,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
    CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_3 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_1 {false} \
@@ -1002,7 +1010,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
-   CONFIG.C_CDC_STAGES {4} \
+   CONFIG.C_CDC_STAGES {0} \
  ] $tx_shutdown
 
   # Create interface connections
@@ -1014,7 +1022,7 @@ WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0
   connect_bd_intf_net -intf_net rx_shutdown_eth0_M_AXIS [get_bd_intf_pins rx_shutdown/M_AXIS] [get_bd_intf_pins tx_decoupler/s_axis]
 
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk] [get_bd_pins tx_shutdown/shutdown_clk]
+  connect_bd_net -net clk_wiz_0_clk_125M [get_bd_pins gtx_clk] [get_bd_pins mac/gtx_clk] [get_bd_pins rx_shutdown/shutdown_clk] [get_bd_pins tx_decoupler/decouple_ref_clk] [get_bd_pins tx_shutdown/clk]
   connect_bd_net -net dcm_eth_clk_125M_90 [get_bd_pins gtx_clk90] [get_bd_pins mac/gtx_clk90]
   connect_bd_net -net decouple_1 [get_bd_pins decouple] [get_bd_pins tx_decoupler/decouple]
   connect_bd_net -net mac_eth0_rx_clk [get_bd_pins clk_rx] [get_bd_pins mac/rx_clk] [get_bd_pins rx_shutdown/clk] [get_bd_pins tx_decoupler/axis_ref_clk] [get_bd_pins tx_reset/slowest_sync_clk]
@@ -1527,13 +1535,14 @@ proc create_hier_cell_macs { parentCell nameHier } {
   set decoupler [ create_bd_cell -type ip -vlnv xilinx.com:ip:dfx_decoupler:1.0 decoupler ]
   set_property -dict [ list \
    CONFIG.ALL_PARAMS {INTF {eth0 {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID\
-{PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER\
-{PRESENT 1 WIDTH 1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST\
-{PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth1\
-{ID 1 VLNV xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH\
-1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH\
-1} TLAST {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0}\
-TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth2 {ID 2 VLNV\
+{PRESENT 1 WIDTH 1} TREADY {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8\
+DECOUPLED 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TLAST {PRESENT 1 WIDTH 1\
+DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0\
+WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth1 {ID 1 VLNV\
+xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY\
+{PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST\
+{PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB\
+{PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}} eth2 {ID 2 VLNV\
 xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY\
 {PRESENT 1 WIDTH 1} TDATA {PRESENT 1 WIDTH 8} TUSER {PRESENT 1 WIDTH 1} TLAST\
 {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB\
@@ -1543,12 +1552,15 @@ xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY\
 {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB\
 {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0\
 HAS_SIGNAL_STATUS 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
    CONFIG.GUI_INTERFACE_NAME {eth0} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \
    CONFIG.GUI_SIGNAL_DECOUPLED_0 {true} \
    CONFIG.GUI_SIGNAL_DECOUPLED_1 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_2 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_3 {true} \
+   CONFIG.GUI_SIGNAL_DECOUPLED_4 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_0 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_1 {true} \
    CONFIG.GUI_SIGNAL_PRESENT_2 {true} \
@@ -2317,8 +2329,8 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
   assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] -force
-  assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] -force
+  assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
   assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_SRC] [get_bd_addr_segs pr_ctrl/memory/bpi_controller/S_AXI/S_AXI_ADDR] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_DST] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] -force

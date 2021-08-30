@@ -201,7 +201,6 @@ pr_verify impl/static_grey_with_sizes.dcp impl/dual_detector.dcp
 pr_verify impl/static_grey_with_sizes.dcp impl/dual_tgen_detector.dcp
 pr_verify impl/static_grey_with_sizes.dcp impl/dual_tgen_latency.dcp
 pr_verify impl/static_grey_with_sizes.dcp impl/quad_tgen.dcp
-close_project
 
 # Generate BPI memory image
 
