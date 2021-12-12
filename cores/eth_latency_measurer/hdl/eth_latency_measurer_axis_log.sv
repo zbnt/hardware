@@ -28,9 +28,8 @@ module eth_latency_measurer_axis_log #(parameter C_AXIS_LOG_ENABLE = 1, paramete
 	input logic m_axis_log_tready
 );
 	if(C_AXIS_LOG_ENABLE) begin
-		localparam C_TX_COUNT_MAX = ((384 + C_AXIS_LOG_WIDTH - 1) / C_AXIS_LOG_WIDTH) - 1;
-		localparam C_TX_COUNT_WIDTH = C_TX_COUNT_MAX != 0 ? $clog2(C_TX_COUNT_MAX + 1) : 1;
-		localparam C_MSG_SIZE = (C_AXIS_LOG_WIDTH > 384 ? C_AXIS_LOG_WIDTH : (384 + 384 % C_AXIS_LOG_WIDTH)) / 8 - 8;
+		localparam C_TX_COUNT_WIDTH = (C_AXIS_LOG_WIDTH < 384) ? $clog2(384/C_AXIS_LOG_WIDTH) : 1;
+		localparam C_TX_COUNT_MAX = (C_AXIS_LOG_WIDTH < 384) ? (384/C_AXIS_LOG_WIDTH - 1) : 0;
 
 		logic tx_enable;
 		logic [383:0] tx_buffer;
@@ -39,14 +38,14 @@ module eth_latency_measurer_axis_log #(parameter C_AXIS_LOG_ENABLE = 1, paramete
 		always_ff @(posedge clk) begin
 			if(~rst_n) begin
 				tx_enable <= 1'b0;
-				tx_buffer <= 512'd0;
+				tx_buffer <= 384'd0;
 				tx_count <= '0;
 				overflow_count <= 64'd0;
 			end else begin
 				if(~tx_enable) begin
 					if(trigger) begin
 						tx_enable <= 1'b1;
-						tx_buffer <= {pongs_lost, pings_lost, pong_time, ping_time, ping_count, current_time, C_MSG_SIZE[15:0], log_id, 32'h02425AFF};
+						tx_buffer <= {pongs_lost, pings_lost, pong_time, ping_time, ping_count, current_time, 16'd40, log_id, 32'h02425AFF};
 						tx_count <= '0;
 					end
 				end else begin
