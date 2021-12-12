@@ -107,13 +107,13 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 
 				ST_SEND_PADDING: begin
 					m_axis_tvalid = 1'b1;
-					m_axis_tdata = 8'h55;
+					m_axis_tdata = {4{~count[0], count[0]}};
 					m_axis_tlast = (count >= padding_size + 16'd17);
 
 					if(m_axis_tready) begin
 						count_next = count + 16'd1;
 
-						if(count >= padding_size + 16'd21) begin
+						if(count >= padding_size + 16'd17) begin
 							count_next = 16'd0;
 							state_next = ST_WAIT_TRIGGER;
 						end
