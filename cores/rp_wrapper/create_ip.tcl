@@ -26,10 +26,10 @@ ip::set_top $core rp_wrapper hdl/rp_wrapper.v
 # Interfaces
 
 ip::add_axi_interface $core S_AXI_PCIE slave {
-	AW {ADDR PROT VALID READY}
+	AW {ADDR VALID READY}
 	W  {DATA STRB VALID READY}
 	B  {RESP VALID READY}
-	AR {ADDR PROT VALID READY}
+	AR {ADDR VALID READY}
 	R  {DATA RESP VALID READY}
 }
 
