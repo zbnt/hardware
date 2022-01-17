@@ -1,3 +1,0 @@
-# This file is automatically written.  Do not modify.
-proc gen_USERPARAMETER_C_END_ADDR_VALUE {C_BASE_ADDR C_MEM_SIZE } {expr $C_BASE_ADDR + $C_MEM_SIZE - 1}
-proc gen_USERPARAMETER_C_MAX_OCCUPANCY_VALUE {C_MEM_SIZE C_WIDTH } {expr ($C_MEM_SIZE / ($C_WIDTH * $C_WIDTH / 8)) * ($C_WIDTH - 2)}
