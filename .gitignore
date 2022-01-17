@@ -1,4 +1,7 @@
 .directory
+.Xil
+NA
+component.xml
 hd_visual
 __pycache__
 

@@ -89,7 +89,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES: 
+   # USE CASES:
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -123,20 +123,20 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\ 
+   set list_check_ips "\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_idelay_ctrl:1.0\
 xilinx.com:ip:processing_system7:5.5\
 xilinx.com:ip:proc_sys_reset:5.0\
-oscar-rc.dev:zbnt_hw:simple_timer:1.1\
-oscar-rc.dev:zbnt_hw:circular_dma:1.1\
+oscar-rc.dev:zbnt:simple_timer:1.1\
+oscar-rc.dev:zbnt:circular_dma:1.1\
 xilinx.com:ip:fifo_generator:13.2\
 xilinx.com:ip:axis_switch:1.1\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
-oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1\
-oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1\
-oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1\
+oscar-rc.dev:zbnt:eth_stats_collector:1.1\
+oscar-rc.dev:zbnt:eth_traffic_gen:1.1\
+oscar-rc.dev:zbnt:eth_frame_detector:1.1\
 xilinx.com:ip:axi_protocol_converter:2.1\
 xilinx.com:ip:axi_register_slice:2.1\
 "
@@ -234,7 +234,7 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
    CONFIG.C_SHARED_TX_CLK {false} \
  ] $stats
@@ -327,7 +327,7 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
    CONFIG.C_SHARED_TX_CLK {false} \
  ] $stats
@@ -697,7 +697,7 @@ proc create_hier_cell_mitm { parentCell nameHier } {
   create_bd_pin -dir I time_running
 
   # Create instance: detector, and set properties
-  set detector [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_frame_detector:1.1 detector ]
+  set detector [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_frame_detector:1.1 detector ]
   set_property -dict [ list \
    CONFIG.C_LOOP_FIFO_A_SIZE {8192} \
    CONFIG.C_LOOP_FIFO_B_SIZE {1024} \
@@ -795,10 +795,10 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
  ] $mac
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats ]
 
   # Create instance: tgen, and set properties
-  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
+  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_traffic_gen:1.1 tgen ]
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
@@ -878,10 +878,10 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
  ] $mac
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats ]
 
   # Create instance: tgen, and set properties
-  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
+  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_traffic_gen:1.1 tgen ]
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins s_axi_stats] [get_bd_intf_pins stats/S_AXI]
@@ -964,7 +964,7 @@ proc create_hier_cell_dma { parentCell nameHier } {
   create_hier_cell_axi_out $hier_obj axi_out
 
   # Create instance: dma, and set properties
-  set dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:circular_dma:1.1 dma ]
+  set dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:circular_dma:1.1 dma ]
   set_property -dict [ list \
    CONFIG.C_FIFO_DEPTH_0 {32768} \
  ] $dma
@@ -1935,7 +1935,7 @@ Flash#Quad SPI Flash#GPIO#GPIO#GPIO#GPIO#GPIO#GPIO#GPIO#GPIO#GPIO#Enet 0#Enet\
   set ps_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ps_reset ]
 
   # Create instance: simple_timer, and set properties
-  set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:simple_timer:1.1 simple_timer ]
+  set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:simple_timer:1.1 simple_timer ]
 
   # Create interface connections
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins ps_interconnect/S00_AXI] [get_bd_intf_pins ps_main/M_AXI_GP0]

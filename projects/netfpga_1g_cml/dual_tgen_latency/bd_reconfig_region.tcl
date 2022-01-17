@@ -88,7 +88,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES: 
+   # USE CASES:
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -122,18 +122,18 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\ 
+   set list_check_ips "\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:proc_sys_reset:5.0\
-oscar-rc.dev:zbnt_hw:simple_timer:1.1\
+oscar-rc.dev:zbnt:simple_timer:1.1\
 xilinx.com:ip:axis_register_slice:1.1\
 xilinx.com:ip:fifo_generator:13.2\
 xilinx.com:ip:axis_switch:1.1\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
-oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1\
-oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1\
-oscar-rc.dev:zbnt_hw:eth_latency_measurer:1.1\
+oscar-rc.dev:zbnt:eth_stats_collector:1.1\
+oscar-rc.dev:zbnt:eth_traffic_gen:1.1\
+oscar-rc.dev:zbnt:eth_latency_measurer:1.1\
 "
 
    set list_ips_missing ""
@@ -228,21 +228,21 @@ proc create_hier_cell_latency { parentCell nameHier } {
   create_bd_pin -dir I time_running
 
   # Create instance: measurer, and set properties
-  set measurer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_latency_measurer:1.1 measurer ]
+  set measurer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_latency_measurer:1.1 measurer ]
   set_property -dict [ list \
    CONFIG.C_AXIS_LOG_WIDTH {128} \
    CONFIG.C_AXI_WIDTH {64} \
  ] $measurer
 
   # Create instance: stats_eth2, and set properties
-  set stats_eth2 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats_eth2 ]
+  set stats_eth2 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats_eth2 ]
   set_property -dict [ list \
    CONFIG.C_AXIS_LOG_WIDTH {128} \
    CONFIG.C_AXI_WIDTH {64} \
  ] $stats_eth2
 
   # Create instance: stats_eth3, and set properties
-  set stats_eth3 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats_eth3 ]
+  set stats_eth3 [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats_eth3 ]
   set_property -dict [ list \
    CONFIG.C_AXIS_LOG_WIDTH {128} \
    CONFIG.C_AXI_WIDTH {64} \
@@ -427,14 +427,14 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
  ] $rx_regslice
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
    CONFIG.C_AXIS_LOG_WIDTH {128} \
    CONFIG.C_AXI_WIDTH {64} \
  ] $stats
 
   # Create instance: tgen, and set properties
-  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
+  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_traffic_gen:1.1 tgen ]
   set_property -dict [ list \
    CONFIG.C_AXI_WIDTH {64} \
  ] $tgen
@@ -523,14 +523,14 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
  ] $rx_regslice
 
   # Create instance: stats, and set properties
-  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_stats_collector:1.1 stats ]
+  set stats [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_stats_collector:1.1 stats ]
   set_property -dict [ list \
    CONFIG.C_AXIS_LOG_WIDTH {128} \
    CONFIG.C_AXI_WIDTH {64} \
  ] $stats
 
   # Create instance: tgen, and set properties
-  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:eth_traffic_gen:1.1 tgen ]
+  set tgen [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:eth_traffic_gen:1.1 tgen ]
   set_property -dict [ list \
    CONFIG.C_AXI_WIDTH {64} \
  ] $tgen
@@ -1142,7 +1142,7 @@ proc create_root_design { parentCell } {
   set reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset ]
 
   # Create instance: simple_timer, and set properties
-  set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:simple_timer:1.1 simple_timer ]
+  set simple_timer [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:simple_timer:1.1 simple_timer ]
   set_property -dict [ list \
    CONFIG.axi_width {64} \
  ] $simple_timer

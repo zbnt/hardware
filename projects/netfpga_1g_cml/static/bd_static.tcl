@@ -88,7 +88,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES: 
+   # USE CASES:
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -122,16 +122,16 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\ 
+   set list_check_ips "\
 xilinx.com:ip:util_idelay_ctrl:1.0\
-oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0\
+oscar-rc.dev:zbnt:rp_wrapper_netfpga_1g_cml:1.0\
 xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_ds_buf:2.2\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:fifo_generator:13.2\
-oscar-rc.dev:zbnt_hw:util_irq2axis:1.0\
-oscar-rc.dev:zbnt_hw:circular_dma:1.1\
+oscar-rc.dev:zbnt:util_irq2axis:1.0\
+oscar-rc.dev:zbnt:circular_dma:1.1\
 xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
 xilinx.com:ip:axi_firewall:1.1\
@@ -139,21 +139,21 @@ xilinx.com:ip:dfx_decoupler:1.0\
 xilinx.com:ip:jtag_axi:1.2\
 xilinx.com:ip:dfx_axi_shutdown_manager:1.0\
 xilinx.com:ip:axi_pcie:2.9\
-oscar-rc.dev:zbnt_hw:util_axis2msi:1.0\
-oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0\
+oscar-rc.dev:zbnt:util_axis2msi:1.0\
+oscar-rc.dev:zbnt:util_cdc_array_single:1.0\
 xilinx.com:ip:axi_gpio:2.0\
-oscar-rc.dev:zbnt_hw:util_icap:1.0\
+oscar-rc.dev:zbnt:util_icap:1.0\
 xilinx.com:ip:dfx_controller:1.0\
 xilinx.com:ip:util_reduced_logic:2.0\
 xilinx.com:ip:axis_register_slice:1.1\
-oscar-rc.dev:zbnt_hw:axis_shutdown:1.0\
+oscar-rc.dev:zbnt:axis_shutdown:1.0\
 alexforencich.com:verilog-ethernet:eth_mac_1g:1.0\
 xilinx.com:ip:axi_clock_converter:2.1\
-oscar-rc.dev:zbnt_hw:bpi_flash:1.0\
+oscar-rc.dev:zbnt:bpi_flash:1.0\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:mig_7series:4.2\
-oscar-rc.dev:zbnt_hw:pr_bitstream_copy:1.0\
-oscar-rc.dev:zbnt_hw:util_startup:1.0\
+oscar-rc.dev:zbnt:pr_bitstream_copy:1.0\
+oscar-rc.dev:zbnt:util_startup:1.0\
 "
 
    set list_ips_missing ""
@@ -382,7 +382,7 @@ proc create_hier_cell_memory { parentCell nameHier } {
  ] $bpi_axi_cc
 
   # Create instance: bpi_controller, and set properties
-  set bpi_controller [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:bpi_flash:1.0 bpi_controller ]
+  set bpi_controller [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:bpi_flash:1.0 bpi_controller ]
   set_property -dict [ list \
    CONFIG.C_AXI_RD_FIFO_DEPTH {512} \
    CONFIG.C_AXI_WIDTH {32} \
@@ -429,10 +429,10 @@ proc create_hier_cell_memory { parentCell nameHier } {
   set ddr_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ddr_reset ]
 
   # Create instance: pr_copy, and set properties
-  set pr_copy [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:pr_bitstream_copy:1.0 pr_copy ]
+  set pr_copy [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:pr_bitstream_copy:1.0 pr_copy ]
 
   # Create instance: startup_clk, and set properties
-  set startup_clk [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_startup:1.0 startup_clk ]
+  set startup_clk [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_startup:1.0 startup_clk ]
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins bpi] [get_bd_intf_pins bpi_controller/BPI]
@@ -521,7 +521,7 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
  ] $mac
 
   # Create instance: rx_shutdown, and set properties
-  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 rx_shutdown ]
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 rx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
@@ -574,7 +574,7 @@ IPI_PROP_COUNT 0}\
   set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
 
   # Create instance: tx_shutdown, and set properties
-  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 tx_shutdown ]
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 tx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
@@ -665,7 +665,7 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
  ] $mac
 
   # Create instance: rx_shutdown, and set properties
-  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 rx_shutdown ]
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 rx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
@@ -718,7 +718,7 @@ IPI_PROP_COUNT 0}\
   set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
 
   # Create instance: tx_shutdown, and set properties
-  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 tx_shutdown ]
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 tx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
@@ -809,7 +809,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
  ] $mac
 
   # Create instance: rx_shutdown, and set properties
-  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 rx_shutdown ]
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 rx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
@@ -862,7 +862,7 @@ IPI_PROP_COUNT 0}\
   set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
 
   # Create instance: tx_shutdown, and set properties
-  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 tx_shutdown ]
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 tx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
@@ -953,7 +953,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
  ] $mac
 
   # Create instance: rx_shutdown, and set properties
-  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 rx_shutdown ]
+  set rx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 rx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
@@ -1006,7 +1006,7 @@ IPI_PROP_COUNT 0}\
   set tx_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 tx_reset ]
 
   # Create instance: tx_shutdown, and set properties
-  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 tx_shutdown ]
+  set tx_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 tx_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
@@ -1125,7 +1125,7 @@ WIDTH 16} TKEEP {PRESENT 0 WIDTH 16}}}} IPI_PROP_COUNT 0}\
  ] $axis_regslice
 
   # Create instance: axis_shutdown, and set properties
-  set axis_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:axis_shutdown:1.0 axis_shutdown ]
+  set axis_shutdown [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:axis_shutdown:1.0 axis_shutdown ]
   set_property -dict [ list \
    CONFIG.C_AXIS_TDATA_WIDTH {128} \
  ] $axis_shutdown
@@ -1206,7 +1206,7 @@ proc create_hier_cell_pr_ctrl { parentCell nameHier } {
   create_bd_pin -dir O -from 0 -to 0 shutdown_req
 
   # Create instance: decouple_cdc, and set properties
-  set decouple_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 decouple_cdc ]
+  set decouple_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_cdc_array_single:1.0 decouple_cdc ]
   set_property -dict [ list \
    CONFIG.C_NUM_STAGES {2} \
  ] $decouple_cdc
@@ -1235,7 +1235,7 @@ SIGNALS {DATA {PRESENT 1 WIDTH 1}}}} IPI_PROP_COUNT 2}\
  ] $gpio
 
   # Create instance: icap, and set properties
-  set icap [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_icap:1.0 icap ]
+  set icap [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_icap:1.0 icap ]
 
   # Create instance: memory
   create_hier_cell_memory $hier_obj memory
@@ -1284,7 +1284,7 @@ CP_COMPRESSION 0}\
  ] $pr_controller
 
   # Create instance: shutdown_ack, and set properties
-  set shutdown_ack [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 shutdown_ack ]
+  set shutdown_ack [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_cdc_array_single:1.0 shutdown_ack ]
   set_property -dict [ list \
    CONFIG.C_NUM_STAGES {2} \
  ] $shutdown_ack
@@ -1296,7 +1296,7 @@ CP_COMPRESSION 0}\
  ] $shutdown_and
 
   # Create instance: shutdown_req_cdc, and set properties
-  set shutdown_req_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_cdc_array_single:1.0 shutdown_req_cdc ]
+  set shutdown_req_cdc [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_cdc_array_single:1.0 shutdown_req_cdc ]
   set_property -dict [ list \
    CONFIG.C_NUM_STAGES {2} \
  ] $shutdown_req_cdc
@@ -1425,7 +1425,7 @@ proc create_hier_cell_pcie { parentCell nameHier } {
  ] $axi_bridge
 
   # Create instance: axis2msi, and set properties
-  set axis2msi [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_axis2msi:1.0 axis2msi ]
+  set axis2msi [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_axis2msi:1.0 axis2msi ]
 
   # Create instance: refclk_ibufds, and set properties
   set refclk_ibufds [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.2 refclk_ibufds ]
@@ -1986,13 +1986,13 @@ proc create_hier_cell_dma { parentCell nameHier } {
  ] $fifo_cdc
 
   # Create instance: irq_axis, and set properties
-  set irq_axis [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:util_irq2axis:1.0 irq_axis ]
+  set irq_axis [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:util_irq2axis:1.0 irq_axis ]
   set_property -dict [ list \
    CONFIG.C_IRQ_NUMBER {0} \
  ] $irq_axis
 
   # Create instance: msg_dma, and set properties
-  set msg_dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:circular_dma:1.1 msg_dma ]
+  set msg_dma [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:circular_dma:1.1 msg_dma ]
   set_property -dict [ list \
    CONFIG.C_AXIS_WIDTH {128} \
    CONFIG.C_AXI_WIDTH {64} \
@@ -2255,7 +2255,7 @@ proc create_root_design { parentCell } {
   create_hier_cell_pr_ctrl [current_bd_instance .] pr_ctrl
 
   # Create instance: rp_wrapper, and set properties
-  set rp_wrapper [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt_hw:rp_wrapper_netfpga_1g_cml:1.0 rp_wrapper ]
+  set rp_wrapper [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:rp_wrapper_netfpga_1g_cml:1.0 rp_wrapper ]
 
   # Create instance: shutdown_concat, and set properties
   set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
@@ -2327,11 +2327,11 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] -force
   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] -force
   assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
-  assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] -force
+  assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces interconnect/jtag_axi/Data] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/S_AXI_PCIE_ADDR] -force
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dtb_rom/controller/S_AXI/Mem0] -force
   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs pr_ctrl/gpio/S_AXI/Reg] -force
   assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs dma/msg_dma/S_AXI/S_AXI_ADDR] -force
-  assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/reg0] -force
+  assign_bd_address -offset 0x40000000 -range 0x00400000 -target_address_space [get_bd_addr_spaces pcie/axi_bridge/M_AXI] [get_bd_addr_segs rp_wrapper/S_AXI_PCIE/S_AXI_PCIE_ADDR] -force
   assign_bd_address -offset 0x00000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_SRC] [get_bd_addr_segs pr_ctrl/memory/bpi_controller/S_AXI/S_AXI_ADDR] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_DST] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] -force
   assign_bd_address -offset 0x00000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces pr_ctrl/memory/pr_copy/M_AXI_PRC] [get_bd_addr_segs pr_ctrl/memory/ddr_controller/memmap/memaddr] -force
