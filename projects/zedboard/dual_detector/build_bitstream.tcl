@@ -1,12 +1,12 @@
-
 cd [file dirname [info script]]
+set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
 
 # Get number of jobs to use
 
 if { [info exists ::env(NUM_JOBS) ] } {
 	set jobs $::env(NUM_JOBS)
 } else {
-	set jobs [exec nproc]
+	set jobs 1
 }
 
 # Create project and generate bitstream, if needed

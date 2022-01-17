@@ -56,12 +56,12 @@ make ultra96
 make netfpga_1g_cml
 
 # Use the NUM_JOBS environment variable to control the number of parallel synthesis jobs
-# By default it will use one for each CPU thread
-# Reducing this number also reduces the RAM usage
-NUM_JOBS=2 make zedboard
+# The default value is 1, incrementing this number reduces synthesis time but increments
+# the amount of RAM required.
+NUM_JOBS=4 make zedboard
 ```
 
 ## License
 
 * The source code included in this repository is subject to the terms of the Mozilla Public License, v2.0. A copy is available in [LICENSE.txt](https://github.com/zbnt/zbnt_hw/blob/master/LICENSE.txt) and [Mozilla's website](https://mozilla.org/MPL/2.0). This excludes code referenced as a submodule, located in the ```external/``` directory.
-* The block designs depend on IP cores available for free as part of the Xilinx Vivado Design Suite, and licensed under the terms of the [Xilinx End User License](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_3/end-user-license-agreement.pdf). The source code for those cores is not distributed as part of this repository.
+* The block designs depend on IP cores available for free as part of the Xilinx Vivado Design Suite, and licensed under the terms of the [Xilinx End User License](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2021_1/end-user-license-agreement.pdf). The source code for those cores is not distributed as part of this repository.
