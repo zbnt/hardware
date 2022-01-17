@@ -1,9 +1,9 @@
 cd [file dirname [info script]]
-source ../../../../cores/ip_functions.tcl
+source ../ip_functions.tcl
 
 # General info
 
-set core [ip::create_core oscar-rc.dev zbnt rp_wrapper_netfpga_1g_cml 1.0]
+set core [ip::create_core oscar-rc.dev zbnt rp_wrapper 1.0]
 
 ip::set_disp_name   $core "ZBNT Reconfigurable Partition"
 ip::set_description $core "ZBNT Reconfigurable Partition"
@@ -19,7 +19,7 @@ ip::add_sources $core {
 	hdl/rp_wrapper.v
 }
 
-ip::add_gui_script $core xgui/rp_wrapper_netfpga_1g_cml.tcl
+ip::add_gui_script $core xgui/rp_wrapper.tcl
 
 ip::set_top $core rp_wrapper hdl/rp_wrapper.v
 

@@ -1,6 +1,6 @@
 SOURCES = \
-	hdl/rp_wrapper.v                   \
-	xgui/rp_wrapper_netfpga_1g_cml.tcl
+	hdl/rp_wrapper.v    \
+	xgui/rp_wrapper.tcl
 
 .PHONY: clean
 

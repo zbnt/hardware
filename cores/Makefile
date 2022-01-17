@@ -12,6 +12,7 @@ CORES = \
 	eth_traffic_gen       \
 	mem_streamer          \
 	pr_bitstream_copy     \
+	rp_wrapper            \
 	simple_timer          \
 	util_axis2msi         \
 	util_cdc_array_single \

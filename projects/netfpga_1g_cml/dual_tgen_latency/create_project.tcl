@@ -7,7 +7,7 @@ set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
 
 # Load source files
 
-read_verilog ../cores/rp_wrapper/hdl/rp_wrapper_impl.v
+read_verilog ../../../cores/rp_wrapper/hdl/rp_wrapper_impl.v
 
 # Set path to IP repository
 

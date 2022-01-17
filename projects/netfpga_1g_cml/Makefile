@@ -3,15 +3,12 @@
 
 all: bitstreams
 
-wrapper:
-	@$(MAKE) -C cores/rp_wrapper
-
 # Synthesis and implementation
 
 bitstreams: synth
 	vivado -mode batch -source build_bitstreams.tcl -nolog -nojournal
 
-synth: wrapper
+synth:
 	vivado -mode batch -source static/synth_design.tcl -nolog -nojournal
 	vivado -mode batch -source dual_detector/synth_design.tcl -nolog -nojournal
 	vivado -mode batch -source dual_tgen_detector/synth_design.tcl -nolog -nojournal

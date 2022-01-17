@@ -124,7 +124,7 @@ set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\
 xilinx.com:ip:util_idelay_ctrl:1.0\
-oscar-rc.dev:zbnt:rp_wrapper_netfpga_1g_cml:1.0\
+oscar-rc.dev:zbnt:rp_wrapper:1.0\
 xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:util_ds_buf:2.2\
@@ -2255,7 +2255,7 @@ proc create_root_design { parentCell } {
   create_hier_cell_pr_ctrl [current_bd_instance .] pr_ctrl
 
   # Create instance: rp_wrapper, and set properties
-  set rp_wrapper [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:rp_wrapper_netfpga_1g_cml:1.0 rp_wrapper ]
+  set rp_wrapper [ create_bd_cell -type ip -vlnv oscar-rc.dev:zbnt:rp_wrapper:1.0 rp_wrapper ]
 
   # Create instance: shutdown_concat, and set properties
   set shutdown_concat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 shutdown_concat ]
