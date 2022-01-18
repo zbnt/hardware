@@ -44,10 +44,11 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 	// MEM_PATTERN
 
-	output logic [7-$clog2(axi_width/8):0] mem_pattern_addr,
+	output logic [10-$clog2(axi_width/8):0] mem_pattern_addr,
 	output logic [axi_width-1:0] mem_pattern_wdata,
 	output logic [(axi_width/8)-1:0] mem_pattern_we,
 	input logic [axi_width-1:0] mem_pattern_rdata,
+	input logic mem_pattern_wdone,
 
 	// Registers
 
@@ -124,7 +125,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 
 	logic [axi_width-1:0] write_mask;
 	logic mem_frame_wdone, mem_frame_rdone, mem_frame_wbusy, mem_frame_rbusy;
-	logic mem_pattern_wdone, mem_pattern_rdone, mem_pattern_wbusy, mem_pattern_rbusy;
+	logic mem_pattern_rdone, mem_pattern_rbusy;
 	logic srst;
 
 	always_ff @(posedge clk) begin
@@ -151,9 +152,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			mem_frame_we <= '0;
 
 			mem_pattern_rdone <= 1'b0;
-			mem_pattern_wdone <= 1'b0;
 			mem_pattern_rbusy <= 1'b0;
-			mem_pattern_wbusy <= 1'b0;
 			mem_pattern_addr <= '0;
 			mem_pattern_wdata <= '0;
 			mem_pattern_we <= '0;
@@ -165,10 +164,11 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			mem_frame_we <= '0;
 
 			mem_pattern_rdone <= mem_pattern_rbusy;
-			mem_pattern_wdone <= mem_pattern_wbusy;
 			mem_pattern_rbusy <= 1'b0;
-			mem_pattern_wbusy <= 1'b0;
-			mem_pattern_we <= '0;
+
+			if(mem_pattern_wdone) begin
+				mem_pattern_we <= '0;
+			end
 
 			lfsr_seed_req <= 1'b0;
 
@@ -182,14 +182,13 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 				mem_frame_wbusy <= 1'b1;
 			end
 
-			if(read_req && s_axi_araddr[12:8] == 5'b10000) begin
-				mem_pattern_addr <= s_axi_araddr[7:$clog2(axi_width/8)];
+			if(read_req && s_axi_araddr[12:11] == 2'b10) begin
+				mem_pattern_addr <= s_axi_araddr[10:$clog2(axi_width/8)];
 				mem_pattern_rbusy <= 1'b1;
-			end else if(write_req && write_addr[12:8] == 5'b10000) begin
-				mem_pattern_addr <= write_addr[7:$clog2(axi_width/8)];
+			end else if(write_req && write_addr[12:11] == 2'b10) begin
+				mem_pattern_addr <= write_addr[10:$clog2(axi_width/8)];
 				mem_pattern_wdata <= s_axi_wdata;
 				mem_pattern_we <= s_axi_wstrb;
-				mem_pattern_wbusy <= 1'b1;
 			end
 
 			if(write_req && write_addr[12:5] == 8'd0) begin
@@ -317,7 +316,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 				// DRAM address, frame
 				read_ready = mem_frame_rdone;
 				read_value = mem_frame_rdata;
-			end else if(s_axi_araddr[12:8] == 5'b10000) begin
+			end else if(s_axi_araddr[12:11] == 2'b10) begin
 				// DRAM address, pattern
 				read_ready = mem_pattern_rdone;
 				read_value = mem_pattern_rdata;
@@ -336,7 +335,7 @@ module eth_traffic_gen_axi #(parameter axi_width = 32)
 			end else if(write_addr[12:11] == 2'b01) begin
 				// DRAM address
 				write_ready = mem_frame_wdone;
-			end else if(write_addr[12:8] == 5'b10000) begin
+			end else if(write_addr[12:11] == 2'b10) begin
 				// DRAM address, pattern
 				write_ready = mem_pattern_wdone;
 			end else begin

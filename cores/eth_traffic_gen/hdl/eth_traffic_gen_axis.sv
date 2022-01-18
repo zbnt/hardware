@@ -8,6 +8,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 (
 	input logic clk,
 	input logic rst,
+	input logic rst_fcount,
 
 	// Status
 
@@ -29,7 +30,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 
 	// MEM_PATTERN
 
-	output logic [7-$clog2(axi_width/8):0] mem_pattern_addr,
+	output logic [10-$clog2(axi_width/8):0] mem_pattern_addr,
 	input logic [axi_width-1:0] mem_pattern_rdata,
 
 	// M_AXIS
@@ -41,6 +42,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	input logic m_axis_tready
 );
 	enum logic [1:0] {ST_WAIT_ENABLE, ST_SEND_DATA, ST_FRAME_DELAY} state, state_next;
+	logic [47:0] fcount, fcount_next, fcount_sr, fcount_sr_next;
 	logic [31:0] count, count_next;
 	logic [15:0] fsize, fsize_next;
 
@@ -69,6 +71,9 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 			count <= 32'd0;
 			fsize <= 16'd0;
 
+			fcount <= 48'd0;
+			fcount_sr <= 48'd0;
+
 			m_axis_tdata <= 8'd0;
 			m_axis_tlast <= 1'b0;
 			m_axis_tvalid <= 1'b0;
@@ -79,6 +84,9 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 			state <= state_next;
 			count <= count_next;
 			fsize <= fsize_next;
+
+			fcount <= fcount_next;
+			fcount_sr <= fcount_sr_next;
 
 			m_axis_tdata <= m_axis_tdata_next;
 			m_axis_tlast <= m_axis_tlast_next;
@@ -94,6 +102,9 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		count_next = count;
 		fsize_next = fsize;
 
+		fcount_next = fcount;
+		fcount_sr_next = fcount_sr;
+
 		m_axis_tdata_next = 8'd0;
 		m_axis_tlast_next = 1'b0;
 		m_axis_tvalid_next = 1'b0;
@@ -107,7 +118,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		tx_state = state;
 
 		mem_frame_addr = count[10:$clog2(axi_width/8)];
-		mem_pattern_addr = count[10:$clog2(axi_width)];
+		mem_pattern_addr = count[10:$clog2(axi_width/8)];
 
 		if(~rst) begin
 			case(state)
@@ -118,6 +129,13 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 
 					pqueue_next = {1'd0, mem_pattern_rdata[axi_width-1:1]};
 					fqueue_next = {8'd0, mem_frame_rdata[axi_width-1:8]};
+
+					if(rst_fcount) begin
+						fcount_next = 48'd0;
+						fcount_sr_next = 48'd0;
+					end else begin
+						fcount_sr_next = fcount;
+					end
 
 					if(enable) begin
 						state_next = ST_SEND_DATA;
@@ -136,8 +154,20 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 					m_axis_tvalid_next = 1'b1;
 
 					if(m_axis_tready) begin
-						m_axis_tdata_next = pqueue[0] ? prng_val : fqueue[7:0];
-						prng_enable = pqueue[0];
+						case(pqueue[1:0])
+							2'd0: m_axis_tdata_next = fqueue[7:0];
+							2'd1: m_axis_tdata_next = prng_val;
+							2'd2: m_axis_tdata_next = fcount_sr[7:0];
+							2'd3: m_axis_tdata_next = fcount_sr[7:0];
+						endcase
+
+						prng_enable = ~pqueue[1] & pqueue[0];
+
+						if(pqueue[1:0] == 2'd2) begin
+							fcount_sr_next = {fcount_sr[7:0], fcount_sr[47:8]};
+						end else begin
+							fcount_sr_next = fcount;
+						end
 
 						if(count == fsize) begin
 							state_next = ST_FRAME_DELAY;
@@ -147,11 +177,11 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 						end
 
 						if(count >= 32'd2047) begin
-							pqueue_next = '1;
-						end else if(count[$clog2(axi_width)-1:0] == '0) begin
+							pqueue_next = {(axi_width/8){2'b01}};
+						end else if(count[$clog2(axi_width/8)-1:0] == '0) begin
 							pqueue_next = mem_pattern_rdata;
 						end else begin
-							pqueue_next = {1'd0, pqueue[axi_width-1:1]};
+							pqueue_next = {2'd0, pqueue[axi_width-1:2]};
 						end
 
 						if(count[$clog2(axi_width/8)-1:0] == '0) begin
@@ -172,6 +202,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 					if(count >= frame_delay && count >= 32'd12) begin
 						state_next = ST_WAIT_ENABLE;
 						count_next = 32'd0;
+						fcount_next = fcount + 48'd1;
 					end
 				end
 			endcase

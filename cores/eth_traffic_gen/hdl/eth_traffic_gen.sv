@@ -54,8 +54,7 @@ module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 	input logic m_axis_tready
 );
 	logic glob_enable;
-	logic tx_enable;
-	logic tx_busy;
+	logic tx_enable, tx_busy;
 	logic [1:0] tx_state;
 	logic [15:0] frame_size;
 	logic [31:0] frame_delay;
@@ -71,10 +70,11 @@ module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 	logic [C_AXI_WIDTH-1:0] mem_frame_b_rdata;
 	logic [(C_AXI_WIDTH/8)-1:0] mem_frame_a_we;
 
-	logic [7-$clog2(C_AXI_WIDTH/8):0] mem_pattern_a_addr, mem_pattern_b_addr;
+	logic [10-$clog2(C_AXI_WIDTH/8):0] mem_pattern_a_addr, mem_pattern_b_addr;
 	logic [C_AXI_WIDTH-1:0] mem_pattern_a_wdata, mem_pattern_a_rdata;
 	logic [C_AXI_WIDTH-1:0] mem_pattern_b_rdata;
 	logic [(C_AXI_WIDTH/8)-1:0] mem_pattern_a_we;
+	logic mem_pattern_a_wdone;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
@@ -122,6 +122,7 @@ module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 		.mem_pattern_wdata(mem_pattern_a_wdata),
 		.mem_pattern_we(mem_pattern_a_we),
 		.mem_pattern_rdata(mem_pattern_a_rdata),
+		.mem_pattern_wdone(mem_pattern_a_wdone),
 
 		.tx_enable(tx_enable),
 
@@ -143,6 +144,7 @@ module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 	(
 		.clk(clk),
 		.rst(~rst_n),
+		.rst_fcount(~tx_enable | ~ext_enable),
 
 		.tx_state(tx_state),
 
@@ -179,7 +181,7 @@ module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 		.dpo(mem_frame_b_rdata)
 	);
 
-	pattern_dram #(C_AXI_WIDTH) U3
+	pattern_dram #(C_AXI_WIDTH, 2, 2048) U3
 	(
 		.clk(clk),
 
@@ -187,6 +189,7 @@ module eth_traffic_gen #(parameter C_AXI_WIDTH = 32)
 		.d(mem_pattern_a_wdata),
 		.spo(mem_pattern_a_rdata),
 		.we(mem_pattern_a_we),
+		.wdone(mem_pattern_a_wdone),
 
 		.dpra(mem_pattern_b_addr),
 		.dpo(mem_pattern_b_rdata)
