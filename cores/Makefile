@@ -10,6 +10,7 @@ CORES = \
 	eth_mac_1g            \
 	eth_stats_collector   \
 	eth_traffic_gen       \
+	mdio                  \
 	mem_streamer          \
 	pr_bitstream_copy     \
 	rp_wrapper            \
