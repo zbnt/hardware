@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module mdio_fsm
+module mdio_fsm #(parameter C_PREAMBLE_TIME = 32)
 (
 	input logic clk,
 	input logic rst_n,
@@ -96,11 +96,12 @@ module mdio_fsm
 			end
 
 			ST_PREAMBLE: begin
-				if(&count) begin
-					state_next = ST_START;
-				end
-
 				count_next = count + 5'd1;
+
+				if(count == C_PREAMBLE_TIME - 1) begin
+					state_next = ST_START;
+					count_next = 5'd0;
+				end
 			end
 
 			ST_START: begin

@@ -4,7 +4,11 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module mdio_w #(parameter C_AXI_WIDTH = 32)
+module mdio_w
+#(
+	parameter C_AXI_WIDTH = 32,
+	parameter C_PREAMBLE_TIME = 32
+)
 (
 	input wire clk,
 	input wire rst_n,
@@ -42,7 +46,12 @@ module mdio_w #(parameter C_AXI_WIDTH = 32)
 );
 	wire mdio_i, mdio_o, mdio_t;
 
-	mdio #(C_AXI_WIDTH) U0
+	mdio
+	#(
+		.C_AXI_WIDTH(C_AXI_WIDTH),
+		.C_PREAMBLE_TIME(C_PREAMBLE_TIME)
+	)
+	U0
 	(
 		.clk(clk),
 		.rst_n(rst_n),

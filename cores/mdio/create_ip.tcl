@@ -33,6 +33,9 @@ ip::set_top $core mdio_w hdl/mdio_wrapper.v
 ip::set_param_disp_name $core C_AXI_WIDTH "AXI Data Width"
 ip::set_param_list      $core C_AXI_WIDTH {32 64}
 
+ip::set_param_disp_name $core C_PREAMBLE_TIME "Preamble length"
+ip::set_param_range     $core C_PREAMBLE_TIME 1 32
+
 # Interfaces
 
 ip::add_axi_interface $core S_AXI slave {
