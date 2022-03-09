@@ -6,6 +6,7 @@ namespace eval ip {
 
 		set_property DISPLAY_NAME $ip_name $core
 		set_property DESCRIPTION $ip_name $core
+		set_property CORE_REVISION [clock seconds] $core
 		set_property IPI_DRC {ignore_freq_hz true} $core
 
 		ipx::add_file_group -type synthesis {} $core
