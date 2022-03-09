@@ -10,7 +10,7 @@ module eth_frame_loop
 
 	parameter C_AXIS_LOG_ENABLE = 1,
 	parameter C_AXIS_LOG_WIDTH = 64,
-	parameter C_DIRECTION_ID = 65,
+	parameter C_DIRECTION_ID = 0,
 
 	parameter C_ENABLE_COMPARE = 1,
 	parameter C_ENABLE_EDIT = 1,
@@ -326,7 +326,7 @@ module eth_frame_loop
 		logic [C_AXIS_LOG_WIDTH-1:0] axis_logd_tdata;
 		logic axis_logd_tvalid, axis_logd_tready;
 
-		logic [119:0] axis_logc_tdata;
+		logic [121:0] axis_logc_tdata;
 		logic axis_logc_tvalid, axis_logc_tready;
 
 		eth_frame_loop_extract #(C_NUM_SCRIPTS, C_AXIS_LOG_WIDTH, C_EXTRACT_FIFO_SIZE) U8

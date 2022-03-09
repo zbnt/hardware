@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter C_DIRECTION_ID = 65)
+module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter C_DIRECTION_ID = 0)
 (
 	input logic clk,
 	input logic rst_n,
@@ -26,7 +26,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 
 	// S_AXIS_CTL
 
-	input logic [119:0] s_axis_ctl_tdata, // {8 * {MATCHED}, SIZE, NUMBER, TIMESTAMP}
+	input logic [121:0] s_axis_ctl_tdata, // {8 * {MATCHED}, FCS_INCORRECT, FRAME_BAD, SIZE, NUMBER, TIMESTAMP}
 	input logic s_axis_ctl_tvalid,
 	output logic s_axis_ctl_tready
 );
@@ -58,7 +58,7 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 					if(s_axis_ctl_tvalid & s_axis_ctl_tready) begin
 						frame_size <= s_axis_ctl_tdata[111:96];
 
-						if(s_axis_ctl_tdata[119:112] != '0) begin
+						if(s_axis_ctl_tdata[121:114] != '0) begin
 							state <= ST_TX_HEADER;
 							s_axis_ctl_tready <= 1'b0;
 
@@ -68,11 +68,11 @@ module eth_frame_detector_axis_log #(parameter C_AXIS_LOG_WIDTH = 64, parameter 
 							tx_buffer[47:32] <= log_id;
 							tx_buffer[63:48] <= C_TX_HEADER_SIZE[15:0] + s_axis_ctl_tdata[111:96];
 
-							tx_buffer[127:64]  <= s_axis_ctl_tdata[63:0];    // 8 bytes : Timestamp
-							tx_buffer[159:128] <= s_axis_ctl_tdata[95:64];   // 4 bytes : Frame number
-							tx_buffer[167:160] <= C_DIRECTION_ID[7:0];       // 1 byte  : Direction
-							tx_buffer[175:168] <= C_AXIS_LOG_WIDTH[10:3];    // 1 byte  : Log width
-							tx_buffer[183:176] <= s_axis_ctl_tdata[119:112]; // 1 byte  : Flags
+							tx_buffer[127:64]  <= s_axis_ctl_tdata[63:0];                             // 8 bytes : Timestamp
+							tx_buffer[159:128] <= s_axis_ctl_tdata[95:64];                            // 4 bytes : Frame number
+							tx_buffer[167:160] <= {'0, s_axis_ctl_tdata[113:112], C_DIRECTION_ID[0]}; // 1 byte  : Frame flags
+							tx_buffer[175:168] <= C_AXIS_LOG_WIDTH[10:3];                             // 1 byte  : Log width
+							tx_buffer[183:176] <= s_axis_ctl_tdata[121:114];                          // 1 byte  : Match flags
 						end else if(s_axis_ctl_tdata[111:96] != 16'd0) begin
 							state <= ST_DROP_FRAME;
 							s_axis_ctl_tready <= 1'b0;

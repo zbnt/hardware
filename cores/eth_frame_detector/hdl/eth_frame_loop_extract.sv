@@ -30,7 +30,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 
 	// M_AXIS_CTL
 
-	output logic [119:0] m_axis_ctl_tdata, // {8 * {MATCHED}, SIZE, NUMBER, TIMESTAMP}
+	output logic [121:0] m_axis_ctl_tdata, // {8 * {MATCHED}, FCS_INCORRECT, FRAME_BAD, SIZE, NUMBER, TIMESTAMP}
 	output logic m_axis_ctl_tvalid,
 	input logic m_axis_ctl_tready
 );
@@ -68,7 +68,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 	// Stage 1: Filter input stream
 
 	logic [7:0] axis_s1_tdata;
-	logic [C_NUM_SCRIPTS+63:0] axis_s1_tuser;
+	logic [C_NUM_SCRIPTS+65:0] axis_s1_tuser;
 	logic axis_s1_tkeep, axis_s1_tlast, axis_s1_tvalid;
 
 	always_ff @(posedge clk) begin
@@ -80,7 +80,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 			axis_s1_tvalid <= 1'b0;
 		end else begin
 			axis_s1_tdata <= s_axis_tdata;
-			axis_s1_tuser <= {script_match, current_time_cdc};
+			axis_s1_tuser <= {script_match, s_axis_tuser[1:0], current_time_cdc};
 			axis_s1_tkeep <= |extract_byte;
 			axis_s1_tlast <= s_axis_tlast;
 			axis_s1_tvalid <= s_axis_tvalid & |{extract_byte, s_axis_tlast};
@@ -90,7 +90,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 	// Stage 2: Resize stream
 
 	logic [C_AXIS_LOG_WIDTH-1:0] axis_s2_tdata;
-	logic [C_NUM_SCRIPTS+111:0] axis_s2_tuser;
+	logic [C_NUM_SCRIPTS+113:0] axis_s2_tuser;
 	logic axis_s2_tkeep, axis_s2_tlast, axis_s2_tvalid;
 
 	logic [C_AXIS_LOG_WIDTH/8-1:0] count_1h;
@@ -101,7 +101,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			axis_s2_tuser[95:0] <= '0;
-			axis_s2_tuser[C_NUM_SCRIPTS+111:112] <= '0;
+			axis_s2_tuser[C_NUM_SCRIPTS+113:112] <= '0;
 			axis_s2_tkeep <= 1'b0;
 			axis_s2_tlast <= 1'b0;
 			axis_s2_tvalid <= 1'b0;
@@ -112,7 +112,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 			frame_begin <= 1'b1;
 		end else begin
 			axis_s2_tuser[95:0] <= {count_frames, axis_s1_tuser[63:0]};
-			axis_s2_tuser[C_NUM_SCRIPTS+111:112] <= axis_s1_tuser[C_NUM_SCRIPTS+63:64];
+			axis_s2_tuser[C_NUM_SCRIPTS+113:112] <= axis_s1_tuser[C_NUM_SCRIPTS+65:64];
 			axis_s2_tlast <= axis_s1_tlast;
 			axis_s2_tvalid <= axis_s1_tvalid & (axis_s1_tlast | count_1h[C_AXIS_LOG_WIDTH/8-1]);
 
@@ -159,7 +159,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 	logic [C_AXIS_LOG_WIDTH-1:0] s_axis_frame_tdata;
 	logic s_axis_frame_tvalid, s_axis_frame_tready;
 
-	logic [119:0] s_axis_ctl_tdata;
+	logic [121:0] s_axis_ctl_tdata;
 	logic s_axis_ctl_tvalid, s_axis_ctl_tready;
 
 	always_ff @(posedge clk) begin
@@ -215,7 +215,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 					end else if(axis_s2_tvalid & axis_s2_tkeep) begin
 						state <= ST_WAIT_FIFO;
 
-						s_axis_ctl_tdata[C_NUM_SCRIPTS+111:112] <= '0;
+						s_axis_ctl_tdata[C_NUM_SCRIPTS+113:114] <= '0;
 						s_axis_ctl_tvalid <= 1'b1;
 					end
 				end
@@ -259,7 +259,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 		.C_MEM_TYPE("block"),
 		.C_CDC_STAGES(2),
 
-		.C_DATA_WIDTH(120)
+		.C_DATA_WIDTH(122)
 	)
 	U3
 	(
