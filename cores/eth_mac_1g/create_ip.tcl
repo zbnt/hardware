@@ -54,8 +54,16 @@ ip::set_param_disp_name $core C_GTX_AS_RX_CLK "Use gtx_clk as TX and RX clocks"
 ip::set_param_format    $core C_GTX_AS_RX_CLK bool
 ip::set_param_value     $core C_GTX_AS_RX_CLK false
 
-ip::set_param_disp_name $core IDELAY_VALUE "IDELAY Value"
-ip::set_param_range     $core IDELAY_VALUE 0 31
+ip::set_param_disp_name $core C_IDELAY_VALUE "IDELAY Value"
+ip::set_param_range     $core C_IDELAY_VALUE 0 31
+
+ip::set_param_disp_name $core C_ENABLE_FCS_OUTPUT "Enable FCS output"
+ip::set_param_format    $core C_ENABLE_FCS_OUTPUT bool
+ip::set_param_value     $core C_ENABLE_FCS_OUTPUT false
+
+ip::set_param_disp_name $core C_ENABLE_FCS_INPUT "Enable FCS input"
+ip::set_param_format    $core C_ENABLE_FCS_INPUT bool
+ip::set_param_value     $core C_ENABLE_FCS_INPUT false
 
 ip::set_param_disp_name $core C_CLK_INPUT_STYLE "RX clock buffers"
 ip::set_param_pairs     $core C_CLK_INPUT_STYLE {

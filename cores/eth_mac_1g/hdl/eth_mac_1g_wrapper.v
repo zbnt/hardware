@@ -4,7 +4,15 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STYLE = "BUFR", parameter C_USE_CLK90 = 0, parameter C_GTX_AS_RX_CLK = 0, parameter IDELAY_VALUE = 12)
+module eth_mac_1g_w #(
+	parameter C_IFACE_TYPE = "GMII",
+	parameter C_CLK_INPUT_STYLE = "BUFR",
+	parameter C_USE_CLK90 = 0,
+	parameter C_GTX_AS_RX_CLK = 0,
+	parameter C_ENABLE_FCS_OUTPUT = 0,
+	parameter C_ENABLE_FCS_INPUT = 0,
+	parameter C_IDELAY_VALUE = 12
+)
 (
 	// Clock signals
 
@@ -19,7 +27,6 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 	// Status
 
 	output wire tx_error,
-	output wire [1:0] rx_error,
 	output wire [1:0] speed,
 
 	// TX_AXIS
@@ -35,7 +42,7 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 	output wire [7:0] rx_axis_tdata,
 	output wire rx_axis_tvalid,
 	output wire rx_axis_tlast,
-	output wire rx_axis_tuser,
+	output wire [2:0] rx_axis_tuser,
 
 	// RGMII
 
@@ -71,7 +78,9 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 			.CLOCK_INPUT_STYLE(C_CLK_INPUT_STYLE),
 			.USE_CLK90(C_USE_CLK90 ? "TRUE" : "FALSE"),
 			.ENABLE_PADDING(1),
-			.MIN_FRAME_LENGTH(64)
+			.MIN_FRAME_LENGTH(64),
+			.ENABLE_FCS_OUTPUT(C_ENABLE_FCS_OUTPUT),
+			.ENABLE_FCS_INPUT(C_ENABLE_FCS_INPUT)
 		)
 		eth_mac_1g_rgmii_inst
 		(
@@ -99,19 +108,17 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 			.rgmii_tx_ctl(rgmii_tx_ctl),
 
 			.tx_error_underflow(tx_error),
-			.rx_error_bad_frame(rx_error[0]),
-			.rx_error_bad_fcs(rx_error[1]),
 			.speed(speed),
 
 			.ifg_delay(8'd12)
 		);
 
-		if(IDELAY_VALUE > 0) begin
+		if(C_IDELAY_VALUE > 0) begin
 			for(genvar i = 0; i < 4; i = i + 1) begin
 				IDELAYE2
 				#(
 					.IDELAY_TYPE("FIXED"),
-					.IDELAY_VALUE(IDELAY_VALUE)
+					.IDELAY_VALUE(C_IDELAY_VALUE)
 				)
 				rd_idelay_inst
 				(
@@ -123,7 +130,7 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 			IDELAYE2
 			#(
 				.IDELAY_TYPE("FIXED"),
-				.IDELAY_VALUE(IDELAY_VALUE)
+				.IDELAY_VALUE(C_IDELAY_VALUE)
 			)
 			rx_ctl_idelay_inst
 			(
@@ -147,7 +154,9 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 				.IODDR_STYLE("IODDR"),
 				.CLOCK_INPUT_STYLE(C_CLK_INPUT_STYLE),
 				.ENABLE_PADDING(1),
-				.MIN_FRAME_LENGTH(64)
+				.MIN_FRAME_LENGTH(64),
+				.ENABLE_FCS_OUTPUT(C_ENABLE_FCS_OUTPUT),
+				.ENABLE_FCS_INPUT(C_ENABLE_FCS_INPUT)
 			)
 			eth_mac_1g_gmii_inst
 			(
@@ -177,8 +186,6 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 				.gmii_tx_er(gmii_tx_er),
 
 				.tx_error_underflow(tx_error),
-				.rx_error_bad_frame(rx_error[0]),
-				.rx_error_bad_fcs(rx_error[1]),
 				.speed(speed),
 
 				.ifg_delay(8'd12)
@@ -186,7 +193,9 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 		end else begin
 			eth_mac_1g #(
 				.ENABLE_PADDING(1),
-				.MIN_FRAME_LENGTH(64)
+				.MIN_FRAME_LENGTH(64),
+				.ENABLE_FCS_OUTPUT(C_ENABLE_FCS_OUTPUT),
+				.ENABLE_FCS_INPUT(C_ENABLE_FCS_INPUT)
 			)
 			eth_mac_1g_inst
 			(
@@ -219,8 +228,6 @@ module eth_mac_1g_w #(parameter C_IFACE_TYPE = "GMII", parameter C_CLK_INPUT_STY
 				.tx_mii_select(1'b0),
 
 				.tx_error_underflow(tx_error),
-				.rx_error_bad_frame(rx_error[0]),
-				.rx_error_bad_fcs(rx_error[1]),
 
 				.ifg_delay(8'd12)
 			);

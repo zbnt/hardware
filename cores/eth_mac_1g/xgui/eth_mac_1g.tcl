@@ -10,11 +10,16 @@ proc init_gui { IPINST } {
 
 	set C_CLK_INPUT_STYLE [ipgui::add_param $IPINST -name "C_CLK_INPUT_STYLE" -parent ${Interface_options} -widget comboBox]
 	set_property tooltip {Clock buffer for the IDDR instances and the rx_clk output, respectively.} ${C_CLK_INPUT_STYLE}
-	ipgui::add_param $IPINST -name "IDELAY_VALUE" -parent ${Interface_options}
+	ipgui::add_param $IPINST -name "C_IDELAY_VALUE" -parent ${Interface_options}
 
 	set C_USE_CLK90 [ipgui::add_param $IPINST -name "C_USE_CLK90" -parent ${Interface_options}]
 	set_property tooltip {Add a 2ns delay to the TX clock output} ${C_USE_CLK90}
 	ipgui::add_param $IPINST -name "C_GTX_AS_RX_CLK" -parent ${Interface_options}
+
+	set Axis_options [ipgui::add_group $IPINST -name "AXI-Stream options" -parent ${Page_0}]
+
+	ipgui::add_param $IPINST -name "C_ENABLE_FCS_OUTPUT" -parent ${Axis_options}
+	ipgui::add_param $IPINST -name "C_ENABLE_FCS_INPUT" -parent ${Axis_options}
 }
 
 proc update_PARAM_VALUE.C_CLK_INPUT_STYLE { PARAM_VALUE.C_CLK_INPUT_STYLE PARAM_VALUE.C_GTX_AS_RX_CLK } {
@@ -53,19 +58,21 @@ proc update_PARAM_VALUE.C_USE_CLK90 { PARAM_VALUE.C_USE_CLK90 PARAM_VALUE.C_IFAC
 	}
 }
 
-proc update_PARAM_VALUE.IDELAY_VALUE { PARAM_VALUE.IDELAY_VALUE PARAM_VALUE.C_IFACE_TYPE } {
-	set IDELAY_VALUE ${PARAM_VALUE.IDELAY_VALUE}
+proc update_PARAM_VALUE.C_IDELAY_VALUE { PARAM_VALUE.C_IDELAY_VALUE PARAM_VALUE.C_IFACE_TYPE } {
+	set C_IDELAY_VALUE ${PARAM_VALUE.C_IDELAY_VALUE}
 	set C_IFACE_TYPE ${PARAM_VALUE.C_IFACE_TYPE}
 	set values(C_IFACE_TYPE) [get_property value $C_IFACE_TYPE]
 
-	if { [gen_USERPARAMETER_IDELAY_VALUE_ENABLEMENT $values(C_IFACE_TYPE)] } {
-		set_property enabled true $IDELAY_VALUE
+	if { [gen_USERPARAMETER_C_IDELAY_VALUE_ENABLEMENT $values(C_IFACE_TYPE)] } {
+		set_property enabled true $C_IDELAY_VALUE
 	} else {
-		set_property enabled false $IDELAY_VALUE
+		set_property enabled false $C_IDELAY_VALUE
 	}
 }
 
 proc update_PARAM_VALUE.C_IFACE_TYPE { PARAM_VALUE.C_IFACE_TYPE } {}
+proc update_PARAM_VALUE.C_ENABLE_FCS_OUTPUT { PARAM_VALUE.C_ENABLE_FCS_OUTPUT } {}
+proc update_PARAM_VALUE.C_ENABLE_FCS_INPUT { PARAM_VALUE.C_ENABLE_FCS_INPUT } {}
 
 proc validate_PARAM_VALUE.C_CLK_INPUT_STYLE { PARAM_VALUE.C_CLK_INPUT_STYLE } {
 	return true
@@ -79,11 +86,19 @@ proc validate_PARAM_VALUE.C_USE_CLK90 { PARAM_VALUE.C_USE_CLK90 } {
 	return true
 }
 
-proc validate_PARAM_VALUE.IDELAY_VALUE { PARAM_VALUE.IDELAY_VALUE } {
+proc validate_PARAM_VALUE.C_IDELAY_VALUE { PARAM_VALUE.C_IDELAY_VALUE } {
 	return true
 }
 
 proc validate_PARAM_VALUE.C_IFACE_TYPE { PARAM_VALUE.C_IFACE_TYPE } {
+	return true
+}
+
+proc validate_PARAM_VALUE.C_ENABLE_FCS_OUTPUT { PARAM_VALUE.C_ENABLE_FCS_OUTPUT } {
+	return true
+}
+
+proc validate_PARAM_VALUE.C_ENABLE_FCS_INPUT { PARAM_VALUE.C_ENABLE_FCS_INPUT } {
 	return true
 }
 
@@ -103,6 +118,14 @@ proc update_MODELPARAM_VALUE.C_GTX_AS_RX_CLK { MODELPARAM_VALUE.C_GTX_AS_RX_CLK 
 	set_property value [get_property value ${PARAM_VALUE.C_GTX_AS_RX_CLK}] ${MODELPARAM_VALUE.C_GTX_AS_RX_CLK}
 }
 
-proc update_MODELPARAM_VALUE.IDELAY_VALUE { MODELPARAM_VALUE.IDELAY_VALUE PARAM_VALUE.IDELAY_VALUE } {
-	set_property value [get_property value ${PARAM_VALUE.IDELAY_VALUE}] ${MODELPARAM_VALUE.IDELAY_VALUE}
+proc update_MODELPARAM_VALUE.C_IDELAY_VALUE { MODELPARAM_VALUE.C_IDELAY_VALUE PARAM_VALUE.C_IDELAY_VALUE } {
+	set_property value [get_property value ${PARAM_VALUE.C_IDELAY_VALUE}] ${MODELPARAM_VALUE.C_IDELAY_VALUE}
+}
+
+proc update_MODELPARAM_VALUE.C_ENABLE_FCS_OUTPUT { MODELPARAM_VALUE.C_ENABLE_FCS_OUTPUT PARAM_VALUE.C_ENABLE_FCS_OUTPUT } {
+	set_property value [get_property value ${PARAM_VALUE.C_ENABLE_FCS_OUTPUT}] ${MODELPARAM_VALUE.C_ENABLE_FCS_OUTPUT}
+}
+
+proc update_MODELPARAM_VALUE.C_ENABLE_FCS_INPUT { MODELPARAM_VALUE.C_ENABLE_FCS_INPUT PARAM_VALUE.C_ENABLE_FCS_INPUT } {
+	set_property value [get_property value ${PARAM_VALUE.C_ENABLE_FCS_INPUT}] ${MODELPARAM_VALUE.C_ENABLE_FCS_INPUT}
 }
