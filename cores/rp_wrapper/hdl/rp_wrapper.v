@@ -18,7 +18,7 @@ module rp_wrapper
 	input wire m_axis_eth0_tready,
 
 	input wire [7:0] s_axis_eth0_tdata,
-	input wire s_axis_eth0_tuser,
+	input wire [2:0] s_axis_eth0_tuser,
 	input wire s_axis_eth0_tlast,
 	input wire s_axis_eth0_tvalid,
 
@@ -33,7 +33,7 @@ module rp_wrapper
 	input wire m_axis_eth1_tready,
 
 	input wire [7:0] s_axis_eth1_tdata,
-	input wire s_axis_eth1_tuser,
+	input wire [2:0] s_axis_eth1_tuser,
 	input wire s_axis_eth1_tlast,
 	input wire s_axis_eth1_tvalid,
 
@@ -48,7 +48,7 @@ module rp_wrapper
 	input wire m_axis_eth2_tready,
 
 	input wire [7:0] s_axis_eth2_tdata,
-	input wire s_axis_eth2_tuser,
+	input wire [2:0] s_axis_eth2_tuser,
 	input wire s_axis_eth2_tlast,
 	input wire s_axis_eth2_tvalid,
 
@@ -63,7 +63,7 @@ module rp_wrapper
 	input wire m_axis_eth3_tready,
 
 	input wire [7:0] s_axis_eth3_tdata,
-	input wire s_axis_eth3_tuser,
+	input wire [2:0] s_axis_eth3_tuser,
 	input wire s_axis_eth3_tlast,
 	input wire s_axis_eth3_tvalid,
 

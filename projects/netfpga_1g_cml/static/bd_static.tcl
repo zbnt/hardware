@@ -88,7 +88,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES:
+   # USE CASES: 
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -122,7 +122,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\
+   set list_check_ips "\ 
 xilinx.com:ip:util_idelay_ctrl:1.0\
 oscar-rc.dev:zbnt:rp_wrapper:1.0\
 xilinx.com:ip:xlconcat:2.1\
@@ -516,6 +516,8 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
    CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_ENABLE_FCS_INPUT {true} \
+   CONFIG.C_ENABLE_FCS_OUTPUT {true} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac
@@ -526,6 +528,7 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_AXIS_TUSER_WIDTH {3} \
    CONFIG.C_CDC_STAGES {4} \
  ] $rx_shutdown
 
@@ -538,10 +541,10 @@ proc create_hier_cell_eth3 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 3 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
 {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
-IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
+IPI_PROP_COUNT 1}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -660,6 +663,8 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
    CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_ENABLE_FCS_INPUT {true} \
+   CONFIG.C_ENABLE_FCS_OUTPUT {true} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac
@@ -670,6 +675,7 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_AXIS_TUSER_WIDTH {3} \
    CONFIG.C_CDC_STAGES {4} \
  ] $rx_shutdown
 
@@ -682,10 +688,10 @@ proc create_hier_cell_eth2 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 3 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
 {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
-IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
+IPI_PROP_COUNT 1}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -804,6 +810,8 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
    CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_ENABLE_FCS_INPUT {true} \
+   CONFIG.C_ENABLE_FCS_OUTPUT {true} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac
@@ -814,6 +822,7 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_AXIS_TUSER_WIDTH {3} \
    CONFIG.C_CDC_STAGES {4} \
  ] $rx_shutdown
 
@@ -826,10 +835,10 @@ proc create_hier_cell_eth1 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 3 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
 {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
-IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
+IPI_PROP_COUNT 1}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -948,6 +957,8 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
   set mac [ create_bd_cell -type ip -vlnv alexforencich.com:verilog-ethernet:eth_mac_1g:1.0 mac ]
   set_property -dict [ list \
    CONFIG.C_CLK_INPUT_STYLE {BUFIO} \
+   CONFIG.C_ENABLE_FCS_INPUT {true} \
+   CONFIG.C_ENABLE_FCS_OUTPUT {true} \
    CONFIG.C_IFACE_TYPE {RGMII} \
    CONFIG.C_USE_CLK90 {true} \
  ] $mac
@@ -958,6 +969,7 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
    CONFIG.C_AXIS_HAS_TREADY {false} \
    CONFIG.C_AXIS_HAS_TUSER {true} \
    CONFIG.C_AXIS_TDATA_WIDTH {8} \
+   CONFIG.C_AXIS_TUSER_WIDTH {3} \
    CONFIG.C_CDC_STAGES {4} \
  ] $rx_shutdown
 
@@ -970,10 +982,10 @@ proc create_hier_cell_eth0 { parentCell nameHier } {
    CONFIG.ALL_PARAMS {HAS_SIGNAL_STATUS 0 INTF {axis {ID 0 VLNV xilinx.com:interface:axis_rtl:1.0\
 MODE slave CDC_STAGES 4 SIGNALS {TDATA {DECOUPLED 1 PRESENT 1 WIDTH 8} TLAST\
 {DECOUPLED 1 PRESENT 1 WIDTH 1} TVALID {PRESENT 1 WIDTH 1} TREADY {PRESENT 0\
-WIDTH 1} TUSER {PRESENT 1 WIDTH 1 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
+WIDTH 1} TUSER {PRESENT 1 WIDTH 3 DECOUPLED 1} TID {PRESENT 0 WIDTH 0} TDEST\
 {PRESENT 0 WIDTH 0} TSTRB {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}}\
-IPI_PROP_COUNT 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
+IPI_PROP_COUNT 1}\
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {axis} \
    CONFIG.GUI_SELECT_CDC_STAGES {4} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
@@ -1552,7 +1564,7 @@ xilinx.com:interface:axis_rtl:1.0 SIGNALS {TVALID {PRESENT 1 WIDTH 1} TREADY\
 {PRESENT 1 WIDTH 1} TID {PRESENT 0 WIDTH 0} TDEST {PRESENT 0 WIDTH 0} TSTRB\
 {PRESENT 0 WIDTH 1} TKEEP {PRESENT 0 WIDTH 1}}}} IPI_PROP_COUNT 0\
 HAS_SIGNAL_STATUS 0}\
-   CONFIG.GUI_HAS_SIGNAL_STATUS {0} \
+   CONFIG.GUI_HAS_SIGNAL_STATUS {false} \
    CONFIG.GUI_INTERFACE_NAME {eth0} \
    CONFIG.GUI_SELECT_INTERFACE {0} \
    CONFIG.GUI_SELECT_VLNV {xilinx.com:interface:axis_rtl:1.0} \

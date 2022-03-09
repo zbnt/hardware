@@ -88,7 +88,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES:
+   # USE CASES: 
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -122,7 +122,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\
+   set list_check_ips "\ 
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:proc_sys_reset:5.0\
 oscar-rc.dev:zbnt:simple_timer:1.1\
@@ -1173,7 +1173,7 @@ proc create_root_design { parentCell } {
    CONFIG.TDATA_NUM_BYTES {1} \
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {1} \
+   CONFIG.TUSER_WIDTH {3} \
    ] $S_AXIS_ETH0
 
   set S_AXIS_ETH1 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH1 ]
@@ -1187,7 +1187,7 @@ proc create_root_design { parentCell } {
    CONFIG.TDATA_NUM_BYTES {1} \
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {1} \
+   CONFIG.TUSER_WIDTH {3} \
    ] $S_AXIS_ETH1
 
   set S_AXIS_ETH2 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH2 ]
@@ -1201,7 +1201,7 @@ proc create_root_design { parentCell } {
    CONFIG.TDATA_NUM_BYTES {1} \
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {1} \
+   CONFIG.TUSER_WIDTH {3} \
    ] $S_AXIS_ETH2
 
   set S_AXIS_ETH3 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_ETH3 ]
@@ -1215,7 +1215,7 @@ proc create_root_design { parentCell } {
    CONFIG.TDATA_NUM_BYTES {1} \
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {1} \
+   CONFIG.TUSER_WIDTH {3} \
    ] $S_AXIS_ETH3
 
   set S_AXI_PCIE [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_PCIE ]
