@@ -12,13 +12,14 @@ module eth_frame_loop_tx
 	// S_AXIS_FRAME
 
 	input logic [7:0] s_axis_frame_tdata,
+	input logic s_axis_frame_tuser,
 	input logic s_axis_frame_tlast,
 	input logic s_axis_frame_tvalid,
 	output logic s_axis_frame_tready,
 
 	// S_AXIS_CTL
 
-	input logic [47:0] s_axis_ctl_tdata, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	input logic [48:0] s_axis_ctl_tdata, // {UPDATE_FCS, IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, CORRUPT_FRAME}
 	input logic s_axis_ctl_tvalid,
 	output logic s_axis_ctl_tready,
 
@@ -36,6 +37,9 @@ module eth_frame_loop_tx
 	logic [13:0] checksum_tr_pos;
 	logic corrupt_fcs;
 
+	logic [31:0] fcs_state, fcs_next;
+	logic fcs_update;
+
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			state <= ST_WAIT_CTL;
@@ -45,6 +49,9 @@ module eth_frame_loop_tx
 			checksum_tr <= 16'd0;
 			checksum_tr_pos <= 14'd0;
 			corrupt_fcs <= 1'b0;
+
+			fcs_state <= '1;
+			fcs_update <= 1'b0;
 
 			s_axis_ctl_tready <= 1'b0;
 		end else begin
@@ -60,6 +67,10 @@ module eth_frame_loop_tx
 						end
 
 						count <= 16'd0;
+
+						fcs_state <= '1;
+						fcs_update <= s_axis_ctl_tdata[48];
+
 						checksum_ip <= s_axis_ctl_tdata[47:32];
 						checksum_tr <= s_axis_ctl_tdata[31:16];
 						checksum_tr_pos <= s_axis_ctl_tdata[15:2];
@@ -72,6 +83,14 @@ module eth_frame_loop_tx
 				ST_TX_FRAME: begin
 					if(m_axis_tready & m_axis_tvalid) begin
 						count <= count + 16'd1;
+
+						if(fcs_update) begin
+							if(~s_axis_frame_tuser) begin
+								fcs_state <= fcs_next;
+							end else begin
+								fcs_state <= {8'hFF, fcs_state[31:8]};
+							end
+						end
 
 						if(m_axis_tlast) begin
 							state <= ST_WAIT_CTL;
@@ -100,7 +119,9 @@ module eth_frame_loop_tx
 		s_axis_frame_tready = 1'b0;
 
 		if(state == ST_TX_FRAME) begin
-			if(checksum_ip != 16'd0 && count[15:1] == 15'd12) begin
+			if(fcs_update & s_axis_frame_tuser) begin
+				m_axis_tdata = ~fcs_state[7:0];
+			end else if(checksum_ip != 16'd0 && count[15:1] == 15'd12) begin
 				if(~count[0]) begin
 					m_axis_tdata = checksum_ip[15:8];
 				end else begin
@@ -124,4 +145,22 @@ module eth_frame_loop_tx
 			s_axis_frame_tready = 1'b1;
 		end
 	end
+
+	lfsr
+	#(
+		.LFSR_WIDTH(32),
+		.LFSR_POLY(32'h4c11db7),
+		.LFSR_CONFIG("GALOIS"),
+		.LFSR_FEED_FORWARD(0),
+		.REVERSE(1),
+		.DATA_WIDTH(8),
+		.STYLE("AUTO")
+	)
+	U0
+	(
+		.data_in(m_axis_tdata),
+		.state_in(fcs_state),
+		.data_out(),
+		.state_out(fcs_next)
+	);
 endmodule

@@ -12,14 +12,14 @@ module eth_frame_loop_csum
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic [9:0] s_axis_tuser,  // {ORIG_BYTE, DROP_FRAME, FCS_INVALID}
+	input logic [10:0] s_axis_tuser,  // {ORIG_BYTE, DROP_FRAME, CORRUPT_FRAME, FCS_ACTIVE}
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
 	// M_AXIS
 
 	output logic [7:0] m_axis_tdata,
-	output logic [47:0] m_axis_tuser, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	output logic [49:0] m_axis_tuser, // {FCS_ACTIVE, UPDATE_FCS, IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, CORRUPT_FRAME}
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid
 );
@@ -33,7 +33,7 @@ module eth_frame_loop_csum
 	logic [17:0] ip_csum_sum, tr_csum_sum;
 
 	logic [7:0] s_axis_tdata_q;
-	logic [47:0] s_axis_tuser_q; // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	logic [49:0] s_axis_tuser_q; // {FCS_ACTIVE, UPDATE_FCS, IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, CORRUPT_FRAME}
 	logic s_axis_tlast_q, s_axis_tvalid_q;
 
 	always_ff @(posedge clk) begin
@@ -65,12 +65,14 @@ module eth_frame_loop_csum
 			m_axis_tvalid <= 1'b0;
 		end else begin
 			s_axis_tdata_q <= s_axis_tdata;
-			s_axis_tuser_q[1:0] <= s_axis_tuser[1:0];
+			s_axis_tuser_q[1:0] <= s_axis_tuser[2:1];
+			s_axis_tuser_q[49] <= s_axis_tuser[0];
 			s_axis_tlast_q <= s_axis_tlast;
 			s_axis_tvalid_q <= s_axis_tvalid;
 
 			m_axis_tdata <= s_axis_tdata_q;
 			m_axis_tuser[15:0] <= s_axis_tuser_q[15:0];
+			m_axis_tuser[49:48] <= s_axis_tuser_q[49:48];
 			m_axis_tlast <= s_axis_tlast_q;
 			m_axis_tvalid <= s_axis_tvalid_q;
 
@@ -97,6 +99,12 @@ module eth_frame_loop_csum
 			if(s_axis_tvalid) begin
 				count <= count + 16'd1;
 				count_total <= count_total + 16'd1;
+
+				if(s_axis_tdata != s_axis_tuser[10:3]) begin
+					// Enable FCS update if a byte that is not part of the was modified
+					// but turn it back off if the FCS is also modified
+					s_axis_tuser_q[48] <= ~s_axis_tuser[0];
+				end
 
 				case(state)
 					ST_ETHER: begin
@@ -283,19 +291,23 @@ module eth_frame_loop_csum
 					tr_csum_valid <= 1'b0;
 				end
 			end
+
+			if(s_axis_tvalid_q & s_axis_tlast_q) begin
+				s_axis_tuser_q[48] <= 1'b0;
+			end
 		end
 	end
 
 	always_comb begin
 		if(~count[0]) begin
 			if(~in_ip_csum) begin
-				ip_csum_sum = {2'd0, s_axis_tuser_q[47:32]} + {2'd0, s_axis_tdata, 8'd0} + ~{2'd0, s_axis_tuser[9:2], 8'd0};
+				ip_csum_sum = {2'd0, s_axis_tuser_q[47:32]} + {2'd0, s_axis_tdata, 8'd0} + ~{2'd0, s_axis_tuser[10:3], 8'd0};
 			end else begin
 				ip_csum_sum = {2'd0, s_axis_tuser_q[47:32]} + {2'd0, s_axis_tdata, 8'd0};
 			end
 		end else begin
 			if(~in_ip_csum) begin
-				ip_csum_sum = {2'd0, s_axis_tuser_q[47:32]} + {10'd0, s_axis_tdata} + ~{10'd0, s_axis_tuser[9:2]};
+				ip_csum_sum = {2'd0, s_axis_tuser_q[47:32]} + {10'd0, s_axis_tdata} + ~{10'd0, s_axis_tuser[10:3]};
 			end else begin
 				ip_csum_sum = {2'd0, s_axis_tuser_q[47:32]} + {10'd0, s_axis_tdata};
 			end
@@ -303,13 +315,13 @@ module eth_frame_loop_csum
 
 		if(~count[0]) begin
 			if(~in_tr_csum) begin
-				tr_csum_sum = {2'd0, s_axis_tuser_q[31:16]} + {2'd0, s_axis_tdata, 8'd0} + ~{2'd0, s_axis_tuser[9:2], 8'd0};
+				tr_csum_sum = {2'd0, s_axis_tuser_q[31:16]} + {2'd0, s_axis_tdata, 8'd0} + ~{2'd0, s_axis_tuser[10:3], 8'd0};
 			end else begin
 				tr_csum_sum = {2'd0, s_axis_tuser_q[31:16]} + {2'd0, s_axis_tdata, 8'd0};
 			end
 		end else begin
 			if(~in_tr_csum) begin
-				tr_csum_sum = {2'd0, s_axis_tuser_q[31:16]} + {10'd0, s_axis_tdata} + ~{10'd0, s_axis_tuser[9:2]};
+				tr_csum_sum = {2'd0, s_axis_tuser_q[31:16]} + {10'd0, s_axis_tdata} + ~{10'd0, s_axis_tuser[10:3]};
 			end else begin
 				tr_csum_sum = {2'd0, s_axis_tuser_q[31:16]} + {10'd0, s_axis_tdata};
 			end

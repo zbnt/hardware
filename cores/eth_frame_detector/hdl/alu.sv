@@ -261,7 +261,7 @@ module alu
 		.data_out(result_s2_s3)
 	);
 
-	lfsr #(64, 4, 63, 62, 60, 59) U3
+	lfsr_prng #(64, 4, 63, 62, 60, 59) U3
 	(
 		.clk(clk),
 		.rst(~rst_n),

@@ -30,7 +30,7 @@ module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 
 	// M_AXIS
 
 	output logic [7:0] m_axis_tdata,
-	output logic [32*C_NUM_SCRIPTS:0] m_axis_tuser,  // {C_NUM_SCRIPTS * {PARAM_B, PARAM_A, INSTR_B, INSTR_A}, FCS_INVALID}
+	output logic [32*C_NUM_SCRIPTS+2:0] m_axis_tuser,  // {C_NUM_SCRIPTS * {PARAM_B, PARAM_A, INSTR_B, INSTR_A}, FCS_ACTIVE, FCS_INCORRECT, FRAME_BAD}
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid
 );
@@ -41,7 +41,7 @@ module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 
 	logic script_end;
 
 	logic [7:0] axis_tdata_q;
-	logic axis_tuser_q;
+	logic [2:0] axis_tuser_q;
 	logic axis_tlast_q;
 	logic axis_tvalid_q;
 
@@ -56,7 +56,7 @@ module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 
 			m_axis_tvalid <= 1'b0;
 
 			axis_tdata_q <= 8'd0;
-			axis_tuser_q <= 1'b0;
+			axis_tuser_q <= 3'b0;
 			axis_tlast_q <= 1'b0;
 			axis_tvalid_q <= 1'b0;
 		end else begin

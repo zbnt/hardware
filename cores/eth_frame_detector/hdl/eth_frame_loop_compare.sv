@@ -14,40 +14,40 @@ module eth_frame_loop_compare #(parameter C_NUM_SCRIPTS = 4)
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic [32*C_NUM_SCRIPTS:0] s_axis_tuser,  // {C_NUM_SCRIPTS * {PARAM_B, PARAM_A, INSTR_B, INSTR_A}, FCS_INVALID}
+	input logic [32*C_NUM_SCRIPTS+2:0] s_axis_tuser,  // {C_NUM_SCRIPTS * {PARAM_B, PARAM_A, INSTR_B, INSTR_A}, FCS_ACTIVE, FCS_INCORRECT, FRAME_BAD}
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
 	// M_AXIS
 
 	output logic [7:0] m_axis_tdata,
-	output logic [17*C_NUM_SCRIPTS:0] m_axis_tuser, // {C_NUM_SCRIPTS * {PARAM_B, INSTR_B, MATCHED}, FCS_INVALID}
+	output logic [17*C_NUM_SCRIPTS+2:0] m_axis_tuser, // {C_NUM_SCRIPTS * {PARAM_B, INSTR_B, MATCHED}, FCS_ACTIVE, FCS_INCORRECT, FRAME_BAD}
 	output logic m_axis_tlast,
 	output logic m_axis_tvalid
 );
 	logic [7:0] s_axis_tdata_q;
-	logic [32*C_NUM_SCRIPTS:0] s_axis_tuser_q;
+	logic [32*C_NUM_SCRIPTS+2:0] s_axis_tuser_q;
 	logic s_axis_tlast_q, s_axis_tvalid_q;
 
 	always_ff @(posedge clk) begin
 		if(~rst_n) begin
 			s_axis_tdata_q <= 8'd0;
-			s_axis_tuser_q[0] <= 1'b0;
+			s_axis_tuser_q[2:0] <= 2'b0;
 			s_axis_tlast_q <= 1'b0;
 			s_axis_tvalid_q <= 1'b0;
 
 			m_axis_tdata <= 8'd0;
-			m_axis_tuser[0] <= 1'b0;
+			m_axis_tuser[2:0] <= 2'b0;
 			m_axis_tlast <= 1'b0;
 			m_axis_tvalid <= 1'b0;
 		end else begin
 			s_axis_tdata_q <= s_axis_tdata;
-			s_axis_tuser_q[0] <= s_axis_tuser[0];
+			s_axis_tuser_q[2:0] <= s_axis_tuser[2:0];
 			s_axis_tlast_q <= s_axis_tlast;
 			s_axis_tvalid_q <= s_axis_tvalid;
 
 			m_axis_tdata <= s_axis_tdata_q;
-			m_axis_tuser[0] <= s_axis_tuser_q[0];
+			m_axis_tuser[2:0] <= s_axis_tuser_q[2:0];
 			m_axis_tlast <= s_axis_tlast_q;
 			m_axis_tvalid <= s_axis_tvalid_q;
 		end
@@ -62,8 +62,8 @@ module eth_frame_loop_compare #(parameter C_NUM_SCRIPTS = 4)
 		logic [7:0] opcode, param;
 
 		always_comb begin
-			opcode = s_axis_tuser[32*i+8:32*i+1];
-			param = s_axis_tuser[32*i+24:32*i+17];
+			opcode = s_axis_tuser[32*i+10:32*i+3];
+			param = s_axis_tuser[32*i+26:32*i+19];
 		end
 
 		always_ff @(posedge clk) begin
@@ -71,9 +71,9 @@ module eth_frame_loop_compare #(parameter C_NUM_SCRIPTS = 4)
 				count <= 3'd0;
 				data_sr <= '0;
 				param_sr <= '0;
-				s_axis_tuser_q[32*i+32:32*i+1] <= 32'd0;
+				s_axis_tuser_q[32*i+34:32*i+3] <= 32'd0;
 			end else if(s_axis_tvalid) begin
-				s_axis_tuser_q[32*i+32:32*i+1] <= s_axis_tuser[32*i+32:32*i+1];
+				s_axis_tuser_q[32*i+34:32*i+3] <= s_axis_tuser[32*i+34:32*i+3];
 
 				if(opcode[0]) begin
 					if(count == 3'd0) begin
@@ -136,8 +136,8 @@ module eth_frame_loop_compare #(parameter C_NUM_SCRIPTS = 4)
 		logic is_lt, is_eq;
 
 		always_comb begin
-			opcode_q = s_axis_tuser_q[32*i+8:32*i+1];
-			param_q = s_axis_tuser_q[32*i+24:32*i+17];
+			opcode_q = s_axis_tuser_q[32*i+10:32*i+3];
+			param_q = s_axis_tuser_q[32*i+26:32*i+19];
 
 			is_eq = (data_sr == param_sr);
 			is_lt = ($signed(data_sr) < $signed(param_sr));
@@ -145,12 +145,12 @@ module eth_frame_loop_compare #(parameter C_NUM_SCRIPTS = 4)
 
 		always_ff @(posedge clk) begin
 			if(~rst_n | m_axis_tlast) begin
-				m_axis_tuser[17*i+17:17*i+1] <= 17'd1;
+				m_axis_tuser[17*i+19:17*i+3] <= 17'd1;
 			end else if(s_axis_tvalid_q) begin
-				m_axis_tuser[17*i+17:17*i+2] <= {s_axis_tuser_q[32*i+32:32*i+25], s_axis_tuser_q[32*i+16:32*i+9]};
+				m_axis_tuser[17*i+19:17*i+4] <= {s_axis_tuser_q[32*i+34:32*i+27], s_axis_tuser_q[32*i+18:32*i+11]};
 
 				if(~script_en[i]) begin
-					m_axis_tuser[17*i+1] <= 1'b0;
+					m_axis_tuser[17*i+3] <= 1'b0;
 				end
 
 				if(opcode_q[1]) begin
@@ -158,54 +158,54 @@ module eth_frame_loop_compare #(parameter C_NUM_SCRIPTS = 4)
 						4'd0: begin
 							// ==
 							if(~is_eq) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd1: begin
 							// >
 							if(is_lt | is_eq) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd2: begin
 							// <
 							if(~is_lt) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd3: begin
 							// >=
 							if(is_lt) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd4: begin
 							// <=
 							if(~is_lt & ~is_eq) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd5: begin
 							// &
 							if((data_sr & param_sr) == '0) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd6: begin
 							// &=
 							if((data_sr & param_sr) != param_sr) begin
-								m_axis_tuser[17*i+1] <= 1'b0;
+								m_axis_tuser[17*i+3] <= 1'b0;
 							end
 						end
 
 						4'd15: begin
-							m_axis_tuser[17*i+1] <= 1'b0;
+							m_axis_tuser[17*i+3] <= 1'b0;
 						end
 					endcase
 				end

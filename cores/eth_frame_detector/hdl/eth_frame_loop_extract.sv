@@ -18,7 +18,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic [17*C_NUM_SCRIPTS:0] s_axis_tuser,  // {C_NUM_SCRIPTS * {PARAM_B, INSTR_B, MATCHED}, FCS_INVALID}
+	input logic [17*C_NUM_SCRIPTS+2:0] s_axis_tuser,  // {C_NUM_SCRIPTS * {PARAM_B, INSTR_B, MATCHED}, FCS_ACTIVE, FCS_INCORRECT, FRAME_BAD}
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
@@ -40,8 +40,8 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 
 	for(genvar i = 0; i < C_NUM_SCRIPTS; ++i) begin
 		always_comb begin
-			script_match[i] = s_axis_tuser[17*i+1];
-			extract_byte[i] = &s_axis_tuser[17*i+2:17*i+1];
+			script_match[i] = s_axis_tuser[17*i+3];
+			extract_byte[i] = &s_axis_tuser[17*i+4:17*i+3];
 		end
 	end
 

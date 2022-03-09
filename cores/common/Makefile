@@ -6,7 +6,7 @@ SOURCES = \
 	hdl/bus_cdc.sv                         \
 	hdl/counter_big.sv                     \
 	hdl/counter.sv                         \
-	hdl/lfsr.sv                            \
+	hdl/lfsr_prng.sv                       \
 	hdl/mux_big.sv                         \
 	hdl/pcg8.sv                            \
 	hdl/reg_slice.sv                       \

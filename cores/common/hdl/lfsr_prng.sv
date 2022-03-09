@@ -1,7 +1,6 @@
-
 // https://www.xilinx.com/support/documentation/application_notes/xapp052.pdf
 
-module lfsr
+module lfsr_prng
 #(
 	parameter width = 64,
 	parameter xnor_count = 4,

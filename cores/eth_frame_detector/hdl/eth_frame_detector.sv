@@ -63,7 +63,7 @@ module eth_frame_detector
 	output logic s_axi_rvalid,
 	input logic s_axi_rready,
 
-	// M_AXIS_A : AXI4-Stream master interface (to TEMAC of iface A)
+	// M_AXIS_A : AXI4-Stream for TX to iface A
 
 	input logic m_axis_a_clk,
 
@@ -73,16 +73,16 @@ module eth_frame_detector
 	output logic m_axis_a_tvalid,
 	input logic m_axis_a_tready,
 
-	// S_AXIS_A : AXI4-Stream slave interface (from TEMAC of iface A)
+	// S_AXIS_A : AXI4-Stream for RX from iface A
 
 	input logic s_axis_a_clk,
 
 	input logic [7:0] s_axis_a_tdata,
-	input logic s_axis_a_tuser,
+	input logic [2:0] s_axis_a_tuser,
 	input logic s_axis_a_tlast,
 	input logic s_axis_a_tvalid,
 
-	// M_AXIS_B : AXI4-Stream master interface (to TEMAC of iface B)
+	// M_AXIS_B : AXI4-Stream for TX to iface B
 
 	input logic m_axis_b_clk,
 
@@ -92,12 +92,12 @@ module eth_frame_detector
 	output logic m_axis_b_tvalid,
 	input logic m_axis_b_tready,
 
-	// S_AXIS_B : AXI4-Stream slave interface (from TEMAC of iface B)
+	// S_AXIS_B : AXI4-Stream for RX from iface B
 
 	input logic s_axis_b_clk,
 
 	input logic [7:0] s_axis_b_tdata,
-	input logic s_axis_b_tuser,
+	input logic [2:0] s_axis_b_tuser,
 	input logic s_axis_b_tlast,
 	input logic s_axis_b_tvalid,
 
@@ -118,44 +118,44 @@ module eth_frame_detector
 	// DBG_A
 
 	output logic [7:0] dbg_a_rx2cmp_tdata,
-	output logic [32*C_NUM_SCRIPTS:0] dbg_a_rx2cmp_tuser,
+	output logic [32*C_NUM_SCRIPTS+2:0] dbg_a_rx2cmp_tuser,
 	output logic dbg_a_rx2cmp_tlast,
 	output logic dbg_a_rx2cmp_tvalid,
 
 	output logic [7:0] dbg_a_cmp2edit_tdata,
-	output logic [17*C_NUM_SCRIPTS:0] dbg_a_cmp2edit_tuser,
+	output logic [17*C_NUM_SCRIPTS+2:0] dbg_a_cmp2edit_tuser,
 	output logic dbg_a_cmp2edit_tlast,
 	output logic dbg_a_cmp2edit_tvalid,
 
 	output logic [7:0] dbg_a_edit2csum_tdata,
-	output logic [9:0] dbg_a_edit2csum_tuser,
+	output logic [10:0] dbg_a_edit2csum_tuser,
 	output logic dbg_a_edit2csum_tlast,
 	output logic dbg_a_edit2csum_tvalid,
 
 	output logic [7:0] dbg_a_csum2fifo_tdata,
-	output logic [47:0] dbg_a_csum2fifo_tuser,
+	output logic [49:0] dbg_a_csum2fifo_tuser,
 	output logic dbg_a_csum2fifo_tlast,
 	output logic dbg_a_csum2fifo_tvalid,
 
 	// DBG_B
 
 	output logic [7:0] dbg_b_rx2cmp_tdata,
-	output logic [32*C_NUM_SCRIPTS:0] dbg_b_rx2cmp_tuser,
+	output logic [32*C_NUM_SCRIPTS+2:0] dbg_b_rx2cmp_tuser,
 	output logic dbg_b_rx2cmp_tlast,
 	output logic dbg_b_rx2cmp_tvalid,
 
 	output logic [7:0] dbg_b_cmp2edit_tdata,
-	output logic [17*C_NUM_SCRIPTS:0] dbg_b_cmp2edit_tuser,
+	output logic [17*C_NUM_SCRIPTS+2:0] dbg_b_cmp2edit_tuser,
 	output logic dbg_b_cmp2edit_tlast,
 	output logic dbg_b_cmp2edit_tvalid,
 
 	output logic [7:0] dbg_b_edit2csum_tdata,
-	output logic [9:0] dbg_b_edit2csum_tuser,
+	output logic [10:0] dbg_b_edit2csum_tuser,
 	output logic dbg_b_edit2csum_tlast,
 	output logic dbg_b_edit2csum_tvalid,
 
 	output logic [7:0] dbg_b_csum2fifo_tdata,
-	output logic [47:0] dbg_b_csum2fifo_tuser,
+	output logic [49:0] dbg_b_csum2fifo_tuser,
 	output logic dbg_b_csum2fifo_tlast,
 	output logic dbg_b_csum2fifo_tvalid,
 

@@ -13,6 +13,7 @@ SOURCES = \
 	hdl/eth_frame_loop_rx.sv           \
 	hdl/eth_frame_loop.sv              \
 	hdl/eth_frame_loop_tx.sv           \
+	hdl/lfsr.v                         \
 	hdl/multiplier.sv                  \
 	hdl/script_mem.sv                  \
 	xdc/cdc_timing.xdc                 \

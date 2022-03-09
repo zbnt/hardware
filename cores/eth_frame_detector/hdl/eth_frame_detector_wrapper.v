@@ -56,7 +56,7 @@ module eth_frame_detector_w
 	output wire s_axi_rvalid,
 	input wire s_axi_rready,
 
-	// M_AXIS_A : AXI4-Stream master interface (to TEMAC of iface A)
+	// M_AXIS_A : AXI4-Stream for TX to iface A
 
 	input wire m_axis_a_clk,
 
@@ -66,16 +66,16 @@ module eth_frame_detector_w
 	output wire m_axis_a_tvalid,
 	input wire m_axis_a_tready,
 
-	// S_AXIS_A : AXI4-Stream slave interface (from TEMAC of iface A)
+	// S_AXIS_A : AXI4-Stream for RX from iface A
 
 	input wire s_axis_a_clk,
 
 	input wire [7:0] s_axis_a_tdata,
-	input wire s_axis_a_tuser,
+	input wire [2:0] s_axis_a_tuser,
 	input wire s_axis_a_tlast,
 	input wire s_axis_a_tvalid,
 
-	// M_AXIS_B : AXI4-Stream master interface (to TEMAC of iface B)
+	// M_AXIS_B : AXI4-Stream for TX to iface B
 
 	input wire m_axis_b_clk,
 
@@ -85,12 +85,12 @@ module eth_frame_detector_w
 	output wire m_axis_b_tvalid,
 	input wire m_axis_b_tready,
 
-	// S_AXIS_B : AXI4-Stream slave interface (from TEMAC of iface B)
+	// S_AXIS_B : AXI4-Stream for RX from iface B
 
 	input wire s_axis_b_clk,
 
 	input wire [7:0] s_axis_b_tdata,
-	input wire s_axis_b_tuser,
+	input wire [2:0] s_axis_b_tuser,
 	input wire s_axis_b_tlast,
 	input wire s_axis_b_tvalid,
 
@@ -111,44 +111,44 @@ module eth_frame_detector_w
 	// DBG_A
 
 	output wire [7:0] dbg_a_rx2cmp_tdata,
-	output wire [32*C_NUM_SCRIPTS:0] dbg_a_rx2cmp_tuser,
+	output wire [32*C_NUM_SCRIPTS+2:0] dbg_a_rx2cmp_tuser,
 	output wire dbg_a_rx2cmp_tlast,
 	output wire dbg_a_rx2cmp_tvalid,
 
 	output wire [7:0] dbg_a_cmp2edit_tdata,
-	output wire [17*C_NUM_SCRIPTS:0] dbg_a_cmp2edit_tuser,
+	output wire [17*C_NUM_SCRIPTS+2:0] dbg_a_cmp2edit_tuser,
 	output wire dbg_a_cmp2edit_tlast,
 	output wire dbg_a_cmp2edit_tvalid,
 
 	output wire [7:0] dbg_a_edit2csum_tdata,
-	output wire [9:0] dbg_a_edit2csum_tuser,
+	output wire [10:0] dbg_a_edit2csum_tuser,
 	output wire dbg_a_edit2csum_tlast,
 	output wire dbg_a_edit2csum_tvalid,
 
 	output wire [7:0] dbg_a_csum2fifo_tdata,
-	output wire [47:0] dbg_a_csum2fifo_tuser,
+	output wire [49:0] dbg_a_csum2fifo_tuser,
 	output wire dbg_a_csum2fifo_tlast,
 	output wire dbg_a_csum2fifo_tvalid,
 
 	// DBG_B
 
 	output wire [7:0] dbg_b_rx2cmp_tdata,
-	output wire [32*C_NUM_SCRIPTS:0] dbg_b_rx2cmp_tuser,
+	output wire [32*C_NUM_SCRIPTS+2:0] dbg_b_rx2cmp_tuser,
 	output wire dbg_b_rx2cmp_tlast,
 	output wire dbg_b_rx2cmp_tvalid,
 
 	output wire [7:0] dbg_b_cmp2edit_tdata,
-	output wire [17*C_NUM_SCRIPTS:0] dbg_b_cmp2edit_tuser,
+	output wire [17*C_NUM_SCRIPTS+2:0] dbg_b_cmp2edit_tuser,
 	output wire dbg_b_cmp2edit_tlast,
 	output wire dbg_b_cmp2edit_tvalid,
 
 	output wire [7:0] dbg_b_edit2csum_tdata,
-	output wire [9:0] dbg_b_edit2csum_tuser,
+	output wire [10:0] dbg_b_edit2csum_tuser,
 	output wire dbg_b_edit2csum_tlast,
 	output wire dbg_b_edit2csum_tvalid,
 
 	output wire [7:0] dbg_b_csum2fifo_tdata,
-	output wire [47:0] dbg_b_csum2fifo_tuser,
+	output wire [49:0] dbg_b_csum2fifo_tuser,
 	output wire dbg_b_csum2fifo_tlast,
 	output wire dbg_b_csum2fifo_tvalid,
 

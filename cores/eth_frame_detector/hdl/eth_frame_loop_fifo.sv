@@ -15,32 +15,33 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic [47:0] s_axis_tuser, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	input logic [49:0] s_axis_tuser, // {FCS_ACTIVE, UPDATE_FCS, IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, CORRUPT_FRAME}
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
 	// M_AXIS_FRAME
 
 	output logic [7:0] m_axis_frame_tdata,
+	output logic m_axis_frame_tuser,
 	output logic m_axis_frame_tlast,
 	output logic m_axis_frame_tvalid,
 	input logic m_axis_frame_tready,
 
 	// M_AXIS_CTL
 
-	output logic [47:0] m_axis_ctl_tdata, // {IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, FCS_INVALID}
+	output logic [48:0] m_axis_ctl_tdata, // {UPDATE_FCS, IP_CSUM, CSUM_VAL, CSUM_POS, DROP_FRAME, CORRUPT_FRAME}
 	output logic m_axis_ctl_tvalid,
 	input logic m_axis_ctl_tready
 );
 	enum logic [2:0] {ST_WAIT_FIFO, ST_WRITE_FRAME, ST_WRITE_CTL, ST_OVERFLOW_A, ST_OVERFLOW_B} state, state_next;
 
 	logic [7:0] s_axis_frame_tdata;
-	logic s_axis_frame_tlast, s_axis_frame_tvalid, s_axis_frame_tready;
+	logic s_axis_frame_tuser, s_axis_frame_tlast, s_axis_frame_tvalid, s_axis_frame_tready;
 
 	logic [7:0] axis_frame_b2d_tdata;
-	logic axis_frame_b2d_tlast, axis_frame_b2d_tvalid, axis_frame_b2d_tready;
+	logic axis_frame_b2d_tuser, axis_frame_b2d_tlast, axis_frame_b2d_tvalid, axis_frame_b2d_tready;
 
-	logic [47:0] s_axis_ctl_tdata;
+	logic [48:0] s_axis_ctl_tdata;
 	logic s_axis_ctl_tvalid, s_axis_ctl_tready;
 
 	logic in_frame;
@@ -68,10 +69,11 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		state_next = state;
 
 		s_axis_frame_tdata = s_axis_tdata;
+		s_axis_frame_tuser = s_axis_tuser[49];
 		s_axis_frame_tlast = s_axis_tlast;
 		s_axis_frame_tvalid = 1'b0;
 
-		s_axis_ctl_tdata = s_axis_tuser;
+		s_axis_ctl_tdata = s_axis_tuser[48:0];
 		s_axis_ctl_tvalid = 1'b0;
 
 		case(state)
@@ -141,7 +143,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.C_HAS_STRB(0),
 		.C_HAS_KEEP(0),
 		.C_HAS_DEST(0),
-		.C_HAS_USER(0),
+		.C_HAS_USER(1),
 		.C_HAS_ID(0),
 		.C_HAS_LAST(1),
 
@@ -155,6 +157,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.s_rst_n(rst_tx_n),
 
 		.s_axis_tdata(axis_frame_b2d_tdata),
+		.s_axis_tuser(axis_frame_b2d_tuser),
 		.s_axis_tlast(axis_frame_b2d_tlast),
 		.s_axis_tvalid(axis_frame_b2d_tvalid),
 		.s_axis_tready(axis_frame_b2d_tready),
@@ -162,6 +165,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.m_clk(clk_tx),
 
 		.m_axis_tdata(m_axis_frame_tdata),
+		.m_axis_tuser(m_axis_frame_tuser),
 		.m_axis_tlast(m_axis_frame_tlast),
 		.m_axis_tvalid(m_axis_frame_tvalid),
 		.m_axis_tready(m_axis_frame_tready)
@@ -181,7 +185,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.C_HAS_STRB(0),
 		.C_HAS_KEEP(0),
 		.C_HAS_DEST(0),
-		.C_HAS_USER(0),
+		.C_HAS_USER(1),
 		.C_HAS_ID(0),
 		.C_HAS_LAST(1),
 
@@ -195,6 +199,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.s_rst_n(rst_n),
 
 		.s_axis_tdata(s_axis_frame_tdata),
+		.s_axis_tuser(s_axis_frame_tuser),
 		.s_axis_tlast(s_axis_frame_tlast),
 		.s_axis_tvalid(s_axis_frame_tvalid),
 		.s_axis_tready(s_axis_frame_tready),
@@ -202,6 +207,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.m_clk(clk_tx),
 
 		.m_axis_tdata(axis_frame_b2d_tdata),
+		.m_axis_tuser(axis_frame_b2d_tuser),
 		.m_axis_tlast(axis_frame_b2d_tlast),
 		.m_axis_tvalid(axis_frame_b2d_tvalid),
 		.m_axis_tready(axis_frame_b2d_tready)
@@ -213,7 +219,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 		.C_MEM_TYPE("block"),
 		.C_CDC_STAGES(2),
 
-		.C_DATA_WIDTH(48),
+		.C_DATA_WIDTH(49),
 		.C_DEST_WIDTH(1),
 		.C_USER_WIDTH(1),
 		.C_ID_WIDTH(1),

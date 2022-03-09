@@ -67,29 +67,29 @@ module eth_frame_loop
 	input logic s_axis_clk,
 
 	input logic [7:0] s_axis_tdata,
-	input logic s_axis_tuser,
+	input logic [2:0] s_axis_tuser,
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid,
 
 	// DBG
 
 	output logic [7:0] axis_rx2cmp_tdata,
-	output logic [32*C_NUM_SCRIPTS:0] axis_rx2cmp_tuser,
+	output logic [32*C_NUM_SCRIPTS+2:0] axis_rx2cmp_tuser,
 	output logic axis_rx2cmp_tlast,
 	output logic axis_rx2cmp_tvalid,
 
 	output logic [7:0] axis_cmp2edit_tdata,
-	output logic [17*C_NUM_SCRIPTS:0] axis_cmp2edit_tuser,
+	output logic [17*C_NUM_SCRIPTS+2:0] axis_cmp2edit_tuser,
 	output logic axis_cmp2edit_tlast,
 	output logic axis_cmp2edit_tvalid,
 
 	output logic [7:0] axis_edit2csum_tdata,
-	output logic [9:0] axis_edit2csum_tuser,
+	output logic [10:0] axis_edit2csum_tuser,
 	output logic axis_edit2csum_tlast,
 	output logic axis_edit2csum_tvalid,
 
 	output logic [7:0] axis_csum2fifo_tdata,
-	output logic [47:0] axis_csum2fifo_tuser,
+	output logic [49:0] axis_csum2fifo_tuser,
 	output logic axis_csum2fifo_tlast,
 	output logic axis_csum2fifo_tvalid
 );
@@ -186,14 +186,14 @@ module eth_frame_loop
 	end else begin
 		always_comb begin
 			axis_cmp2edit_tdata = axis_rx2cmp_tdata;
-			axis_cmp2edit_tuser[0] = axis_rx2cmp_tuser[0];
+			axis_cmp2edit_tuser[2:0] = axis_rx2cmp_tuser[2:0];
 			axis_cmp2edit_tlast = axis_rx2cmp_tlast;
 			axis_cmp2edit_tvalid = axis_rx2cmp_tvalid;
 		end
 
 		for(genvar i = 0; i < C_NUM_SCRIPTS; ++i) begin
 			always_comb begin
-				axis_cmp2edit_tuser[17*i+17:17*i+1] = {axis_rx2cmp_tuser[32*i+32:32*i+25], axis_rx2cmp_tuser[32*i+16:32*i+9], script_en_s[i]};
+				axis_cmp2edit_tuser[17*i+19:17*i+3] = {axis_rx2cmp_tuser[32*i+34:32*i+27], axis_rx2cmp_tuser[32*i+18:32*i+11], script_en_s[i]};
 			end
 		end
 	end
@@ -221,7 +221,7 @@ module eth_frame_loop
 	end else begin
 		always_comb begin
 			axis_edit2csum_tdata = axis_cmp2edit_tdata;
-			axis_edit2csum_tuser = {9'd0, axis_cmp2edit_tuser[0]};
+			axis_edit2csum_tuser = {9'd0, |axis_cmp2edit_tuser[1:0], axis_cmp2edit_tuser[2]};
 			axis_edit2csum_tlast = axis_cmp2edit_tlast;
 			axis_edit2csum_tvalid = axis_cmp2edit_tvalid;
 		end
@@ -250,16 +250,16 @@ module eth_frame_loop
 	end else begin
 		always_comb begin
 			axis_csum2fifo_tdata = axis_edit2csum_tdata;
-			axis_csum2fifo_tuser = {46'd0, axis_edit2csum_tuser[1:0]};
+			axis_csum2fifo_tuser = {axis_edit2csum_tuser[0], 47'd0, axis_edit2csum_tuser[2:1]};
 			axis_csum2fifo_tlast = axis_edit2csum_tlast;
 			axis_csum2fifo_tvalid = axis_edit2csum_tvalid;
 		end
 	end
 
 	logic [7:0] axis_txd_tdata;
-	logic axis_txd_tlast, axis_txd_tvalid, axis_txd_tready;
+	logic axis_txd_tuser, axis_txd_tlast, axis_txd_tvalid, axis_txd_tready;
 
-	logic [47:0] axis_txc_tdata;
+	logic [48:0] axis_txc_tdata;
 	logic axis_txc_tvalid, axis_txc_tready;
 
 	eth_frame_loop_fifo #(C_LOOP_FIFO_A_SIZE, C_LOOP_FIFO_B_SIZE) U6
@@ -280,6 +280,7 @@ module eth_frame_loop
 		// M_AXIS_FRAME
 
 		.m_axis_frame_tdata(axis_txd_tdata),
+		.m_axis_frame_tuser(axis_txd_tuser),
 		.m_axis_frame_tlast(axis_txd_tlast),
 		.m_axis_frame_tvalid(axis_txd_tvalid),
 		.m_axis_frame_tready(axis_txd_tready),
@@ -299,6 +300,7 @@ module eth_frame_loop
 		// S_AXIS_FRAME
 
 		.s_axis_frame_tdata(axis_txd_tdata),
+		.s_axis_frame_tuser(axis_txd_tuser),
 		.s_axis_frame_tlast(axis_txd_tlast),
 		.s_axis_frame_tvalid(axis_txd_tvalid),
 		.s_axis_frame_tready(axis_txd_tready),
