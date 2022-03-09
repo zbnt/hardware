@@ -25,7 +25,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 	// S_AXIS
 
 	input logic [7:0] s_axis_tdata,
-	input logic s_axis_tuser,
+	input logic [2:0] s_axis_tuser,
 	input logic s_axis_tlast,
 	input logic s_axis_tvalid
 );
@@ -68,7 +68,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 			count_next = count + 16'd1;
 			rx_buffer_next = {rx_buffer[311:0], 8'd0};
 
-			if(count <= 16'd39 && count != 16'd24 && count != 16'd25 && count != 16'd36 && count != 16'd37) begin
+			if(~s_axis_tuser[2] && count <= 16'd39 && count != 16'd24 && count != 16'd25 && count != 16'd36 && count != 16'd37) begin
 				if(rx_buffer[319:312] != s_axis_tdata) begin
 					is_valid_next = 1'b0;
 				end

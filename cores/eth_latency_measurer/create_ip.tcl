@@ -26,6 +26,7 @@ ip::add_sources $core {
 	hdl/eth_latency_measurer_coord.sv
 	hdl/eth_latency_measurer_rx.sv
 	hdl/eth_latency_measurer_tx.sv
+	hdl/lfsr.v
 }
 
 ip::add_implementation_sources $core xdc/cdc_timing.xdc

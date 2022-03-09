@@ -7,6 +7,7 @@ SOURCES = \
 	hdl/eth_latency_measurer.sv          \
 	hdl/eth_latency_measurer_tx.sv       \
 	hdl/eth_latency_measurer_wrapper.v   \
+	hdl/lfsr.v                           \
 	xdc/cdc_timing.xdc                   \
 	xgui/eth_latency_measurer.gtcl       \
 	xgui/eth_latency_measurer.tcl

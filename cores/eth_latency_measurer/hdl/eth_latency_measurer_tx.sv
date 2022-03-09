@@ -32,21 +32,25 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
 );
-	enum logic [1:0] {ST_WAIT_TRIGGER, ST_SEND_HEADERS, ST_SEND_PADDING} state, state_next;
+	enum logic [1:0] {ST_WAIT_TRIGGER, ST_SEND_HEADERS, ST_SEND_PADDING, ST_SEND_FCS} state, state_next;
 
 	logic [15:0] count, count_next;
 	logic [335:0] tx_buffer, tx_buffer_next;
 	logic [15:0] ip_checksum, icmp_checksum;
+
+	logic [31:0] fcs_state, fcs_state_next, fcs_next;
 
 	always_ff @(posedge clk) begin
 		if(rst) begin
 			state <= ST_WAIT_TRIGGER;
 			count <= 16'd0;
 			tx_buffer <= '0;
+			fcs_state <= '1;
 		end else begin
 			state <= state_next;
 			count <= count_next;
 			tx_buffer <= tx_buffer_next;
+			fcs_state <= fcs_state_next;
 		end
 	end
 
@@ -54,6 +58,7 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 		state_next = state;
 		count_next = count;
 		tx_buffer_next = tx_buffer;
+		fcs_state_next = '1;
 
 		m_axis_tvalid = 1'b0;
 		m_axis_tdata = 8'd0;
@@ -83,6 +88,7 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 
 					if(m_axis_tready) begin
 						count_next = count + 16'd1;
+						fcs_state_next = fcs_next;
 
 						case(count)
 							16'd23: begin
@@ -102,21 +108,44 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 							count_next = 16'd0;
 							state_next = ST_SEND_PADDING;
 						end
+					end else begin
+						fcs_state_next = fcs_state;
 					end
 				end
 
 				ST_SEND_PADDING: begin
 					m_axis_tvalid = 1'b1;
 					m_axis_tdata = {4{~count[0], count[0]}};
-					m_axis_tlast = (count >= padding_size + 16'd17);
+					m_axis_tlast = 1'b0;
 
 					if(m_axis_tready) begin
 						count_next = count + 16'd1;
+						fcs_state_next = fcs_next;
 
 						if(count >= padding_size + 16'd17) begin
 							count_next = 16'd0;
+							state_next = ST_SEND_FCS;
+						end
+					end else begin
+						fcs_state_next = fcs_state;
+					end
+				end
+
+				ST_SEND_FCS: begin
+					m_axis_tvalid = 1'b1;
+					m_axis_tdata = ~fcs_state[7:0];
+					m_axis_tlast = (count >= 16'd3);
+
+					if(m_axis_tready) begin
+						count_next = count + 16'd1;
+						fcs_state_next = {8'hFF, fcs_state[31:8]};
+
+						if(count >= 16'd3) begin
+							count_next = 16'd0;
 							state_next = ST_WAIT_TRIGGER;
 						end
+					end else begin
+						fcs_state_next = fcs_state;
 					end
 				end
 
@@ -161,4 +190,22 @@ module eth_latency_measurer_tx #(parameter C_MODE = 0)
 			.checksum(icmp_checksum)
 		);
 	end
+
+	lfsr
+	#(
+		.LFSR_WIDTH(32),
+		.LFSR_POLY(32'h4c11db7),
+		.LFSR_CONFIG("GALOIS"),
+		.LFSR_FEED_FORWARD(0),
+		.REVERSE(1),
+		.DATA_WIDTH(8),
+		.STYLE("AUTO")
+	)
+	U2
+	(
+		.data_in(m_axis_tdata),
+		.state_in(fcs_state),
+		.data_out(),
+		.state_out(fcs_next)
+	);
 endmodule

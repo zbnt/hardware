@@ -57,7 +57,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 	input logic s_axis_main_clk,
 
 	input logic [7:0] s_axis_main_tdata,
-	input logic s_axis_main_tuser,
+	input logic [2:0] s_axis_main_tuser,
 	input logic s_axis_main_tlast,
 	input logic s_axis_main_tvalid,
 
@@ -74,7 +74,7 @@ module eth_latency_measurer #(parameter C_AXI_WIDTH = 32, parameter C_AXIS_LOG_E
 	input logic s_axis_loop_clk,
 
 	input logic [7:0] s_axis_loop_tdata,
-	input logic s_axis_loop_tuser,
+	input logic [2:0] s_axis_loop_tuser,
 	input logic s_axis_loop_tlast,
 	input logic s_axis_loop_tvalid,
 
