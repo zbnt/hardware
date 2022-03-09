@@ -5,6 +5,7 @@ SOURCES = \
 	hdl/eth_traffic_gen.sv        \
 	hdl/eth_traffic_gen_wrapper.v \
 	hdl/frame_dram.sv             \
+	hdl/lfsr.v                    \
 	hdl/pattern_dram.sv           \
 	xgui/eth_traffic_gen.tcl
 

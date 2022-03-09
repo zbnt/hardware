@@ -41,7 +41,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	output logic m_axis_tvalid,
 	input logic m_axis_tready
 );
-	enum logic [1:0] {ST_WAIT_ENABLE, ST_SEND_DATA, ST_FRAME_DELAY} state, state_next;
+	enum logic [1:0] {ST_WAIT_ENABLE, ST_SEND_DATA, ST_SEND_FCS, ST_FRAME_DELAY} state, state_next;
 	logic [47:0] fcount, fcount_next, fcount_sr, fcount_sr_next;
 	logic [31:0] count, count_next;
 	logic [15:0] fsize, fsize_next;
@@ -56,6 +56,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 	logic [axi_width-1:0] pqueue, pqueue_next;
 	logic [axi_width-1:0] fqueue, fqueue_next;
 
+	logic [31:0] fcs_state, fcs_state_next, fcs_next;
+
 	pcg8 U0
 	(
 		.clk(clk),
@@ -63,6 +65,24 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 		.enable(prng_enable),
 		.seed(prng_seed),
 		.value(prng_val)
+	);
+
+	lfsr
+	#(
+		.LFSR_WIDTH(32),
+		.LFSR_POLY(32'h4c11db7),
+		.LFSR_CONFIG("GALOIS"),
+		.LFSR_FEED_FORWARD(0),
+		.REVERSE(1),
+		.DATA_WIDTH(8),
+		.STYLE("AUTO")
+	)
+	U1
+	(
+		.data_in(m_axis_tdata_next),
+		.state_in(fcs_state),
+		.data_out(),
+		.state_out(fcs_next)
 	);
 
 	always_ff @(posedge clk) begin
@@ -80,6 +100,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 
 			pqueue <= '0;
 			fqueue <= '0;
+
+			fcs_state <= '1;
 		end else begin
 			state <= state_next;
 			count <= count_next;
@@ -94,6 +116,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 
 			pqueue <= pqueue_next;
 			fqueue <= fqueue_next;
+
+			fcs_state <= fcs_state_next;
 		end
 	end
 
@@ -114,6 +138,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 
 		pqueue_next = pqueue;
 		fqueue_next = fqueue;
+
+		fcs_state_next = '1;
 
 		tx_state = state;
 
@@ -150,10 +176,12 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 
 				ST_SEND_DATA: begin
 					m_axis_tdata_next = m_axis_tdata;
-					m_axis_tlast_next = (count == fsize);
+					m_axis_tlast_next = 1'b0;
 					m_axis_tvalid_next = 1'b1;
 
 					if(m_axis_tready) begin
+						fcs_state_next = fcs_next;
+
 						case(pqueue[1:0])
 							2'd0: m_axis_tdata_next = fqueue[7:0];
 							2'd1: m_axis_tdata_next = prng_val;
@@ -170,8 +198,8 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 						end
 
 						if(count == fsize) begin
-							state_next = ST_FRAME_DELAY;
-							count_next = 32'd2;
+							state_next = ST_SEND_FCS;
+							count_next = 32'd0;
 						end else begin
 							count_next = count + 32'd1;
 						end
@@ -189,6 +217,26 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 						end else begin
 							fqueue_next = {8'd0, fqueue[axi_width-1:8]};
 						end
+					end else begin
+						fcs_state_next = fcs_state;
+					end
+				end
+
+				ST_SEND_FCS: begin
+					m_axis_tdata_next = ~fcs_state[7:0];
+					m_axis_tlast_next = (count == 32'd3);
+					m_axis_tvalid_next = 1'b1;
+
+					if(m_axis_tready) begin
+						count_next = count + 16'd1;
+						fcs_state_next = {8'hFF, fcs_state[31:8]};
+
+						if(count >= 16'd3) begin
+							state_next = ST_FRAME_DELAY;
+							count_next = 16'd2;
+						end
+					end else begin
+						fcs_state_next = fcs_state;
 					end
 				end
 

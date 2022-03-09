@@ -24,6 +24,7 @@ ip::add_sources $core {
 	hdl/eth_traffic_gen_axis.sv
 	hdl/eth_traffic_gen_burst.sv
 	hdl/frame_dram.sv
+	hdl/lfsr.v
 	hdl/pattern_dram.sv
 }
 
