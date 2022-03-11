@@ -171,6 +171,7 @@ module eth_traffic_gen_axis #(parameter axi_width = 32)
 						m_axis_tdata_next = mem_pattern_rdata[0] ? prng_val[7:0] : mem_frame_rdata[7:0];
 						m_axis_tvalid_next = 1'b1;
 						prng_enable = mem_pattern_rdata[0];
+						fcs_state_next = fcs_next;
 					end
 				end
 
