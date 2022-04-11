@@ -33,7 +33,7 @@
 
 			mdio@a0000000 {
 				compatible = "zbnt,axi-mdio", "generic-uio";
-				reg = <0xa0000000 0x1000>;
+				reg = <0x0 0xa0000000 0x0 0x1000>;
 
 				zbnt,ports = <0 1 2 3>;
 				zbnt,phy-addr = <0x1 0x3 0xc 0xf>;
@@ -55,7 +55,7 @@
 
 			dma@a0020000 {
 				compatible = "zbnt,message-dma", "generic-uio";
-				reg = <0xa0020000 0x1000>;
+				reg = <0x0 0xa0020000 0x0 0x1000>;
 
 				interrupt-names = "irq0";
 				interrupt-parent = <&gic>;
@@ -64,54 +64,54 @@
 
 			timer@a0040000 {
 				compatible = "zbnt,simple-timer", "generic-uio";
-				reg = <0xa0040000 0x1000>;
+				reg = <0x0 0xa0040000 0x0 0x1000>;
 			};
 
 			stats@a0060000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa0060000 0x1000>;
+				reg = <0x0 0xa0060000 0x0 0x1000>;
 
 				zbnt,ports = <0>;
 			};
 
 			stats@a0080000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa0080000 0x1000>;
+				reg = <0x0 0xa0080000 0x0 0x1000>;
 
 				zbnt,ports = <1>;
 			};
 
 			stats@a00a0000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa00a0000 0x1000>;
+				reg = <0x0 0xa00a0000 0x0 0x1000>;
 
 				zbnt,ports = <2>;
 			};
 
 			stats@a00c0000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa00c0000 0x1000>;
+				reg = <0x0 0xa00c0000 0x0 0x1000>;
 
 				zbnt,ports = <3>;
 			};
 
 			tgen@a00e0000 {
 				compatible = "zbnt,traffic-generator", "generic-uio";
-				reg = <0xa00e0000 0x2000>;
+				reg = <0x0 0xa00e0000 0x0 0x2000>;
 
 				zbnt,ports = <0>;
 			};
 
 			tgen@a0100000 {
 				compatible = "zbnt,traffic-generator", "generic-uio";
-				reg = <0xa0100000 0x2000>;
+				reg = <0x0 0xa0100000 0x0 0x2000>;
 
 				zbnt,ports = <1>;
 			};
 
 			detector@a0120000 {
 				compatible = "zbnt,frame-detector", "generic-uio";
-				reg = <0xa0120000 0x20000>;
+				reg = <0x0 0xa0120000 0x0 0x20000>;
 
 				zbnt,ports = <2 3>;
 			};

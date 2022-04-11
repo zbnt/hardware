@@ -20,8 +20,8 @@
 		target = <&amba>;
 
 		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <1>;
+			#address-cells = <2>;
+			#size-cells = <2>;
 
 			dmabuf0 {
 				compatible = "ikwzm,u-dma-buf";
@@ -33,7 +33,7 @@
 
 			mdio@a0000000 {
 				compatible = "zbnt,axi-mdio", "generic-uio";
-				reg = <0xa0000000 0x1000>;
+				reg = <0x0 0xa0000000 0x0 0x1000>;
 
 				zbnt,ports = <0 1 2 3>;
 				zbnt,phy-addr = <0x1 0x3 0xc 0xf>;
@@ -55,7 +55,7 @@
 
 			dma@a0010000 {
 				compatible = "zbnt,message-dma", "generic-uio";
-				reg = <0xa0010000 0x1000>;
+				reg = <0x0 0xa0010000 0x0 0x1000>;
 
 				interrupt-names = "irq0";
 				interrupt-parent = <&gic>;
@@ -64,47 +64,47 @@
 
 			timer@a0020000 {
 				compatible = "zbnt,simple-timer", "generic-uio";
-				reg = <0xa0020000 0x1000>;
+				reg = <0x0 0xa0020000 0x0 0x1000>;
 			};
 
 			stats@a0030000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa0030000 0x1000>;
+				reg = <0x0 0xa0030000 0x0 0x1000>;
 
 				zbnt,ports = <0>;
 			};
 
 			stats@a0040000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa0040000 0x1000>;
+				reg = <0x0 0xa0040000 0x0 0x1000>;
 
 				zbnt,ports = <1>;
 			};
 
 			stats@a0050000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa0050000 0x1000>;
+				reg = <0x0 0xa0050000 0x0 0x1000>;
 
 				zbnt,ports = <2>;
 			};
 
 			stats@a0060000 {
 				compatible = "zbnt,stats-collector", "generic-uio";
-				reg = <0xa0060000 0x1000>;
+				reg = <0x0 0xa0060000 0x0 0x1000>;
 
 				zbnt,ports = <3>;
 			};
 
 			detector@a0070000 {
 				compatible = "zbnt,frame-detector", "generic-uio";
-				reg = <0xa0070000 0x10000>;
+				reg = <0x0 0xa0070000 0x0 0x10000>;
 
 				zbnt,ports = <0 1>;
 			};
 
 			detector@a0080000 {
 				compatible = "zbnt,frame-detector", "generic-uio";
-				reg = <0xa0080000 0x10000>;
+				reg = <0x0 0xa0080000 0x0 0x10000>;
 
 				zbnt,ports = <2 3>;
 			};
