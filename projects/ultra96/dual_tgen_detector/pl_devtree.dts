@@ -20,8 +20,8 @@
 		target = <&amba>;
 
 		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <1>;
+			#address-cells = <2>;
+			#size-cells = <2>;
 
 			dmabuf0 {
 				compatible = "ikwzm,u-dma-buf";
