@@ -130,8 +130,7 @@ module eth_stats_collector
 
 	// AXIS
 
-	logic stats_changed;
-	logic [5:0] stats_id, stats_id_prev;
+	logic timeout;
 	logic [31:0] sample_timer;
 
 	eth_stats_collector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U1
@@ -139,7 +138,7 @@ module eth_stats_collector
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.trigger(stats_changed & log_enable),
+		.trigger(timeout & log_enable),
 		.log_id(log_id),
 		.overflow_count(overflow_count),
 
@@ -162,7 +161,7 @@ module eth_stats_collector
 	counter_big #(32) U2
 	(
 		.clk(clk),
-		.rst(~rst_n | srst | stats_changed),
+		.rst(~rst_n | srst | timeout),
 
 		.enable(~&sample_timer),
 
@@ -170,15 +169,13 @@ module eth_stats_collector
 	);
 
 	always_ff @(posedge clk) begin
-		stats_id_prev <= stats_id;
-		stats_changed <= stats_id != stats_id_prev && sample_timer >= sample_period;
+		timeout <= (sample_timer >= sample_period);
 	end
 
 	// TX statistics, CDC needed only if C_SHARED_TX_CLK == 0
 
 	logic enable_tx, tx_frame_good, tx_valid;
 	logic [1:0] rst_tx_n;
-	logic [2:0] tx_stats_id;
 	logic [16:0] tx_frame_length;
 	logic [63:0] tx_bytes_cdc, tx_good_cdc, tx_bad_cdc;
 
@@ -209,8 +206,7 @@ module eth_stats_collector
 
 		.total_bytes(tx_bytes_cdc),
 		.total_good(tx_good_cdc),
-		.total_bad(tx_bad_cdc),
-		.stats_id(tx_stats_id)
+		.total_bad(tx_bad_cdc)
 	);
 
 	if(C_SHARED_TX_CLK) begin
@@ -225,18 +221,17 @@ module eth_stats_collector
 		always_comb begin
 			rst_tx_n = {rst_n, rst_n & ~srst};
 
-			stats_id[2:0] = tx_stats_id;
 			tx_bytes = tx_bytes_cdc;
 			tx_good = tx_good_cdc;
 			tx_bad = tx_bad_cdc;
 		end
 	end else begin
-		bus_cdc #(195, 2)
+		bus_cdc #(192, 2)
 		(
 			.clk_src(clk_tx),
 			.clk_dst(clk),
-			.data_in({tx_stats_id, tx_bytes_cdc, tx_good_cdc, tx_bad_cdc}),
-			.data_out({stats_id[2:0], tx_bytes, tx_good, tx_bad})
+			.data_in({tx_bytes_cdc, tx_good_cdc, tx_bad_cdc}),
+			.data_out({tx_bytes, tx_good, tx_bad})
 		);
 
 		sync_ffs #(3, 2)
@@ -252,7 +247,6 @@ module eth_stats_collector
 
 	logic enable_rx, rx_frame_good, rx_valid;
 	logic [1:0] rst_rx_n;
-	logic [2:0] rx_stats_id;
 	logic [16:0] rx_frame_length;
 	logic [63:0] rx_bytes_cdc, rx_good_cdc, rx_bad_cdc;
 
@@ -282,16 +276,15 @@ module eth_stats_collector
 
 		.total_bytes(rx_bytes_cdc),
 		.total_good(rx_good_cdc),
-		.total_bad(rx_bad_cdc),
-		.stats_id(rx_stats_id)
+		.total_bad(rx_bad_cdc)
 	);
 
-	bus_cdc #(195, 2) U7
+	bus_cdc #(192, 2) U7
 	(
 		.clk_src(clk_rx),
 		.clk_dst(clk),
-		.data_in({rx_stats_id, rx_bytes_cdc, rx_good_cdc, rx_bad_cdc}),
-		.data_out({stats_id[5:3], rx_bytes, rx_good, rx_bad})
+		.data_in({rx_bytes_cdc, rx_good_cdc, rx_bad_cdc}),
+		.data_out({rx_bytes, rx_good, rx_bad})
 	);
 
 	sync_ffs #(3, 2) U8
