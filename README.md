@@ -20,7 +20,7 @@ This repository includes block designs for the following boards:
 
 ### Software
 
-* [Vivado Design Suite 2021.1](https://www.xilinx.com/products/design-tools/vivado.html)
+* [Vivado Design Suite 2022.1](https://www.xilinx.com/products/design-tools/vivado.html)
 * Linux device tree compiler (dtc)
 * Python 3
 
