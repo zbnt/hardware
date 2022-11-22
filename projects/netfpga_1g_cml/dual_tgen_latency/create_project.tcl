@@ -3,7 +3,7 @@
 
 cd [file dirname [info script]]
 create_project -force zbnt_hw_dual_tgen_latency -part xc7k325tffg676-1 vivado
-set_property XPM_LIBRARIES {XPM_MEMORY XPM_FIFO} [current_project]
+set_property XPM_LIBRARIES {XPM_CDC XPM_MEMORY XPM_FIFO} [current_project]
 
 # Load source files
 
@@ -28,7 +28,7 @@ create_ip_run $bd
 # Configure synthesis
 
 set runs [get_runs *synth_1]
-set_property -name "flow" -value "Vivado Synthesis 2021" -objects $runs
+set_property -name "flow" -value "Vivado Synthesis 2022" -objects $runs
 set_property -name "strategy" -value "Flow_PerfOptimized_high" -objects $runs
 set_property -name "steps.synth_design.args.fsm_extraction" -value "one_hot" -objects $runs
 set_property -name "steps.synth_design.args.keep_equivalent_registers" -value "1" -objects $runs

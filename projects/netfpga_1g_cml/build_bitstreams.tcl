@@ -112,8 +112,8 @@ proc set_bitstream_offsets { dcp dcp_out args } {
 	set total_size_table {}
 
 	for {set i 0} {$i < 32} {incr i} {
-		lappend address_mem [get_cells -of_objects [all_fanin -flat -pin_levels 1 [get_nets bd_static_i/pr_ctrl/pr_controller/U0/i_vsm_0/address_from_mem[$i]]] -filter {REF_NAME =~ RAM*S}]
-		lappend size_mem [get_cells -of_objects [all_fanin -flat -pin_levels 1 [get_nets bd_static_i/pr_ctrl/pr_controller/U0/i_vsm_0/size_from_mem[$i]]] -filter {REF_NAME =~ RAM*S}]
+		lappend address_mem [get_cells -of_objects [all_fanin -flat -pin_levels 1 [get_nets bd_static_i/pr_ctrl/pr_controller/U0/i_vsm_0/b_bs_info.address_from_mem[$i]]] -filter {REF_NAME =~ RAM*S}]
+		lappend size_mem [get_cells -of_objects [all_fanin -flat -pin_levels 1 [get_nets bd_static_i/pr_ctrl/pr_controller/U0/i_vsm_0/b_bs_info.size_from_mem[$i]]] -filter {REF_NAME =~ RAM*S}]
 		lappend total_size_mem [get_cells bd_static_i/pr_ctrl/memory/pr_copy/inst/U1/genblk1[$i].size_rom]
 		lappend address_table 0
 		lappend size_table 0
