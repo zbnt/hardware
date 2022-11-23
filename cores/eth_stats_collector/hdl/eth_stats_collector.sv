@@ -224,7 +224,7 @@ module eth_stats_collector
 			tx_bad = tx_bad_cdc;
 		end
 	end else begin
-		bus_cdc #(192, 2)
+		bus_cdc #(192, 4)
 		(
 			.clk_src(clk_tx),
 			.clk_dst(clk),
@@ -232,7 +232,7 @@ module eth_stats_collector
 			.data_out({tx_bytes, tx_good, tx_bad})
 		);
 
-		sync_ffs #(3, 2)
+		sync_ffs #(3, 4)
 		(
 			.clk_src(clk),
 			.clk_dst(clk_tx),
@@ -277,7 +277,7 @@ module eth_stats_collector
 		.total_bad(rx_bad_cdc)
 	);
 
-	bus_cdc #(192, 2) U7
+	bus_cdc #(192, 4) U7
 	(
 		.clk_src(clk_rx),
 		.clk_dst(clk),
@@ -285,7 +285,7 @@ module eth_stats_collector
 		.data_out({rx_bytes, rx_good, rx_bad})
 	);
 
-	sync_ffs #(3, 2) U8
+	sync_ffs #(3, 4) U8
 	(
 		.clk_src(clk),
 		.clk_dst(clk_rx),

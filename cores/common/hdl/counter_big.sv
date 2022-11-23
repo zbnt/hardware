@@ -21,7 +21,7 @@ module counter_big #(parameter width = 32)
 	);
 endmodule
 
-module counter_big_impl #(parameter width)
+module counter_big_impl #(parameter width = 32)
 (
 	input logic clk,
 	input logic rst,

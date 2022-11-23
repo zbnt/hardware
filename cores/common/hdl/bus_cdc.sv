@@ -1,53 +1,55 @@
-
-module bus_cdc #(parameter width, parameter stages = 2, parameter ext_trigger = 0)
+module bus_cdc #(parameter C_WIDTH = 8, parameter C_STAGES = 2, parameter C_EXT_TRIGGER = 0)
 (
 	input logic clk_src,
 	input logic clk_dst,
 	input logic trigger,
-	input logic [width-1:0] data_in,
-	output logic [width-1:0] data_out
+	input logic [C_WIDTH-1:0] data_in,
+	output logic [C_WIDTH-1:0] data_out
 );
-	// source clock domain
+	logic in_trigger, in_done;
+	logic [C_WIDTH-1:0] in_reg;
 
-	(* DONT_TOUCH = "TRUE" *) logic [width-1:0] bus_sync_in;
-	logic bus_sync_ack;
+	logic out_done;
+	logic [C_WIDTH-1:0] out_sync;
+
+	xpm_cdc_handshake
+	#(
+		.DEST_EXT_HSK(0),
+		.DEST_SYNC_FF(C_STAGES),
+		.SRC_SYNC_FF(C_STAGES),
+		.WIDTH(C_WIDTH)
+	)
+	U0
+	(
+		.src_clk(clk_src),
+		.src_in(in_reg),
+		.src_send(in_trigger),
+		.src_rcv(in_done),
+
+		.dest_clk(clk_dst),
+		.dest_out(out_sync),
+		.dest_req(out_done),
+		.dest_ack(1'b0)
+	);
 
 	always_ff @(posedge clk_src) begin
-		if(~bus_sync_ack && (trigger || ~ext_trigger)) begin
-			bus_sync_in <= data_in;
-		end
+		case ({in_done, in_trigger})
+			2'b00: begin
+				if (C_EXT_TRIGGER == '0 || trigger) begin
+					in_trigger <= 1'b1;
+					in_reg <= data_in;
+				end
+			end
+
+			2'b11: begin
+				in_trigger <= 1'b0;
+			end
+		endcase
 	end
-
-	// destination clock domain
-
-	logic [width-1:0] bus_sync_out;
-	logic bus_sync_ready;
 
 	always_ff @(posedge clk_dst) begin
-		if(bus_sync_ready) begin
-			bus_sync_out <= bus_sync_in;
+		if (out_done) begin
+			data_out <= out_sync;
 		end
 	end
-
-	always_comb begin
-		data_out = bus_sync_out;
-	end
-
-	// synchronizer for handshake signals
-
-	sync_ffs #(1, stages) U0
-	(
-		.clk_src(clk_src),
-		.clk_dst(clk_dst),
-		.data_in(~bus_sync_ack && (trigger || ~ext_trigger)),
-		.data_out(bus_sync_ready)
-	);
-
-	sync_ffs #(1, stages) U1
-	(
-		.clk_src(clk_dst),
-		.clk_dst(clk_src),
-		.data_in(bus_sync_ready),
-		.data_out(bus_sync_ack)
-	);
 endmodule

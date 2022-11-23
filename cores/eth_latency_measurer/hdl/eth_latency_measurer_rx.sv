@@ -94,7 +94,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 
 	// CDC
 
-	bus_cdc #(16, 2) U0
+	bus_cdc #(16, 4) U0
 	(
 		.clk_src(clk_rx),
 		.clk_dst(clk),
@@ -102,7 +102,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 		.data_out(ping_id)
 	);
 
-	bus_cdc #(192, 2) U1
+	bus_cdc #(192, 4) U1
 	(
 		.clk_src(clk),
 		.clk_dst(clk_rx),
@@ -110,7 +110,7 @@ module eth_latency_measurer_rx #(parameter C_MODE = 0)
 		.data_out({mac_addr_src_cdc, mac_addr_dst_cdc, ip_addr_src_cdc, ip_addr_dst_cdc, frame_id_cdc, log_id_cdc})
 	);
 
-	sync_ffs #(1, 2) U2
+	sync_ffs #(1, 4) U2
 	(
 		.clk_src(clk),
 		.clk_dst(clk_rx),

@@ -1,13 +1,12 @@
-
-module sync_ffs #(parameter width, parameter stages = 2)
+module sync_ffs #(parameter C_WIDTH = 8, parameter C_STAGES = 2)
 (
 	input logic clk_src,
 	input logic clk_dst,
-	input logic [width-1:0] data_in,
-	output logic [width-1:0] data_out
+	input logic [C_WIDTH-1:0] data_in,
+	output logic [C_WIDTH-1:0] data_out
 );
-	(* ASYNC_REG = "TRUE" *) logic [width-1:0] sync_stages[0:stages-1];
-	(* DONT_TOUCH = "TRUE" *) logic [width-1:0] sync_stages_in;
+	(* ASYNC_REG = "TRUE" *) logic [C_WIDTH-1:0] sync_stages[0:C_STAGES-1];
+	(* DONT_TOUCH = "TRUE" *) logic [C_WIDTH-1:0] sync_stages_in;
 
 	// source clock domain
 
@@ -21,14 +20,14 @@ module sync_ffs #(parameter width, parameter stages = 2)
 		sync_stages[0] <= sync_stages_in;
 	end
 
-	for(genvar i = 1; i < stages; ++i) begin
+	for (genvar i = 1; i < C_STAGES; ++i) begin
 		always_ff @(posedge clk_dst) begin
 			sync_stages[i] <= sync_stages[i-1];
 		end
 	end
 
 	always_comb begin
-		data_out = sync_stages[stages-1];
+		data_out = sync_stages[C_STAGES-1];
 	end
 endmodule
 

@@ -99,12 +99,20 @@ module eth_frame_loop
 	logic [C_NUM_SCRIPTS-1:0] script_en_s;
 
 	if(~C_SHARED_RX_CLK) begin
-		sync_ffs #(C_NUM_SCRIPTS + 3, 2) U0
+		bus_cdc #(C_NUM_SCRIPTS + 2, 4) U0
 		(
 			.clk_src(clk),
 			.clk_dst(s_axis_clk),
-			.data_in({script_en, log_en, srst, rst_n}),
-			.data_out({script_en_s, log_en_s, srst_s, rst_n_s})
+			.data_in({script_en, log_en, srst}),
+			.data_out({script_en_s, log_en_s, srst_s})
+		);
+
+		sync_ffs #(1, 4) U1
+		(
+			.clk_src(clk),
+			.clk_dst(s_axis_clk),
+			.data_in(rst_n),
+			.data_out(rst_n_s)
 		);
 	end else begin
 		always_comb begin
@@ -115,7 +123,7 @@ module eth_frame_loop
 	end
 
 	if(~C_SHARED_TX_CLK) begin
-		sync_ffs #(1, 2) U1
+		sync_ffs #(1, 4) U2
 		(
 			.clk_src(clk),
 			.clk_dst(m_axis_clk),
@@ -130,7 +138,7 @@ module eth_frame_loop
 
 	// Loop
 
-	eth_frame_loop_rx #(C_NUM_SCRIPTS, C_AXI_WIDTH, C_MAX_SCRIPT_SIZE) U2
+	eth_frame_loop_rx #(C_NUM_SCRIPTS, C_AXI_WIDTH, C_MAX_SCRIPT_SIZE) U3
 	(
 		.clk(s_axis_clk),
 		.rst_n(rst_n_s),
@@ -162,7 +170,7 @@ module eth_frame_loop
 	);
 
 	if(C_ENABLE_COMPARE && C_NUM_SCRIPTS != 0) begin
-		eth_frame_loop_compare #(C_NUM_SCRIPTS) U3
+		eth_frame_loop_compare #(C_NUM_SCRIPTS) U4
 		(
 			.clk(s_axis_clk),
 			.rst_n(rst_n_s),
@@ -199,7 +207,7 @@ module eth_frame_loop
 	end
 
 	if(C_ENABLE_EDIT && C_NUM_SCRIPTS != 0) begin
-		eth_frame_loop_edit #(C_NUM_SCRIPTS) U4
+		eth_frame_loop_edit #(C_NUM_SCRIPTS) U5
 		(
 			.clk(s_axis_clk),
 			.rst_n(rst_n_s),
@@ -228,7 +236,7 @@ module eth_frame_loop
 	end
 
 	if(C_ENABLE_CHECKSUM && C_NUM_SCRIPTS != 0) begin
-		eth_frame_loop_csum U5
+		eth_frame_loop_csum U6
 		(
 			.clk(s_axis_clk),
 			.rst_n(rst_n_s),
@@ -262,7 +270,7 @@ module eth_frame_loop
 	logic [48:0] axis_txc_tdata;
 	logic axis_txc_tvalid, axis_txc_tready;
 
-	eth_frame_loop_fifo #(C_LOOP_FIFO_A_SIZE, C_LOOP_FIFO_B_SIZE) U6
+	eth_frame_loop_fifo #(C_LOOP_FIFO_A_SIZE, C_LOOP_FIFO_B_SIZE, C_SHARED_RX_CLK && C_SHARED_TX_CLK) U7
 	(
 		.clk(s_axis_clk),
 		.rst_n(rst_n_s),
@@ -292,7 +300,7 @@ module eth_frame_loop
 		.m_axis_ctl_tready(axis_txc_tready)
 	);
 
-	eth_frame_loop_tx U7
+	eth_frame_loop_tx U8
 	(
 		.clk(m_axis_clk),
 		.rst_n(rst_n_m),
@@ -329,7 +337,7 @@ module eth_frame_loop
 		logic [121:0] axis_logc_tdata;
 		logic axis_logc_tvalid, axis_logc_tready;
 
-		eth_frame_loop_extract #(C_NUM_SCRIPTS, C_AXIS_LOG_WIDTH, C_EXTRACT_FIFO_SIZE) U8
+		eth_frame_loop_extract #(C_NUM_SCRIPTS, C_AXIS_LOG_WIDTH, C_EXTRACT_FIFO_SIZE) U9
 		(
 			.clk(s_axis_clk),
 			.rst_n(rst_n_s),
@@ -360,7 +368,7 @@ module eth_frame_loop
 			.m_axis_ctl_tready(axis_logc_tready)
 		);
 
-		eth_frame_detector_axis_log #(C_AXIS_LOG_WIDTH, C_DIRECTION_ID) U9
+		eth_frame_detector_axis_log #(C_AXIS_LOG_WIDTH, C_DIRECTION_ID) U10
 		(
 			.clk(clk),
 			.rst_n(rst_n),

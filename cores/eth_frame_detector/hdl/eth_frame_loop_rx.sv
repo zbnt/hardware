@@ -4,7 +4,13 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 32, parameter C_MAX_SCRIPT_SIZE = 2048)
+module eth_frame_loop_rx
+#(
+	parameter C_NUM_SCRIPTS = 4,
+	parameter C_AXI_WIDTH = 32,
+	parameter C_MAX_SCRIPT_SIZE = 2048,
+	parameter C_SHARED_MEM_CLK = 0
+)
 (
 	input logic clk,
 	input logic rst_n,
@@ -88,11 +94,12 @@ module eth_frame_loop_rx #(parameter C_NUM_SCRIPTS = 4, parameter C_AXI_WIDTH = 
 	for(genvar i = 0; i < C_NUM_SCRIPTS; ++i) begin
 		logic script_we, script_req;
 
-		script_mem #(C_AXI_WIDTH, C_MAX_SCRIPT_SIZE) U0
+		script_mem #(C_AXI_WIDTH, C_MAX_SCRIPT_SIZE, C_SHARED_MEM_CLK) U0
 		(
 			.clk_a(clk_mem),
+
 			.clk_b(clk),
-			.rst_n(rst_n),
+			.rst_n_b(rst_n),
 
 			.a(mem_addr[$clog2(4*C_MAX_SCRIPT_SIZE)-1:0]),
 			.d(mem_wdata),

@@ -4,11 +4,12 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module script_mem #(parameter C_AXI_WIDTH = 32, parameter C_MAX_SCRIPT_SIZE = 2048)
+module script_mem #(parameter C_AXI_WIDTH = 32, parameter C_MAX_SCRIPT_SIZE = 2048, parameter C_SHARED_CLK = 0)
 (
 	input logic clk_a,
+
 	input logic clk_b,
-	input logic rst_n,
+	input logic rst_n_b,
 
 	input logic [$clog2(4*C_MAX_SCRIPT_SIZE)-1:0] a,
 	input logic [C_AXI_WIDTH-1:0] d,
@@ -39,21 +40,28 @@ module script_mem #(parameter C_AXI_WIDTH = 32, parameter C_MAX_SCRIPT_SIZE = 20
 		end
 	end
 
-	bus_cdc #(C_AXI_WIDTH + $clog2(4*C_MAX_SCRIPT_SIZE) + 2, 2) U0
-	(
-		.clk_src(clk_a),
-		.clk_dst(clk_b),
-		.data_in({d, a, we, req}),
-		.data_out({d_cdc, a_cdc, we_cdc, req_cdc})
-	);
+	if (~C_SHARED_CLK) begin
+		bus_cdc #(C_AXI_WIDTH + $clog2(4*C_MAX_SCRIPT_SIZE) + 2, 4) U0
+		(
+			.clk_src(clk_a),
+			.clk_dst(clk_b),
+			.data_in({d, a, we, req}),
+			.data_out({d_cdc, a_cdc, we_cdc, req_cdc})
+		);
 
-	bus_cdc #(C_AXI_WIDTH + 1, 2) U1
-	(
-		.clk_src(clk_b),
-		.clk_dst(clk_a),
-		.data_in({qspo_cdc, ack_cdc}),
-		.data_out({qspo, ack})
-	);
+		bus_cdc #(C_AXI_WIDTH + 1, 4) U1
+		(
+			.clk_src(clk_b),
+			.clk_dst(clk_a),
+			.data_in({qspo_cdc, ack_cdc}),
+			.data_out({qspo, ack})
+		);
+	end else begin
+		always_ff @(posedge clk_b) begin
+			{d_cdc, a_cdc, we_cdc, req_cdc} <= {d, a, we, req};
+			{qspo, ack} <= {qspo_cdc, ack_cdc};
+		end
+	end
 
 	// Memory instance
 
@@ -90,8 +98,8 @@ module script_mem #(parameter C_AXI_WIDTH = 32, parameter C_MAX_SCRIPT_SIZE = 20
 		.clka(clk_b),
 		.clkb(clk_b),
 
-		.rsta(~rst_n),
-		.rstb(~rst_n),
+		.rsta(~rst_n_b),
+		.rstb(~rst_n_b),
 		.sleep(1'b0),
 
 		.addra(a_cdc[$clog2(4*C_MAX_SCRIPT_SIZE)-1:$clog2(C_AXI_WIDTH/8)]),

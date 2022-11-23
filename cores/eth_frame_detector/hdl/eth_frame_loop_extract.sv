@@ -49,7 +49,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 
 	logic [63:0] current_time_cdc, overflow_count_cdc;
 
-	bus_cdc #(64, 2) U0
+	gray_cdc #(64, 4) U0
 	(
 		.clk_src(clk_log),
 		.clk_dst(clk),
@@ -57,7 +57,7 @@ module eth_frame_loop_extract #(parameter C_NUM_SCRIPTS = 4, parameter C_AXIS_LO
 		.data_out(current_time_cdc)
 	);
 
-	bus_cdc #(64, 2) U1
+	bus_cdc #(64, 4) U1
 	(
 		.clk_src(clk),
 		.clk_dst(clk_log),

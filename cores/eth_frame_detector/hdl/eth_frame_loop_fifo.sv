@@ -4,7 +4,7 @@
 	file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LOOP_FIFO_B_SIZE = 128)
+module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LOOP_FIFO_B_SIZE = 128, parameter C_SHARED_CLK = 0)
 (
 	input logic clk,
 	input logic rst_n,
@@ -175,7 +175,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 	#(
 		.C_DEPTH(C_LOOP_FIFO_A_SIZE),
 		.C_MEM_TYPE("block"),
-		.C_CDC_STAGES(2),
+		.C_CDC_STAGES(C_SHARED_CLK ? 0 : 2),
 
 		.C_DATA_WIDTH(8),
 		.C_DEST_WIDTH(1),
@@ -217,7 +217,7 @@ module eth_frame_loop_fifo #(parameter C_LOOP_FIFO_A_SIZE = 2048, parameter C_LO
 	#(
 		.C_DEPTH(C_LOOP_FIFO_A_SIZE / 32),
 		.C_MEM_TYPE("block"),
-		.C_CDC_STAGES(2),
+		.C_CDC_STAGES(C_SHARED_CLK ? 0 : 2),
 
 		.C_DATA_WIDTH(49),
 		.C_DEST_WIDTH(1),
