@@ -130,7 +130,7 @@ module eth_stats_collector
 
 	// AXIS
 
-	logic timeout;
+	logic sample_trigger, sample_timer_clear;
 	logic [31:0] sample_timer;
 
 	eth_stats_collector_axis_log #(C_AXIS_LOG_ENABLE, C_AXIS_LOG_WIDTH) U1
@@ -138,7 +138,7 @@ module eth_stats_collector
 		.clk(clk),
 		.rst_n(rst_n),
 
-		.trigger(timeout & log_enable),
+		.trigger(sample_trigger & log_enable),
 		.log_id(log_id),
 		.overflow_count(overflow_count),
 
@@ -158,18 +158,16 @@ module eth_stats_collector
 		.m_axis_log_tready(m_axis_log_tready)
 	);
 
-	counter_big #(32) U2
-	(
-		.clk(clk),
-		.rst(~rst_n | srst | timeout),
-
-		.enable(~&sample_timer),
-
-		.count(sample_timer)
-	);
-
 	always_ff @(posedge clk) begin
-		timeout <= (sample_timer >= sample_period);
+		sample_timer_clear <= ~rst_n | srst | ~enable | ~time_running;
+
+		if (sample_timer_clear | sample_trigger) begin
+			sample_timer <= 'd1;
+			sample_trigger <= 1'b0;
+		end else begin
+			sample_timer <= sample_timer + 'd1;
+			sample_trigger <= (sample_timer >= sample_period);
+		end
 	end
 
 	// TX statistics, CDC needed only if C_SHARED_TX_CLK == 0
