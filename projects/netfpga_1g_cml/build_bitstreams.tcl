@@ -32,7 +32,7 @@ proc run_implementation { static_dcp rp_dcp out_dcp reports_dir args } {
 	opt_design -directive ExploreWithRemap
 	place_design -directive Explore
 	phys_opt_design -directive Explore
-	route_design -directive NoTimingRelaxation -tns_cleanup
+	route_design -directive AggressiveExplore -tns_cleanup
 	phys_opt_design -directive AggressiveExplore
 
 	# Generate reports
