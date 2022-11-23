@@ -20,7 +20,8 @@ update_ip_catalog -rebuild
 # Create block diagram
 
 source bd_dual_tgen_latency.tcl
-read_verilog [make_wrapper -top -files [get_files bd_dual_tgen_latency.bd]]
+set bd [get_files bd_dual_tgen_latency.bd]
+read_verilog [make_wrapper -top -files $bd]
 
 # Create IP synthesis runs
 

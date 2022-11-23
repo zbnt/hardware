@@ -20,7 +20,8 @@ update_ip_catalog -rebuild
 # Create block diagram
 
 source bd_quad_tgen.tcl
-read_verilog [make_wrapper -top -files [get_files bd_quad_tgen.bd]]
+set bd [get_files bd_quad_tgen.bd]
+read_verilog [make_wrapper -top -files $bd]
 
 # Create IP synthesis runs
 
