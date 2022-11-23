@@ -92,19 +92,18 @@ module simple_timer #(parameter axi_width = 32)
 		.current_count(current_time)
 	);
 
-	// counter
+	// Counter
 
-	counter_big #(64) U1
-	(
-		.clk(clk),
-		.rst(~rst_n | srst),
-
-		.enable(time_running),
-
-		.count(current_time)
-	);
+	logic time_clear;
 
 	always_ff @(posedge clk) begin
-		time_running <= (enable & ~srst & rst_n) && (current_time < max_count);
+		if (time_clear) begin
+			current_time <= '0;
+		end else if (time_running) begin
+			current_time <= current_time + 'd1;
+		end
+
+		time_clear <= ~rst_n | srst;
+		time_running <= rst_n && ~srst && enable && (current_time < max_count);
 	end
 endmodule

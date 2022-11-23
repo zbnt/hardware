@@ -17,7 +17,6 @@ ip::add_sources $core {
 	hdl/axi4_lite/axi4_lite_slave_write.sv
 	hdl/axis_fifo.sv
 	hdl/bus_cdc.sv
-	hdl/counter_big.sv
 	hdl/counter.sv
 	hdl/gray_cdc.sv
 	hdl/lfsr_prng.sv
